@@ -671,7 +671,7 @@ public class Import_layers {
 	static String GEOMCOL = "__mlocate__topology";
 	String shp2pgsql = "shp2pgsql";
 	String psql = "psql";
-	static String cwdir = System.getProperty("user.dir");
+	static String cwdir = NakshaConfig.getString("tmpDir.path");
 	static int err = 0;
 	static int state = 0;
 	static String g_layer_tablename = "";
