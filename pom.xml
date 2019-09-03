@@ -224,6 +224,14 @@
 
 	<build>
 		<finalName>naksha</finalName>
+	    <resources>
+	        <resource>
+	            <directory>src/main/resource</directory>
+	            <includes>
+	                <include>**/*.properties</include>
+	            </includes>
+	        </resource>
+	    </resources>
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
