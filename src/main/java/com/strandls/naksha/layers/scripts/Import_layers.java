@@ -691,7 +691,7 @@ public class Import_layers {
 
 	HashMap<String, String> SQL_COLUMNS = new HashMap<>();
 
-	static String PATH = System.getProperty("user.dir");
+	static String PATH = NakshaConfig.getString("tmpDir.path");
 
 	public Import_layers(String DBNAME, String DBUSER, String path, String Sql_file_name) {
 		this.DBNAME = DBNAME;

@@ -28,7 +28,7 @@ public class DBexec {
 			StringWriter input = new StringWriter();
 			new OutStream(process.getOutputStream(), "output-stream-thread", dbpassword).start();
 			new InStream(process.getErrorStream(), new PrintWriter(errors, true), "error-stream-thread").start();
-			System.out.println(process.getErrorStream().available());
+			//System.out.println(process.getErrorStream().available());
 			new InStream(process.getInputStream(), new PrintWriter(input, true), "input-stream-thread").start();
 			process.waitFor();
 			return i;
