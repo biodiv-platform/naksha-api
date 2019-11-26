@@ -16,4 +16,3 @@ out/
 /dependencies.xml
 .java-version
 deployOnVenus.sh
-@ci/maven-toolbox

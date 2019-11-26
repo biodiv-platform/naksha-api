@@ -74,17 +74,17 @@ public class LayerDAOJDBC implements LayerDAO {
 	public ObservationLocationInfo getLayersDetails(Double lat, Double lon) {
 
 		String tahsilQuery = "SELECT tahsil from lyr_115_india_tahsils where st_contains"
-				+ "(lyr_115_india_tahsils.__mlocate__topology, ST_GeomFromText('POINT(" + lat + " " + lon + ")',0))";
+				+ "(lyr_115_india_tahsils.__mlocate__topology, ST_GeomFromText('POINT(" + lon + " " + lat + ")',0))";
 		String soilQuery = "SELECT descriptio from lyr_117_india_soils where st_contains"
-				+ "(lyr_117_india_soils.__mlocate__topology, ST_GeomFromText('POINT(" + lat + " " + lon + ")',0))";
+				+ "(lyr_117_india_soils.__mlocate__topology, ST_GeomFromText('POINT(" + lon + " " + lat + ")',0))";
 		String forestTypeQuery = "SELECT type_desc from lyr_118_india_foresttypes where st_contains"
-				+ "(lyr_118_india_foresttypes.__mlocate__topology, ST_GeomFromText('POINT(" + lat + " " + lon
+				+ "(lyr_118_india_foresttypes.__mlocate__topology, ST_GeomFromText('POINT(" + lon + " " + lat
 				+ ")',0))";
 		String rainfallQuery = "SELECT rain_range from lyr_119_india_rainfallzone where st_contains"
-				+ "(lyr_119_india_rainfallzone.__mlocate__topology, ST_GeomFromText('POINT(" + lat + " " + lon
+				+ "(lyr_119_india_rainfallzone.__mlocate__topology, ST_GeomFromText('POINT(" + lon + " " + lat
 				+ ")',0))";
 		String tempQuery = "SELECT temp_c from lyr_162_india_temperature where st_contains"
-				+ "(lyr_162_india_temperature.__mlocate__topology, ST_GeomFromText('POINT(" + lat + " " + lon
+				+ "(lyr_162_india_temperature.__mlocate__topology, ST_GeomFromText('POINT(" + lon + " " + lat
 				+ ")',0));";
 
 		String soil = null, rainfall = null, tahsil = null, temp = null, forestType = null;
