@@ -57,8 +57,10 @@ import com.strandls.naksha.NakshaConfig;
  */
 public class Import_layers {
 
+	private static final Charset filename = null;
 	static String DBNAME;
 	static String DBUSER;
+	static String dirname = NakshaConfig.getString("tmpDir.path") + "layersqls/";
 
 	public static Object Meta_Layer(String path) {
 		state = 1;
@@ -216,22 +218,23 @@ public class Import_layers {
 				key = key.trim().replace("\t", " ");
 
 				if (key.equals("link_tablename")) {
-					String tablename = "lnk_" + Integer.toString(link_seq) + "_"
-							+ escapeStr(val).replace(".dbf", "").replace(".txt", "");
+					String tablename = "lnk_" + Integer.toString(link_seq) + "_" + escapeStr(val).replace(".dbf", "")
+							.replace(".txt", "").replace(".csv", "").replace(".xlsx", "");
 					theDictStr += indnt + spc + "\"" + escapeStr(key) + "\" : \"" + tablename + "\",\n";
-					g_link_tablenames.put(escapeStr(val).replace(".dbf", "").replace(".txt", ""), tablename);
+					g_link_tablenames.put(escapeStr(val).replace(".dbf", "").replace(".txt", "").replace(".csv", "")
+							.replace(".xlsx", ""), tablename);
 					// link_seq += 1;
 
-					Path filePath = Paths.get(path, "linktable", escapeStr(val).replace(".dbf", "").replace(".txt", ""),
-							".txt");
+					Path filePath = Paths.get(path, "linktable", escapeStr(val).replace(".dbf", "").replace(".txt", "")
+							.replace(".csv", "").replace(".xlsx", ""), ".txt");
 					theDictStr += indnt + spc + "\"linkTable_filename\" : \"" + escapeStr(filePath.toString())
 							+ "\",\n";
 				}
 
 				else if (key.equals("layer_tablename")) {
 
-					g_layer_tablename = "lyr_" + Integer.toString(layer_seq) + "_"
-							+ escapeStr(val).replace(".dbf", "").replace(".txt", "");
+					g_layer_tablename = "lyr_" + Integer.toString(layer_seq) + "_" + escapeStr(val).replace(".dbf", "")
+							.replace(".txt", "").replace(".csv", "").replace(".xlsx", "");
 					theDictStr += indnt + spc + "\"" + escapeStr(key) + "\" : \"" + g_layer_tablename + "\",\n";
 					layer_seq += 1;
 					// System.out.println(g_layer_tablename);
@@ -311,8 +314,9 @@ public class Import_layers {
 		List<String> list2 = new ArrayList<>();
 		System.out.println("database import");
 		for (Object o : theDict) {
-			JSONObject layer = (JSONObject) o;
+			JSONObject layer = (JSONObject) o; // "layer_type":"POINT",
 			System.out.println(layer.get("shp_filename"));
+
 			System.out.println(layer);
 			err = 0;
 			JSONObject Meta_Layer = (JSONObject) layer.get("Meta_Layer");
@@ -325,6 +329,7 @@ public class Import_layers {
 
 			String cmmd = "shp2pgsql -s -1 -W \"latin1\" -I -p -g " + GEOMCOL + " " + layer.get("shp_filename") + " "
 					+ layer_tablename + " " + DBNAME;
+
 			System.out.println(cmmd);
 
 			ProcessBuilder pb = new ProcessBuilder();
@@ -358,7 +363,7 @@ public class Import_layers {
 				System.out.println(layer_type);
 			}
 
-			List<String> c = modifyCreateLayer(list2);
+			List<String> c = modifyCreateLayer(list2);// not for csv
 
 			for (String c1 : c) {
 				System.out.println(c1);
@@ -380,6 +385,7 @@ public class Import_layers {
 
 			String cmmd2 = "shp2pgsql -s -1 -W \"latin1\" -I -a -g " + GEOMCOL + " " + layer.get("shp_filename") + " "
 					+ layer_tablename + " " + DBNAME;
+
 			pb.command("bash", "-c", String.format("%s > %s", cmmd2, sqlfl));
 			Process process2 = pb.start();
 			// getOutput(process2);
@@ -405,16 +411,19 @@ public class Import_layers {
 
 			String sql1 = String.format("%s\n\n%s\n", c.stream().collect(Collectors.joining("\n")), layer_colcomments);
 			System.out.println(sql1);
+
 			String sql2 = "\nUPDATE " + layer_tablename
 					+ " SET __mlocate__layer_id = (SELECT currval('\"Meta_Layer_layer_id_seq\"')), __mlocate__status = 1, __mlocate__created_by = 1, __mlocate__created_date = now(), __mlocate__modified_by = 1, __mlocate__modified_date = now(), __mlocate__validated_by = 1, __mlocate__validated_date = now();\n\n";
-			// SELECT currval('\"Meta_Layer_layer_id_seq\"');
+
 			sql2 = String.format("\n%s\n%s\n", Meta_Layer_sql, sql2);
+
 			System.out.println(sql2);
 
 			if (err == 1) {
 				System.out.println("error in data\n");
 
 			} else {
+
 				insertsql(sqlfl, sql1, sql2);
 				System.out.println(String.format("@REM # -- Related shape file: %s", layer.get("shp_filename")));
 
@@ -455,7 +464,7 @@ public class Import_layers {
 
 	}
 
-	private static List<String> parse_Meta_Layer(String layer_tablename, String layer_type, JSONObject Meta_Layer) {
+	public static List<String> parse_Meta_Layer(String layer_tablename, String layer_type, JSONObject Meta_Layer) {
 		System.out.println(Meta_Layer);
 		List<String> ret = new ArrayList<>();
 		String Meta_Layer_sql = "INSERT INTO \"Meta_Layer\" (";
@@ -564,6 +573,7 @@ public class Import_layers {
 	}
 
 	private static void insertsql(String fln1, String sql, String sql2) throws FileNotFoundException, IOException {
+
 		String fln2 = fln1 + "new";
 		FileInputStream instream = null;
 		FileOutputStream outstream = null;
@@ -768,18 +778,45 @@ public class Import_layers {
 
 	}
 
+	public static int filemainfunc(Import_layers imp, DBexec database, String dbname, String dbpassword, String dbuser)
+			throws IOException, ScriptException, ParseException, InterruptedException, SQLException {
+
+		layer_seq = getNextSeqFromDB("\\\"Meta_Layer_layer_id_seq\\\"", dbpassword) + 1;// +1
+		System.out.println(layer_seq);
+
+		String directoryName1 = PATH.concat("/layersqls");
+		String directoryName2 = PATH.concat("/logs");
+		String directoryName3 = PATH.concat("/layers.json");
+
+		File directory1 = new File(directoryName1);
+		File directory2 = new File(directoryName2);
+		File directory3 = new File(directoryName3);
+
+		if (directory1.exists())
+			FileUtils.deleteDirectory(directory1);
+		new File(directoryName1).mkdirs();
+
+		if (directory2.exists())
+			FileUtils.deleteDirectory(directory2);
+		new File(directoryName2).mkdirs();
+
+		if (directory3.exists())
+			FileUtils.forceDelete(directory3);
+
+		return layer_seq;
+	}
+
 	public static int getNextVal(String SequenceName, String dbpassword) throws IOException {
 		String dbhost = NakshaConfig.getString("geoserver.dbhost");
-		String s1 = String.format("PGPASSWORD=" + dbpassword
-				+ "  psql -h " + dbhost + "  -d %s -U %s -t -c \"select nextval('\\\"Meta_Layer_layer_id_seq\\\"')\"",
+		String s1 = String.format("PGPASSWORD=" + dbpassword + "  psql -h " + dbhost
+				+ "  -d %s -U %s -t -c \"select nextval('\\\"Meta_Layer_layer_id_seq\\\"')\"", DBNAME, DBUSER);
+
+		String s2 = String.format("PGPASSWORD=" + dbpassword + "  psql -h " + dbhost
+				+ "  -d %s -U %s -t -c \"select setval('\\\"Meta_Layer_layer_id_seq\\\"' , (select nextval('\\\"Meta_Layer_layer_id_seq\\\"')-2))\"",
 				DBNAME, DBUSER);
 
-		String s2 = String.format("PGPASSWORD=" + dbpassword
-				+ "  psql -h " + dbhost + "  -d %s -U %s -t -c \"select setval('\\\"Meta_Layer_layer_id_seq\\\"' , (select nextval('\\\"Meta_Layer_layer_id_seq\\\"')-2))\"",
-				DBNAME, DBUSER);
-
-		String s3 = String.format("PGPASSWORD=" + dbpassword
-				+ "  psql -h " + dbhost + "  -d %s -U %s -t -c \"select pg_sequences.last_value from pg_sequences where schemaname = 'public' and sequencename = %s\"",
+		String s3 = String.format("PGPASSWORD=" + dbpassword + "  psql -h " + dbhost
+				+ "  -d %s -U %s -t -c \"select pg_sequences.last_value from pg_sequences where schemaname = 'public' and sequencename = %s\"",
 				DBNAME, DBUSER, SequenceName);
 		int val = 0;
 		String[] arr = { s1, s2, s3 };
@@ -930,7 +967,8 @@ public class Import_layers {
 		File root = new File(path);
 		System.out.println(root.isDirectory());
 		File[] list = root.listFiles();
-
+		String csvfl = "";
+		String xlsxfl = "";
 		if (list == null)
 			return " ";
 
@@ -943,6 +981,7 @@ public class Import_layers {
 				String pth1 = filePath.toString();
 				System.out.println("pth1 to final : " + pth1);
 				String shpfl = "";
+
 				String metadatafl = "";
 				if (System.getProperty("os.name") == "nt")
 					path1_sp = pth1.split("\\");
@@ -966,6 +1005,15 @@ public class Import_layers {
 						shpfl = Paths.get(rt.toString(), flname.getName()).toString();
 						shpfl = flname.getAbsolutePath();
 						System.out.println(shpfl);
+					} else if (flname.getName().endsWith(".csv")) {
+						csvfl = Paths.get(rt.toString(), flname.getName()).toString();
+						csvfl = flname.getAbsolutePath();
+						System.out.println(csvfl);
+					}
+					if (flname.getName().endsWith(".xlsx")) {
+						xlsxfl = Paths.get(rt.toString(), flname.getName()).toString();
+						xlsxfl = flname.getAbsolutePath();
+						System.out.println(xlsxfl);
 					}
 
 					else if (flname.getName().endsWith("metadata.txt") || flname.getName().endsWith(".meta.txt")) {
@@ -978,12 +1026,23 @@ public class Import_layers {
 				if (err == 1) {
 					continue;
 				}
+
 				String spc = "    ";
-				String str1 = spc + "\"shp_filename\": " + "\"" + shpfl.replace("\\", "\\\\") + "\"," + "\n";
+				String str = null;
+
+				if (shpfl.endsWith("shp")) {
+					str = spc + "\"shp_filename\": " + "\"" + shpfl.replace("\\", "\\\\") + "\"," + "\n";
+
+				} else if (csvfl.endsWith("csv")) {
+					str = spc + "\"filename\": " + "\"" + csvfl.replace("\\", "\\\\") + "\"," + "\n";
+				} else {
+					str = spc + "\"filename\": " + "\"" + xlsxfl.replace("\\", "\\\\") + "\"," + "\n";
+				}
 
 				int indx = theDictStr.lastIndexOf("    },\n");
+
 				System.out.println(theDictStr + "  " + indx);
-				theDictStr = theDictStr.substring(0, indx + 7) + str1
+				theDictStr = theDictStr.substring(0, indx + 7) + str
 						+ theDictStr.substring(indx + 7, theDictStr.length() - 1);
 				theFinalDictStr += theDictStr;
 				System.out.println(theFinalDictStr);

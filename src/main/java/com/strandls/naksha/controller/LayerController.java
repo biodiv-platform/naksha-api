@@ -38,12 +38,11 @@ public class LayerController {
 
 	@Inject
 	LayerUploadService layerService;
-
 	@Inject
 	GeoServerIntegrationService service;
 
 	@GET
-	@Path("ping")
+	@Path("/ping")
 	@Produces(MediaType.TEXT_PLAIN)
 	public String ping() {
 		return "pong";
@@ -60,57 +59,62 @@ public class LayerController {
 	public Response uploadFiles(final FormDataMultiPart multiPart) {
 
 		try {
-			FormDataBodyPart formdata = multiPart.getField("shp");
-
-			if (formdata == null) {
-				throw new WebApplicationException(
-						Response.status(Response.Status.BAD_REQUEST).entity("SHP file not present").build());
-
-			}
-
-			InputStream shpInputStream = formdata.getValueAs(InputStream.class);
-			String shpFileName = formdata.getContentDisposition().getFileName();
-			shpFileName += ".";
-			String layerName = shpFileName.split("\\.")[0].toLowerCase();
-			System.out.println(layerName);
-
-			formdata = multiPart.getField("dbf");
-
-			if (formdata == null) {
-				throw new WebApplicationException(
-						Response.status(Response.Status.BAD_REQUEST).entity("DBF file not present").build());
-			}
-			InputStream dbfInputStream = formdata.getValueAs(InputStream.class);
-
-			formdata = multiPart.getField("metadata");
-
+			FormDataBodyPart formdata = multiPart.getField("metadata");
 			if (formdata == null) {
 				throw new WebApplicationException(
 						Response.status(Response.Status.BAD_REQUEST).entity("Metadata file not present").build());
 			}
 			InputStream metadataInputStream = formdata.getValueAs(InputStream.class);
-
-			formdata = multiPart.getField("shx");
-			if (formdata == null) {
-				throw new WebApplicationException(
-						Response.status(Response.Status.BAD_REQUEST).entity("Shx file not present").build());
+			formdata = multiPart.getField("shp");
+			if (formdata != null) {
+				InputStream shpInputStream = formdata.getValueAs(InputStream.class);
+				String shpFileName = formdata.getContentDisposition().getFileName();
+				shpFileName += ".";
+				String layerName = shpFileName.split("\\.")[0].toLowerCase();
+				System.out.println(layerName);
+				formdata = multiPart.getField("dbf");
+				if (formdata == null) {
+					throw new WebApplicationException(
+							Response.status(Response.Status.BAD_REQUEST).entity("Metadata file not present").build());
+				}
+				InputStream dbfInputStream = formdata.getValueAs(InputStream.class);
+				formdata = multiPart.getField("shx");
+				if (formdata == null) {
+					throw new WebApplicationException(
+							Response.status(Response.Status.BAD_REQUEST).entity("Shx file not present").build());
+				}
+				InputStream shxInputStream = formdata.getValueAs(InputStream.class);
+				int i = layerService.uploadShpLayer(shpInputStream, dbfInputStream, metadataInputStream, shxInputStream,
+						layerName);
+				TimeUnit.SECONDS.sleep(5);
+				service.getRequest("/rest/reload", null, "POST");
+				return Response.status(Response.Status.OK)
+						.entity("{\"responseCode\":" + i + ", \"info\": \"1 = failure && 0 = Success\"}").build();
+			} else {
+				boolean isCsvFile;
+				InputStream inputStream;
+				FormDataBodyPart formData = multiPart.getField("csv");
+				if (formData == null) {
+					formData = multiPart.getField("xlsx");
+					isCsvFile = false;
+				} else {
+					isCsvFile = true;
+				}
+				inputStream = formData.getValueAs(InputStream.class);
+				String fileName = formData.getContentDisposition().getFileName();
+				fileName += ".";
+				String layerName = fileName.split("\\.")[0].toLowerCase();
+				System.out.println(layerName);
+				int k = layerService.uploadfilelayer(inputStream, metadataInputStream, layerName, isCsvFile);
+				TimeUnit.SECONDS.sleep(5);
+				service.getRequest("/rest/reload", null, "POST");
+				return Response.status(Response.Status.OK)
+						.entity("{\"responseCode\":" + k + ", \"info\": \"1 = failure && 0 = Success\"}").build();
 			}
-			InputStream shxInputStream = formdata.getValueAs(InputStream.class);
-
-			int i = layerService.uploadShpLayer(shpInputStream, dbfInputStream, metadataInputStream, shxInputStream,
-					layerName);
-
-			// Waiting for disk files to be created then reload layers
-			TimeUnit.SECONDS.sleep(5);
-			service.getRequest("/rest/reload", null, "POST");
-
-			return Response.status(Response.Status.OK)
-					.entity("{\"responseCode\":" + i + ", \"info\": \"1 = failure && 0 = Success\"}").build();
-
 		} catch (Exception e) {
+			e.printStackTrace();
 			throw new WebApplicationException(
 					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
-
 		}
 
 	}
@@ -119,7 +123,6 @@ public class LayerController {
 	@Path(ApiConstants.LAYERINFO)
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-
 	@ApiOperation(value = "Find layer info By Latitude and Longitude", notes = "Returns Layer Details", response = ObservationLocationInfo.class)
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "Layer info not found", response = String.class) })
 
@@ -135,18 +138,20 @@ public class LayerController {
 			return Response.status(Status.BAD_REQUEST).build();
 		}
 	}
-//	@GET
-//	@Path("/attributes")
-//	@Produces(MediaType.APPLICATION_JSON)
-//	public List<LayerAttributes> attributes(@QueryParam("layername") String layername) {
-//		return layerService.getLayerAttributes(layername);
-//	}
-//	
-//	@GET
-//	@Path("/tags")
-//	@Produces(MediaType.APPLICATION_JSON)
-//	public List<String> tags(@QueryParam("tag") String tag) {
-//		return layerService.getLayerNamesWithTag(tag);
-//	}
+
+	// @GET
+	// @Path("/attributes")
+	// @Produces(MediaType.APPLICATION_JSON)
+	// public List<LayerAttributes> attributes(@QueryParam("layername") String
+	// layername) {
+	// return layerService.getLayerAttributes(layername);
+	// }
+	//
+	// @GET
+	// @Path("/tags")
+	// @Produces(MediaType.APPLICATION_JSON)
+	// public List<String> tags(@QueryParam("tag") String tag) {
+	// return layerService.getLayerNamesWithTag(tag);
+	// }
 
 }

@@ -46,7 +46,7 @@ public class generate_geoserver_styles {
 			rule_mgl = String.format(line_rule_tpl_mgl, key, value);
 		}
 		if (lastRule == true) {
-			rule_mgl = rule_mgl.substring(0, rule_mgl.length()-1);
+			rule_mgl = rule_mgl.substring(0, rule_mgl.length() - 1);
 		}
 		return rule_mgl;
 	}
@@ -217,8 +217,9 @@ public class generate_geoserver_styles {
 		try {
 			String dbhost = NakshaConfig.getString("geoserver.dbhost");
 			String dbport = NakshaConfig.getString("geoserver.dbport");
-			connection = DriverManager.getConnection("jdbc:postgresql://" + dbhost + ":" + dbport + "/" + db, user, pass);// +db, user
-																											// ,pass
+			connection = DriverManager.getConnection("jdbc:postgresql://" + dbhost + ":" + dbport + "/" + db, user,
+					pass);// +db, user
+			// ,pass
 
 		} catch (SQLException e) {
 			System.out.println("Connection Failed! Check output console");
@@ -237,7 +238,7 @@ public class generate_geoserver_styles {
 		stmt = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 
 		String sql;
-		String[] cont_type = { "bigint", "integer", "smallint", "double precision", "real" };
+		String[] cont_type = { "bigint", "integer", "smallint", "double precision", "real", "numeric", "timetsamp" };
 
 		for (String tablename : tables) {
 

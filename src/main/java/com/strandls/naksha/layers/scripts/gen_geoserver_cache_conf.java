@@ -106,8 +106,9 @@ public class gen_geoserver_cache_conf {
 		try {
 			String dbhost = NakshaConfig.getString("geoserver.dbhost");
 			String dbport = NakshaConfig.getString("geoserver.dbport");
-			connection = DriverManager.getConnection("jdbc:postgresql://" + dbhost + ":" + dbport + "/" + db, user, pass);// +db, user
-																											// ,pass
+			connection = DriverManager.getConnection("jdbc:postgresql://" + dbhost + ":" + dbport + "/" + db, user,
+					pass);// +db, user
+			// ,pass
 
 		} catch (SQLException e) {
 			System.out.println("Connection Failed! Check output console");
@@ -152,7 +153,7 @@ public class gen_geoserver_cache_conf {
 	}
 
 	private static void create_cache_xml(String tablename) throws SQLException, IOException {
-		String[] content_type = { "bigint", "integer", "smallint", "double precision", "real" };
+		String[] content_type = { "bigint", "integer", "smallint", "double precision", "real", "numeric", "timetsamp" };
 		List<String> styles = new ArrayList<>();
 		String colname_datatype_query = "select column_name, data_type from information_schema.columns where table_name = '"
 				+ tablename + "'";

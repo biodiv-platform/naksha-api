@@ -57,7 +57,6 @@ public class GeoserverController {
 		try {
 			ArrayList<NameValuePair> params = new ArrayList<NameValuePair>();
 			params.add(new BasicNameValuePair("REQUEST", "GetCapabilities"));
-
 			String url = workspace + "/wfs";
 			String layers = new String(service.getRequest(url, params));
 			return Response.status(Status.OK).entity(Utils.convertStringToDocument(layers)).build();

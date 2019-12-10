@@ -7,6 +7,7 @@ import com.strandls.naksha.pojo.ObservationLocationInfo;
 
 /**
  * DAO for map layers that are stored in post gis
+ * 
  * @author mukund
  *
  */
@@ -14,6 +15,7 @@ public interface LayerDAO {
 
 	/**
 	 * Get all the attributes present in the layer
+	 * 
 	 * @param layerName
 	 * @return
 	 */
@@ -21,10 +23,11 @@ public interface LayerDAO {
 
 	/**
 	 * Get layer names associated with a tag
+	 * 
 	 * @return
 	 */
 	List<String> getLayerNamesWithTag(String tag);
-	
+
 	/**
 	 * 
 	 * @param lat
@@ -32,4 +35,5 @@ public interface LayerDAO {
 	 * @return {@link ObservationLocationInfo}
 	 */
 	public ObservationLocationInfo getLayersDetails(Double lat, Double lon);
+
 }

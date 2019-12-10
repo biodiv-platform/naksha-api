@@ -118,7 +118,8 @@ public class generate_geoserver_layers {
 		try {
 			String dbhost = NakshaConfig.getString("geoserver.dbhost");
 			String dbport = NakshaConfig.getString("geoserver.dbport");
-			connection = DriverManager.getConnection("jdbc:postgresql://" + dbhost + ":" + dbport + "/" + db, user, pass);
+			connection = DriverManager.getConnection("jdbc:postgresql://" + dbhost + ":" + dbport + "/" + db, user,
+					pass);
 		} catch (SQLException e) {
 			System.out.println("Connection Failed! Check output console");
 			e.printStackTrace();
@@ -239,7 +240,7 @@ public class generate_geoserver_layers {
 
 	private static String get_keywords_xml(String tablename) throws SQLException {
 
-		String[] layer_keywords = null;
+		String[] layer_keywords = new String[1];
 		String keywords_xml = "";
 		String layer_keywords_query = "select tags from \"Meta_Layer\" where layer_tablename='" + tablename + "'";
 		ResultSet rs = stmt.executeQuery(layer_keywords_query);
@@ -276,7 +277,7 @@ public class generate_geoserver_layers {
 	}
 
 	private static String create_styles_xml(String tablename) throws SQLException {
-		String[] cont_type = { "bigint", "integer", "smallint", "double precision", "real" };
+		String[] cont_type = { "bigint", "integer", "smallint", "double precision", "real", "numeric", "timetsamp" };
 
 		String styles = "";
 		String colname_datatype_query = "select column_name, data_type from information_schema.columns where table_name = '"
