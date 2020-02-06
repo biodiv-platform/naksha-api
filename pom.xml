@@ -34,12 +34,12 @@
         <repository>
             <id>central</id>
             <name>jfrog-releases</name>
-            <url>https://venus.strandls.com/artifactory/libs-release-local</url>
+            <url>http://pamba.strandls.com/artifactory/libs-release-local</url>
         </repository>
         <snapshotRepository>
             <id>snapshots</id>
             <name>jfrog-snapshots</name>
-            <url>https://venus.strandls.com/artifactory/libs-snapshot-local</url>
+            <url>http://pamba.strandls.com/artifactory/libs-snapshot-local</url>
         </snapshotRepository>
     </distributionManagement>
 
@@ -50,13 +50,13 @@
             </snapshots>
             <id>central</id>
             <name>libs-release</name>
-            <url>https://venus.strandls.com/artifactory/libs-release</url>
+            <url>http://pamba.strandls.com/artifactory/libs-release</url>
         </repository>
         <repository>
             <snapshots />
             <id>snapshots</id>
             <name>libs-snapshot</name>
-            <url>https://venus.strandls.com/artifactory/libs-snapshot</url>
+            <url>http://pamba.strandls.com/artifactory/libs-snapshot</url>
         </repository>
     </repositories>
 
@@ -168,7 +168,12 @@
             <artifactId>httpclient</artifactId>
             <version>4.5.4</version>
         </dependency>
-
+        
+        <dependency>
+			<groupId>com.strandls.biodiv</groupId>
+			<artifactId>esmodule-client</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+		</dependency>
 
         <!-- https://mvnrepository.com/artifact/io.swagger/swagger-annotations -->
         <dependency>
@@ -322,7 +327,7 @@
                             <locations>
                                 ${location}
                             </locations>
-                            <schemes>http,https</schemes>
+                            <schemes>http</schemes>
                             <host>localhost:8080</host>
                             <basePath>${base-path}</basePath>
                             <info>

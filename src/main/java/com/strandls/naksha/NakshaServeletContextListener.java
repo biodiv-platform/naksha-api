@@ -16,8 +16,10 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Scopes;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.google.inject.servlet.ServletModule;
+import com.strandls.esmodule.controllers.GeoServiceApi;
 import com.strandls.naksha.controller.NakshaControllerModule;
 import com.strandls.naksha.dao.DAOFactory;
 import com.strandls.naksha.dao.DAOModule;
@@ -52,6 +54,7 @@ public class NakshaServeletContextListener extends GuiceServletContextListener {
 					DAOFactory daoFactory = DAOFactory.getInstance();
 					Connection connection = daoFactory.getConnection();
 					bind(Connection.class).toInstance(connection);
+					bind(GeoServiceApi.class).in(Scopes.SINGLETON);
 
 				} catch (ClassNotFoundException e) {
 					logger.error("Error finding postgresql driver.", e);
