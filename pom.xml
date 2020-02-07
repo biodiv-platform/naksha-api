@@ -1,8 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>naksha-api</groupId>
     <artifactId>naksha-api</artifactId>
@@ -34,12 +32,12 @@
         <repository>
             <id>central</id>
             <name>jfrog-releases</name>
-            <url>http://pamba.strandls.com/artifactory/libs-release-local</url>
+            <url>https://venus.strandls.com/artifactory/libs-release-local</url>
         </repository>
         <snapshotRepository>
             <id>snapshots</id>
             <name>jfrog-snapshots</name>
-            <url>http://pamba.strandls.com/artifactory/libs-snapshot-local</url>
+            <url>https://venus.strandls.com/artifactory/libs-snapshot-local</url>
         </snapshotRepository>
     </distributionManagement>
 
@@ -50,13 +48,13 @@
             </snapshots>
             <id>central</id>
             <name>libs-release</name>
-            <url>http://pamba.strandls.com/artifactory/libs-release</url>
+            <url>https://venus.strandls.com/artifactory/libs-release</url>
         </repository>
         <repository>
             <snapshots />
             <id>snapshots</id>
             <name>libs-snapshot</name>
-            <url>http://pamba.strandls.com/artifactory/libs-snapshot</url>
+            <url>https://venus.strandls.com/artifactory/libs-snapshot</url>
         </repository>
     </repositories>
 
@@ -168,12 +166,12 @@
             <artifactId>httpclient</artifactId>
             <version>4.5.4</version>
         </dependency>
-        
+
         <dependency>
-			<groupId>com.strandls.biodiv</groupId>
-			<artifactId>esmodule-client</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
-		</dependency>
+            <groupId>com.strandls.biodiv</groupId>
+            <artifactId>esmodule-client</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
 
         <!-- https://mvnrepository.com/artifact/io.swagger/swagger-annotations -->
         <dependency>
@@ -327,7 +325,7 @@
                             <locations>
                                 ${location}
                             </locations>
-                            <schemes>http</schemes>
+                            <schemes>http,https</schemes>
                             <host>localhost:8080</host>
                             <basePath>${base-path}</basePath>
                             <info>
