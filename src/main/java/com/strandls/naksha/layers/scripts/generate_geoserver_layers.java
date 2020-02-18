@@ -239,7 +239,7 @@ public class generate_geoserver_layers {
 
 	private static String get_keywords_xml(String tablename) throws SQLException {
 
-		String[] layer_keywords = null;
+		String[] layer_keywords;
 		String keywords_xml = "";
 		String layer_keywords_query = "select tags from \"Meta_Layer\" where layer_tablename='" + tablename + "'";
 		ResultSet rs = stmt.executeQuery(layer_keywords_query);
@@ -249,7 +249,7 @@ public class generate_geoserver_layers {
 		if (!layer_keywords_results.isEmpty() && layer_keywords_results != null) {
 			layer_keywords = layer_keywords_results.split(",");
 		} else {
-			layer_keywords[0] = "Miscellaneous";
+			layer_keywords = new String[]{"Miscellaneous"};
 		}
 
 		for (String keyword : layer_keywords) {
