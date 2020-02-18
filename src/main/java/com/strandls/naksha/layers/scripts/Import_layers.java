@@ -472,7 +472,7 @@ public class Import_layers {
 				+ "COMMENT ON COLUMN \"%s\".__mlocate__validated_by IS 'Validated By';\n"
 				+ "COMMENT ON COLUMN \"%s\".__mlocate__validated_date IS 'Validated Date';\n";
 
-		layer_colcomments = layer_colcomments.replace("%s", layer_tablename);
+		layer_colcomments = layer_colcomments.replace("%s", layer_tablename.toLowerCase());
 		// here x is keysStr
 
 		while (keys.hasNext()) {
