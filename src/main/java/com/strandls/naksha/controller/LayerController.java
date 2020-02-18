@@ -108,6 +108,8 @@ public class LayerController {
 					.entity("{\"responseCode\":" + i + ", \"info\": \"1 = failure && 0 = Success\"}").build();
 
 		} catch (Exception e) {
+			System.out.println("CRASHED: " + e.toString() + e.getMessage());
+			e.printStackTrace();
 			throw new WebApplicationException(
 					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
 

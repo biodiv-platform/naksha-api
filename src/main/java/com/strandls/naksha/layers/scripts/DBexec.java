@@ -16,11 +16,10 @@ import com.strandls.naksha.NakshaConfig;
 public class DBexec {
 	public static int main_func_generation(String sql_fl, String dbname, String dbpassword, String dbuser) {
 		try {
-			String password = "hum123";
 			String dbhost = NakshaConfig.getString("geoserver.dbhost");
 			ProcessBuilder builder = new ProcessBuilder("bash", "-c", "PGPASSWORD=" + dbpassword
 					+ " psql -h " + dbhost + " -d " + dbname + " -a -U " + dbuser + " -f " + sql_fl);
-			Process process = builder.start();
+			Process process = builder.inheritIO().start();
 			System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
 			System.out.println(process);
 			int i = process.getErrorStream().available();
@@ -33,6 +32,7 @@ public class DBexec {
 			process.waitFor();
 			return i;
 		} catch (Error | Exception ex) {
+			ex.printStackTrace();
 			return 1;
 		}
 
