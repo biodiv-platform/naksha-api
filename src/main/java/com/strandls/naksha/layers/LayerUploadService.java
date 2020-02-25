@@ -131,9 +131,11 @@ public class LayerUploadService {
 	}
 
 	private int xlsxcommand(String dataPath, String FilePath) throws Exception {
+
 		isCsvFile = false;
 		int s = impo.csvexcelmain_data(dbname, dbuser, dbpassword, dataPath, FilePath, isCsvFile);
 		geoserver();
+
 		return s;
 	}
 
@@ -142,9 +144,6 @@ public class LayerUploadService {
 		return locInfo;
 	}
 
-//	public List<LayerAttributes> getLayerAttributes(String layerName) {
-//		return layerDAO.getLayerAttributes(layerName);
-//	}
 //
 //	public List<String> getLayerNamesWithTag(String tag) {
 //		if (tag == null || tag.isEmpty())

@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Various configurations needed by the web app
- * 
+ *
  * @author mukund
  */
 public class NakshaConfig {

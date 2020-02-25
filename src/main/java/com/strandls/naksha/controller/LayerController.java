@@ -139,13 +139,6 @@ public class LayerController {
 		}
 	}
 
-	// @GET
-	// @Path("/attributes")
-	// @Produces(MediaType.APPLICATION_JSON)
-	// public List<LayerAttributes> attributes(@QueryParam("layername") String
-	// layername) {
-	// return layerService.getLayerAttributes(layername);
-	// }
 	//
 	// @GET
 	// @Path("/tags")

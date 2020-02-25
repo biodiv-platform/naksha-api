@@ -1,11 +1,5 @@
 package com.strandls.naksha.pojo;
 
-/**
- * Attributes present in a layer
- * 
- * @author mukund
- *
- */
 public class LayerAttributes {
 
 	private String name;

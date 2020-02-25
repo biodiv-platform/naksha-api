@@ -60,16 +60,16 @@ public class NakshaServeletContextListener extends GuiceServletContextListener {
 				}
 
 				// ------------------------ End Geoserver related configurations
-				
+
 				Map<String, String> props = new HashMap<String, String>();
 				props.put("javax.ws.rs.Application", ApplicationConfig.class.getName());
 				props.put("jersey.config.server.wadl.disableWadl", "true");
-				
-				serve("/api/*").with(GuiceContainer.class,props);
+
+				serve("/api/*").with(GuiceContainer.class, props);
 
 			}
 
-		},new NakshaControllerModule(), new GeoserverModule(), new LayerUploadModule(), new DAOModule());
+		}, new NakshaControllerModule(), new GeoserverModule(), new LayerUploadModule(), new DAOModule());
 
 	}
 

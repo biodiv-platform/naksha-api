@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.strandls.naksha.layers.scripts;
 
 import java.io.File;
@@ -253,8 +248,11 @@ public class generate_geoserver_styles {
 
 			String layer_type = StringUtils.strip(rs.getString(2), "'");
 
-			String colname_datatype_query = "select column_name, data_type from information_schema.columns where table_name = '"
-					+ tablename + "'";
+			String colname_datatype_query = "SELECT c.column_name, c.data_type, pgd.description\n"
+					+ "from pg_catalog.pg_statio_all_tables as st\n"
+					+ "inner join pg_catalog.pg_description pgd on (pgd.objoid=st.relid)\n"
+					+ "right outer join information_schema.columns c on (pgd.objsubid=c.ordinal_position and  c.table_schema=st.schemaname and c.table_name=st.relname)\n"
+					+ "where table_schema = 'public' and table_name = '" + tablename + "'";
 			rs = stmt.executeQuery(colname_datatype_query);
 			List<HashMap<String, Object>> list1 = convertResultSetToList(rs);
 
@@ -263,10 +261,13 @@ public class generate_geoserver_styles {
 				String col_type = (String) hm1.get("data_type");
 				String column_name1 = (String) hm1.get("column_name");
 				System.out.println(col_type);
+				String description = (String) hm1.get("description");
+				System.out.println(description);
 
 				if (!column_name1.startsWith("__mlocate__") && col_type.startsWith("character")) {
 					System.out.println("getting column name and type " + column_name1);
-					create_categorical_style_files(tablename, column_name1, column_name1, layer_type, col_type);
+					create_categorical_style_files(tablename, column_name1, column_name1, description, layer_type,
+							col_type);
 				}
 
 				else if (!column_name1.startsWith("__mlocate__") && Arrays.asList(cont_type).contains(col_type)) {
@@ -285,8 +286,7 @@ public class generate_geoserver_styles {
 							System.out.println(max);
 							String min = (String) hm2.get("min").toString();
 							System.out.println(min);
-							create_style_files(tablename, column_name1, column_name1, min, max, 5, layer_type,
-									col_type);
+							create_style_files(tablename, description, column_name1, min, max, 5, layer_type, col_type);
 						}
 					}
 
@@ -302,19 +302,8 @@ public class generate_geoserver_styles {
 
 	}
 
-	private static String get_column_name(String tablename, String property_name) throws SQLException {
-		String col_description_query = "select col_description((select oid from pg_class where relname = '" + tablename
-				+ "'), (select ordinal_position from information_schema.columns where table_name='" + tablename + "'"
-				+ property_name + "'))";
-		ResultSet rs = stmt.executeQuery(col_description_query);
-		rs.first();
-		System.out.println(rs.getString(1));
-		String column_name = rs.getString(1);
-		return column_name;
-	}
-
 	private static void create_categorical_style_files(String tablename, String property_title, String property_name,
-			String layer_type, String col_type) throws SQLException, IOException {
+			String description, String layer_type, String col_type) throws SQLException, IOException {
 
 		System.out.println("start");
 		System.setProperty("user.dir", "/apps/biodiv/map_upload_tmp/styles/" + tablename + "/");
@@ -332,7 +321,7 @@ public class generate_geoserver_styles {
 
 		File file_sld = new File(tmp_dir_path + "/styles/" + tablename + "/" + sld_filename);
 		FileWriter fileWriter1 = new FileWriter(file_sld);
-		fileWriter1.write(String.format(header_tpl, property_title));
+		fileWriter1.write(String.format(header_tpl, description));
 
 		File file_json = new File(tmp_dir_path + "/styles/" + tablename + "/" + json_filename);
 		FileWriter fileWriter2 = new FileWriter(file_json);

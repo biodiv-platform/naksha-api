@@ -192,6 +192,7 @@ public class Import_data {
 			break;
 		}
 		int countforLoop = 0;
+
 		Pattern p = Pattern.compile("^\\d{4}[-]?\\d{1,2}[-]?\\d{1,2}[T]?\\d{1,2}:\\d{1,2}:\\d{1,2}$");
 		while ((nextRecord = csvReader.readNext()) != null) {
 			String insertQuery = "insert into " + layer_tablename + "(" + sb.substring(0, sb.length() - 1) + ")"
@@ -200,12 +201,15 @@ public class Import_data {
 			for (int j = 0; j < nextRecord.length; j++) {
 				if (nextRecord[j].matches("-?\\d+(\\.\\d+)?")) {
 					dataType[j] = "decimal";
+
 					insertQuery = insertQuery + "" + nextRecord[j] + ",";
 				} else {
 					dataType[j] = "VARCHAR";
+
 					insertQuery = insertQuery + "'" + nextRecord[j] + "',";
 				}
 			}
+
 			insertQuery = insertQuery.substring(0, insertQuery.length() - 1);
 			insertQuery += " )";
 			if (countforLoop == 0) {
@@ -306,10 +310,10 @@ public class Import_data {
 				}
 				insertQuery = insertQuery.substring(0, insertQuery.length() - 1);
 				insertQuery += " )";
-				System.out.println("");
+
 				stmt.executeUpdate(insertQuery);
 				stmt.executeUpdate(updatetable);
-				System.out.println("");
+
 				countforLoop++;
 			}
 			stmt.executeUpdate(geometryquery);

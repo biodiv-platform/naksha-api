@@ -2,7 +2,6 @@ package com.strandls.naksha.dao;
 
 import java.util.List;
 
-import com.strandls.naksha.pojo.LayerAttributes;
 import com.strandls.naksha.pojo.ObservationLocationInfo;
 
 /**
@@ -19,7 +18,6 @@ public interface LayerDAO {
 	 * @param layerName
 	 * @return
 	 */
-	List<LayerAttributes> getLayerAttributes(String layerName);
 
 	/**
 	 * Get layer names associated with a tag
