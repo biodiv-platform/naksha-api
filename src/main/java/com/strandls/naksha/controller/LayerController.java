@@ -132,6 +132,7 @@ public class LayerController {
 			Double latitude = Double.parseDouble(lat);
 			Double longitude = Double.parseDouble(lon);
 			ObservationLocationInfo locationInfo = layerService.getLayerDetails(latitude, longitude);
+			System.out.println("check acess");
 			return Response.status(Status.OK).entity(locationInfo).build();
 
 		} catch (Exception e) {
