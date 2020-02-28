@@ -213,8 +213,7 @@ public class generate_geoserver_styles {
 			String dbhost = NakshaConfig.getString("geoserver.dbhost");
 			String dbport = NakshaConfig.getString("geoserver.dbport");
 			connection = DriverManager.getConnection("jdbc:postgresql://" + dbhost + ":" + dbport + "/" + db, user,
-					pass);// +db, user
-			// ,pass
+					pass);
 
 		} catch (SQLException e) {
 			System.out.println("Connection Failed! Check output console");

@@ -109,7 +109,6 @@ public class generate_geoserver_layers {
 			String pass, String db) throws ClassNotFoundException, SQLException, IOException {
 
 		Class.forName("org.postgresql.Driver");
-
 		try {
 			String dbhost = NakshaConfig.getString("geoserver.dbhost");
 			String dbport = NakshaConfig.getString("geoserver.dbport");

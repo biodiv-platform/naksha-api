@@ -132,20 +132,11 @@ public class LayerController {
 			Double latitude = Double.parseDouble(lat);
 			Double longitude = Double.parseDouble(lon);
 			ObservationLocationInfo locationInfo = layerService.getLayerDetails(latitude, longitude);
-			System.out.println("check acess");
 			return Response.status(Status.OK).entity(locationInfo).build();
 
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).build();
 		}
 	}
-
-	//
-	// @GET
-	// @Path("/tags")
-	// @Produces(MediaType.APPLICATION_JSON)
-	// public List<String> tags(@QueryParam("tag") String tag) {
-	// return layerService.getLayerNamesWithTag(tag);
-	// }
 
 }

@@ -363,7 +363,7 @@ public class Import_layers {
 				System.out.println(layer_type);
 			}
 
-			List<String> c = modifyCreateLayer(list2);// not for csv
+			List<String> c = modifyCreateLayer(list2);
 
 			for (String c1 : c) {
 				System.out.println(c1);
