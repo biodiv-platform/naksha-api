@@ -79,7 +79,7 @@ public class ObservationController {
 	public Response fetchESAggs(@QueryParam("index") String index, @QueryParam("type") String type,
 			@QueryParam("geoField") String geoField, @QueryParam("precision") Integer precision,
 			@QueryParam("top") Double top, @QueryParam("left") Double left, @QueryParam("bottom") Double bottom,
-			@QueryParam("right") Double right) {
+			@QueryParam("right") Double right, @QueryParam("speciesId") Long speciesId) {
 		try {
 
 			index = index == null ? NakshaConfig.getString("observation.es.index") : index;
@@ -87,7 +87,7 @@ public class ObservationController {
 			geoField = geoField == null ? NakshaConfig.getString("observation.es.geoField") : geoField;
 
 			Map<String, Object> geoHashToDocCount = geoServiceApi.getGeoAggregation(index, type, geoField, precision,
-					top, left, bottom, right);
+					top, left, bottom, right, speciesId);
 			return Response.ok().entity(geoHashToDocCount).build();
 		} catch (Exception e) {
 			return Response.status(Status.BAD_REQUEST).build();
