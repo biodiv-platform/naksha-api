@@ -1,4 +1,4 @@
-package com.strandls.naksha.pojo;
+package com.strandls.naksha.pojo.response;
 
 public class GeoserverLayerStyles {
 

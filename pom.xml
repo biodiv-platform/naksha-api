@@ -1,6 +1,8 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>naksha-api</groupId>
     <artifactId>naksha-api</artifactId>
@@ -20,6 +22,7 @@
         <swagger-maven-plugin.version>3.1.1</swagger-maven-plugin.version>
         <exec-maven-plugin.version>1.3.2</exec-maven-plugin.version>
         <openapi-generator-cli.version>4.0.3</openapi-generator-cli.version>
+        <hibernate-core.version>5.4.1.Final</hibernate-core.version>
 
         <!-- Project property -->
         <war-name>naksha-api</war-name>
@@ -32,12 +35,12 @@
         <repository>
             <id>central</id>
             <name>jfrog-releases</name>
-            <url>https://venus.strandls.com/artifactory/libs-release-local</url>
+            <url>http://pamba.strandls.com/artifactory/libs-release-local</url>
         </repository>
         <snapshotRepository>
             <id>snapshots</id>
             <name>jfrog-snapshots</name>
-            <url>https://venus.strandls.com/artifactory/libs-snapshot-local</url>
+            <url>http://pamba.strandls.com/artifactory/libs-snapshot-local</url>
         </snapshotRepository>
     </distributionManagement>
 
@@ -48,13 +51,13 @@
             </snapshots>
             <id>central</id>
             <name>libs-release</name>
-            <url>https://venus.strandls.com/artifactory/libs-release</url>
+            <url>http://pamba.strandls.com/artifactory/libs-release</url>
         </repository>
         <repository>
             <snapshots />
             <id>snapshots</id>
             <name>libs-snapshot</name>
-            <url>https://venus.strandls.com/artifactory/libs-snapshot</url>
+            <url>http://pamba.strandls.com/artifactory/libs-snapshot</url>
         </repository>
     </repositories>
 
@@ -138,6 +141,12 @@
             <artifactId>postgresql</artifactId>
             <version>42.2.5</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-core -->
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-core</artifactId>
+			<version>${hibernate-core.version}</version>
+		</dependency>
 
         <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-configuration2 -->
         <dependency>
@@ -166,12 +175,12 @@
             <artifactId>httpclient</artifactId>
             <version>4.5.4</version>
         </dependency>
-
+        
         <dependency>
-            <groupId>com.strandls.biodiv</groupId>
-            <artifactId>esmodule-client</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
-        </dependency>
+			<groupId>com.strandls.biodiv</groupId>
+			<artifactId>esmodule-client</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+		</dependency>
 
         <!-- https://mvnrepository.com/artifact/io.swagger/swagger-annotations -->
         <dependency>
@@ -325,7 +334,7 @@
                             <locations>
                                 ${location}
                             </locations>
-                            <schemes>http,https</schemes>
+                            <schemes>http, https</schemes>
                             <host>localhost:8080</host>
                             <basePath>${base-path}</basePath>
                             <info>

@@ -16,5 +16,6 @@ public class NakshaControllerModule extends AbstractModule {
 	protected void configure() {
 		bind(GeoserverController.class).in(Scopes.SINGLETON);
 		bind(LayerController.class).in(Scopes.SINGLETON);
+		bind(ObservationController.class).in(Scopes.SINGLETON);
 	}
 }

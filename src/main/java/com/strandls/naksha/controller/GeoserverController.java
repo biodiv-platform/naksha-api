@@ -20,7 +20,7 @@ import com.google.inject.Inject;
 import com.strandls.naksha.ApiConstants;
 import com.strandls.naksha.geoserver.GeoServerIntegrationService;
 import com.strandls.naksha.geoserver.GeoserverService;
-import com.strandls.naksha.pojo.GeoserverLayerStyles;
+import com.strandls.naksha.pojo.response.GeoserverLayerStyles;
 import com.strandls.naksha.utils.Utils;
 
 import io.swagger.annotations.Api;

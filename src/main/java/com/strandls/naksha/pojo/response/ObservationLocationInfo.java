@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.strandls.naksha.pojo;
+package com.strandls.naksha.pojo.response;
 
 /**
  * @author Abhishek Rudra

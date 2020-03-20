@@ -1,8 +1,9 @@
 package com.strandls.naksha.controller;
 
-import java.io.InputStream;
-import java.util.concurrent.TimeUnit;
+import java.io.IOException;
+import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -10,16 +11,16 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import com.google.inject.Inject;
 import com.strandls.naksha.ApiConstants;
-import com.strandls.naksha.geoserver.GeoServerIntegrationService;
-import com.strandls.naksha.layers.LayerUploadService;
-import com.strandls.naksha.pojo.ObservationLocationInfo;
-import com.sun.jersey.multipart.FormDataBodyPart;
+import com.strandls.naksha.service.MetaLayerService;
 import com.sun.jersey.multipart.FormDataMultiPart;
 
 import io.swagger.annotations.Api;
@@ -36,11 +37,11 @@ import io.swagger.annotations.ApiResponses;
 @Path(ApiConstants.LAYER)
 public class LayerController {
 
+	//@Inject
+	//private GeoServerIntegrationService service;
+	
 	@Inject
-	LayerUploadService layerService;
-
-	@Inject
-	GeoServerIntegrationService service;
+	private MetaLayerService metaLayerService;
 
 	@GET
 	@Path("ping")
@@ -49,6 +50,23 @@ public class LayerController {
 		return "pong";
 	}
 
+	@POST
+	@Path("upload")
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Upload Layer", notes = "Returns succuess failure", response = String.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "file not present", response = String.class),
+			@ApiResponse(code = 500, message = "ERROR", response = String.class) })
+	public Response upload(@Context HttpServletRequest request, final FormDataMultiPart multiPart) {
+		try {
+			Map<String, String> result = metaLayerService.upload(request, multiPart);
+			return Response.ok().entity(result).build();
+		} catch (Exception e) {
+			throw new WebApplicationException(
+					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
+		}
+	}
+/**
 	@POST
 	@Path(ApiConstants.UPLOADSHP)
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -114,7 +132,56 @@ public class LayerController {
 		}
 
 	}
+*/
+	@POST
+	@Path(ApiConstants.DOWNLOADSHP)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Download the shp file", notes = "Return the shp file", response = String.class)
+	public Response downloadShp(@QueryParam("outputFile") String outputFile, @QueryParam("host") String host,
+			@QueryParam("user") String user, @QueryParam("password") String password,
+			@QueryParam("dbName") String dbName, @QueryParam("query") String query, String jsonString) {
 
+		JSONObject jsonObject = new JSONObject(jsonString);
+		outputFile = jsonObject.getString("outputFile");
+		host = jsonObject.getString("host");
+		user = jsonObject.getString("user");
+		password = jsonObject.getString("password");
+		dbName = jsonObject.getString("dbName");
+		String layer = jsonObject.getString("layerName");
+		JSONArray attributeList = jsonObject.getJSONArray("attributeList");
+
+		String selectAttribute = " * ";
+		if (attributeList != null) {
+			selectAttribute = "";
+			attributeList.forEach(attribute -> {
+				JSONObject attributeObject = (JSONObject) attribute;
+				attributeObject.getString("Name");
+			});
+		}
+
+		String ogrCommand = "ogr2ogr ";
+		ogrCommand += "-f \"ESRI Shapefile\" ";
+		ogrCommand += outputFile;
+		String conn = "host=" + host + " user=" + user + " dbname=" + dbName;
+		if (password != null)
+			conn += " password=" + password;
+		ogrCommand += " PG:\"" + conn + "\"";
+		ogrCommand += " -sql";
+		ogrCommand += " \"" + query + "\"";
+
+		ProcessBuilder pb = new ProcessBuilder();
+		pb.command("bash", "-c", ogrCommand);
+		try {
+			Process process1 = pb.start();
+			process1.isAlive();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return Response.ok().entity(ogrCommand).build();
+	}
+
+	/**
 	@GET
 	@Path(ApiConstants.LAYERINFO)
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -135,6 +202,7 @@ public class LayerController {
 			return Response.status(Status.BAD_REQUEST).build();
 		}
 	}
+	*/
 //	@GET
 //	@Path("/attributes")
 //	@Produces(MediaType.APPLICATION_JSON)

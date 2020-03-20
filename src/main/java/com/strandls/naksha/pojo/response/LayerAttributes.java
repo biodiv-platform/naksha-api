@@ -1,4 +1,4 @@
-package com.strandls.naksha.pojo;
+package com.strandls.naksha.pojo.response;
 
 /**
  * Attributes present in a layer
