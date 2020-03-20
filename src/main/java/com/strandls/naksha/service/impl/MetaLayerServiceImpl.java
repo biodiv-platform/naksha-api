@@ -39,7 +39,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		JSONObject jsonObject = MetaLayerUtil.getMetadataAsJson(multiPart);
 		JSONObject layerColumnDescription = (JSONObject) jsonObject.remove("$layerColumnDescription");
 
-		
+		String layerName = multiPart.getField("shp").getContentDisposition().getFileName().split("\\.")[0].toLowerCase();
 		
 		MetaLayer metaLayer = objectMapper.readValue(jsonObject.toJSONString(), MetaLayer.class);
 		metaLayer.setDirPath(dirPath);
@@ -47,18 +47,13 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		String shpFile = copiedFiles.get("shp");
 		String nlt = "PROMOTE_TO_MULTI";
-		String nln = "";
-		String lco = "";
+		String nln = "lyr_" + metaLayer.getId() + "_" + layerName;
+		String lco = null;
 		String query = null;
 		OGR2OGR ogr2ogr = new OGR2OGR(OGR2OGR.SHP_TO_POSTGRES, nlt, nln, lco, query, shpFile);
 		ogr2ogr.execute();
 		
-		
-		//return command;
-
-		//int i = layerService.uploadShpLayer(shpInputStream, dbfInputStream, metadataInputStream, shxInputStream,
-		//		layerName);
-
+		ogr2ogr.addColumnDescription(nln, layerColumnDescription);
 		// Waiting for disk files to be created then reload layers
 		//TimeUnit.SECONDS.sleep(5);
 		//service.getRequest("/rest/reload", null, "POST");

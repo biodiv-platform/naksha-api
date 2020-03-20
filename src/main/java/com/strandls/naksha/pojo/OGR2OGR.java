@@ -4,6 +4,8 @@ import java.io.IOException;
 
 import javax.naming.directory.InvalidAttributesException;
 
+import org.json.simple.JSONObject;
+
 import com.strandls.naksha.NakshaConfig;
 
 public class OGR2OGR {
@@ -102,5 +104,33 @@ public class OGR2OGR {
 			e.printStackTrace();
 		}
 		return -1;
+	}
+
+	public int addColumnDescription(String layerName, JSONObject layerColumnDescription) {
+		
+		String comments = "";
+		
+		for(Object key : layerColumnDescription.keySet()) {
+			String columnName = key.toString();
+			String description = layerColumnDescription.get(key).toString();
+			
+			String comment = "";
+			comment += "PGPASSWORD=" + password;
+			comment += " psql ";
+			comment += " -h " + host;
+			comment += " -d " + dbName;
+			comment += " -a -U " + user;
+			String sqlComment = "COMMENT ON COLUMN public." + layerName + "." + columnName + " IS \'" + description + "\'";
+			comment += " -c " + "\"" + sqlComment + "\"";
+			comment +=";";
+			comments += comment;
+		}
+		
+		ProcessBuilder pb = new ProcessBuilder();
+		pb.command("bash", "-c", comments);
+		
+		//ProcessBuilder builder = new ProcessBuilder("bash", "-c", "PGPASSWORD=" + dbpassword
+		//		+ " psql -h " + dbhost + " -d " + dbname + " -a -U " + dbuser + " -f " + sql_fl);
+		return 0;
 	}
 }
