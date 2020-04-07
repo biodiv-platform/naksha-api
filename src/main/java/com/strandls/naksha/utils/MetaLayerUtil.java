@@ -22,7 +22,7 @@ import com.sun.jersey.multipart.FormDataMultiPart;
 
 public class MetaLayerUtil {
 
-	private static final String TEMP_DIR_PATH = "tmpDir.path";
+	public static final String TEMP_DIR_PATH = "tmpDir.path";
 
 	private static final String[] COMPULSORY_EXTENSIONS = { "shp", "dbf", "shx" };
 	private static final String[] OPTIONAL_EXTENSIONS = { "prj", "sbn", "sbx", "fbn", "fbx", "ain", "aih", "ixs", "mxs",
@@ -102,6 +102,9 @@ public class MetaLayerUtil {
 					Response.status(Response.Status.BAD_REQUEST).entity("Metadata file not present").build());
 		}
 		InputStream metaDataInputStream = formdata.getValueAs(InputStream.class);
-		return (JSONObject) (new JSONParser()).parse(new InputStreamReader(metaDataInputStream, "UTF-8"));
+		InputStreamReader inputStreamReader = new InputStreamReader(metaDataInputStream, "UTF-8");
+		JSONParser parser = new JSONParser();
+		JSONObject jsonObject = (JSONObject) parser.parse(inputStreamReader);
+		return jsonObject;
 	}
 }

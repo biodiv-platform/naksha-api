@@ -1,12 +1,12 @@
 package com.strandls.naksha.dao;
 
+import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
-import com.google.inject.servlet.ServletModule;
 
-public class DaoModule extends ServletModule {
+public class DaoModule extends AbstractModule {
 	
 	@Override
-	protected void configureServlets() {
+	protected void configure() {
 		bind(MetaLayerDao.class).in(Scopes.SINGLETON);
 	}
 }

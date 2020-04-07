@@ -1,10 +1,11 @@
 package com.strandls.naksha.pojo;
 
+import java.io.File;
 import java.io.IOException;
 
 import javax.naming.directory.InvalidAttributesException;
 
-import org.json.simple.JSONObject;
+import org.json.JSONObject;
 
 import com.strandls.naksha.NakshaConfig;
 
@@ -81,7 +82,7 @@ public class OGR2OGR {
 		case POSTGRES_TO_SHP:
 			ogrCommand = "ogr2ogr ";
 			ogrCommand += "-f \"ESRI Shapefile\" ";
-			ogrCommand += shpFile;
+			ogrCommand += shpFile + File.separator + nln + ".shp";
 			conn = "host=" + host + " user=" + user + " dbname=" + dbName + " port=" + port;
 			if (password != null)
 				conn += " password=" + password;
@@ -110,9 +111,9 @@ public class OGR2OGR {
 		
 		String comments = "";
 		
-		for(Object key : layerColumnDescription.keySet()) {
+		for(String key : layerColumnDescription.keySet()) {
 			String columnName = key.toString();
-			String description = layerColumnDescription.get(key).toString();
+			String description = layerColumnDescription.getString(key);
 			
 			String comment = "";
 			comment += "PGPASSWORD=" + password;
@@ -129,8 +130,12 @@ public class OGR2OGR {
 		ProcessBuilder pb = new ProcessBuilder();
 		pb.command("bash", "-c", comments);
 		
-		//ProcessBuilder builder = new ProcessBuilder("bash", "-c", "PGPASSWORD=" + dbpassword
-		//		+ " psql -h " + dbhost + " -d " + dbname + " -a -U " + dbuser + " -f " + sql_fl);
-		return 0;
+		try {
+			pb.start();
+			return 0;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return -1;
 	}
 }

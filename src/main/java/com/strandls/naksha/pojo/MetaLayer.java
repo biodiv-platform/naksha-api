@@ -21,7 +21,7 @@ import com.strandls.naksha.pojo.enumtype.LayerStatus;
 import com.strandls.naksha.pojo.enumtype.LayerType;
 
 @Entity
-@Table(name = "meta_layer")
+@Table(name = "Meta_Layer_Table")
 @XmlRootElement
 @JsonIgnoreProperties
 public class MetaLayer implements Serializable {

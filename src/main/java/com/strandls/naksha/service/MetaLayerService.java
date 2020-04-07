@@ -1,5 +1,6 @@
 package com.strandls.naksha.service;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Map;
 
@@ -12,6 +13,17 @@ import com.sun.jersey.multipart.FormDataMultiPart;
 
 public interface MetaLayerService {
 
-	public Map<String, String> upload(HttpServletRequest request, FormDataMultiPart multiPart) throws IOException, ParseException, InvalidAttributesException, InterruptedException;
-	
+	public static final String WORKSPACE = "biodiv";
+	public static final String DATASTORE = "postgis";
+
+	public Map<String, String> uploadLayer(HttpServletRequest request, FormDataMultiPart multiPart)
+			throws IOException, ParseException, InvalidAttributesException, InterruptedException;
+
+	public void prepareDownloadLayer(String uri, String jsonString)
+			throws InvalidAttributesException, InterruptedException, FileNotFoundException, IOException;
+
+	public String removeLayer(String layerName);
+
+	public String getFileLocation(String hashKey, String layerName);
+
 }

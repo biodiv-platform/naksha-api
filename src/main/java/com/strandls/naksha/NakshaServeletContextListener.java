@@ -28,14 +28,11 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.Scopes;
 import com.google.inject.servlet.GuiceServletContextListener;
-import com.google.inject.servlet.ServletModule;
-import com.strandls.esmodule.controllers.GeoServiceApi;
-import com.strandls.naksha.controller.NakshaControllerModule;
+import com.strandls.naksha.controller.ControllerModule;
 import com.strandls.naksha.dao.DaoModule;
-import com.strandls.naksha.geoserver.GeoserverModule;
 import com.strandls.naksha.service.ServiceModule;
+import com.sun.jersey.guice.JerseyServletModule;
 import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 
 public class NakshaServeletContextListener extends GuiceServletContextListener {
@@ -50,65 +47,48 @@ public class NakshaServeletContextListener extends GuiceServletContextListener {
 
 	@Override
 	protected Injector getInjector() {
-		return Guice.createInjector(new ServletModule() {
-
+		Injector injector = Guice.createInjector(new JerseyServletModule() {
 			@Override
 			protected void configureServlets() {
+				PoolingHttpClientConnectionManager manager = new PoolingHttpClientConnectionManager();
+				manager.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_ROUTE);
+				bind(PoolingHttpClientConnectionManager.class).toInstance(manager);
+				try {
+					Class.forName("org.postgresql.Driver");
+				} catch (ClassNotFoundException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 
-				// Start Geoserver related configurations --------------------------------------
-				//try {
+				Configuration configuration = new Configuration();
 
-					/*
-					 * PoolingHttpClientConnectionManager manager = new
-					 * PoolingHttpClientConnectionManager();
-					 * manager.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_ROUTE);
-					 * bind(PoolingHttpClientConnectionManager.class).toInstance(manager);
-					 * Class.forName("org.postgresql.Driver"); DAOFactory daoFactory =
-					 * DAOFactory.getInstance(); Connection connection = daoFactory.getConnection();
-					 * bind(Connection.class).toInstance(connection);
-					 * bind(ObjectMapper.class).in(Scopes.SINGLETON);
-					 */
-					
-					
-					Configuration configuration = new Configuration();
-
-					try {
-						for (Class<?> cls : getEntityClassesFromPackage("com")) {
-							configuration.addAnnotatedClass(cls);
-						}
-					} catch (ClassNotFoundException | IOException | URISyntaxException e) {
-						e.printStackTrace();
-						logger.error(e.getMessage());
+				try {
+					for (Class<?> cls : getEntityClassesFromPackage("com")) {
+						configuration.addAnnotatedClass(cls);
 					}
+				} catch (ClassNotFoundException | IOException | URISyntaxException e) {
+					e.printStackTrace();
+					logger.error(e.getMessage());
+				}
 
-					configuration = configuration.configure();
-					SessionFactory sessionFactory = configuration.buildSessionFactory();
+				configuration = configuration.configure();
+				SessionFactory sessionFactory = configuration.buildSessionFactory();
 
-					ObjectMapper objectMapper = new ObjectMapper();
-					bind(ObjectMapper.class).toInstance(objectMapper);
-					
-					Map<String, String> props = new HashMap<String, String>();
-					props.put("javax.ws.rs.Application", ApplicationConfig.class.getName());
-					props.put("jersey.config.server.wadl.disableWadl", "true");
+				ObjectMapper objectMapper = new ObjectMapper();
+				bind(ObjectMapper.class).toInstance(objectMapper);
+				bind(SessionFactory.class).toInstance(sessionFactory);
 
-					bind(GeoServiceApi.class).in(Scopes.SINGLETON);
-					bind(SessionFactory.class).toInstance(sessionFactory);
-					serve("/api/*").with(GuiceContainer.class, props);
-					
+				Map<String, String> props = new HashMap<String, String>();
+				props.put("javax.ws.rs.Application", ApplicationConfig.class.getName());
+				props.put("jersey.config.server.wadl.disableWadl", "true");
 
-				/*} catch (ClassNotFoundException e) {
-					logger.error("Error finding postgresql driver.", e);
-				} catch (SQLException e) {
-					logger.error("Error getting database connection.", e);
-				}*/
-
-				// ------------------------ End Geoserver related configurations
+				serve("/api/*").with(GuiceContainer.class, props);
 			}
+		}, new ControllerModule(), new DaoModule(), new ServiceModule());
 
-		},new NakshaControllerModule(), new GeoserverModule(), new DaoModule(), new ServiceModule());
-
+		return injector;
 	}
-	
+
 	protected List<Class<?>> getEntityClassesFromPackage(String packageName)
 			throws URISyntaxException, IOException, ClassNotFoundException {
 
@@ -153,20 +133,26 @@ public class NakshaServeletContextListener extends GuiceServletContextListener {
 	}
 
 	@Override
-	public void contextDestroyed(ServletContextEvent sce) {
-		Injector injector = (Injector) sce.getServletContext().getAttribute(Injector.class.getName());
+	public void contextDestroyed(ServletContextEvent servletContextEvent) {
 
-		PoolingHttpClientConnectionManager httpConnectionManger = injector
-				.getInstance(PoolingHttpClientConnectionManager.class);
-		if (httpConnectionManger != null) {
-			httpConnectionManger.close();
-		}
+		Injector injector = (Injector) servletContextEvent.getServletContext().getAttribute(Injector.class.getName());
 
+		SessionFactory sessionFactory = injector.getInstance(SessionFactory.class);
+		sessionFactory.close();
+
+		super.contextDestroyed(servletContextEvent);
+		// ... First close any background tasks which may be using the DB ...
+		// ... Then close any DB connection pools ...
+
+		// Now deregister JDBC drivers in this context's ClassLoader:
+		// Get the webapp's ClassLoader
 		ClassLoader cl = Thread.currentThread().getContextClassLoader();
+		// Loop through all drivers
 		Enumeration<Driver> drivers = DriverManager.getDrivers();
 		while (drivers.hasMoreElements()) {
 			Driver driver = drivers.nextElement();
 			if (driver.getClass().getClassLoader() == cl) {
+				// This driver was registered by the webapp's ClassLoader, so deregister it:
 				try {
 					logger.info("Deregistering JDBC driver {}", driver);
 					DriverManager.deregisterDriver(driver);
@@ -174,12 +160,12 @@ public class NakshaServeletContextListener extends GuiceServletContextListener {
 					logger.error("Error deregistering JDBC driver {}", driver, ex);
 				}
 			} else {
+				// driver was not registered by the webapp's ClassLoader and may be in use
+				// elsewhere
 				logger.trace("Not deregistering JDBC driver {} as it does not belong to this webapp's ClassLoader",
 						driver);
 			}
 		}
-
-		super.contextDestroyed(sce);
 	}
 
 }
