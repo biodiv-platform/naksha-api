@@ -69,13 +69,17 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		String layerTableName = "lyr_" + metaLayer.getId() + "_" + layerName;
 
 		OGR2OGR ogr2ogr = new OGR2OGR(OGR2OGR.SHP_TO_POSTGRES, null, layerTableName, null, null, copiedFiles.get("shp"));
-		int isUploaded = ogr2ogr.execute();
-		if( isUploaded == -1) {
+		Process process = ogr2ogr.execute();
+		if( process == null) {
 			throw new IOException("Layer upload on the postgis failed");
+		} else {
+			process.waitFor();
 		}
-		int isCommentAdded = ogr2ogr.addColumnDescription(layerTableName, layerColumnDescription);
-		if( isCommentAdded == -1) {
+		process = ogr2ogr.addColumnDescription(layerTableName, layerColumnDescription);
+		if( process == null) {
 			throw new IOException("Comment could not be added to table");
+		} else {
+			process.waitFor();
 		}
 
 		List<String> keywords = new ArrayList<String>();
@@ -138,13 +142,27 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		
 		shapeFileDirectoryPath = shapeFileDirectory.getAbsolutePath();
 		OGR2OGR ogr2ogr = new OGR2OGR(OGR2OGR.POSTGRES_TO_SHP, null, layerName, null, query, shapeFileDirectoryPath);
-		ogr2ogr.execute();
+		Process process = ogr2ogr.execute();
+		if( process == null) {
+			throw new IOException("Shape file creation failed");
+		} else {
+			process.waitFor();
+		}
 		
 		String zipFileLocation = shapeFileDirectoryPath + ".zip";
 
+		zipFolder(zipFileLocation, shapeFileDirectory);
+
+		System.out.println(uri + "/" + hashKey + "/" + layerName);
+		
+		// TODO : send mail notification for download url
+		// return directory.getAbsolutePath();
+	}
+	
+	public void zipFolder(String zipFileLocation, File fileDirectory) throws IOException {
 		FileOutputStream fos = new FileOutputStream(zipFileLocation);
         ZipOutputStream zipOut = new ZipOutputStream(fos);
-        for (File fileToZip : shapeFileDirectory.listFiles()) {
+        for (File fileToZip : fileDirectory.listFiles()) {
             FileInputStream fis = new FileInputStream(fileToZip);
             ZipEntry zipEntry = new ZipEntry(fileToZip.getName());
             zipOut.putNextEntry(zipEntry);
@@ -158,11 +176,6 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
         }
         zipOut.close();
         fos.close();
-		
-		System.out.println(uri + "/" + hashKey + "/" + layerName);
-		
-		// TODO : send mail notification for download url
-		// return directory.getAbsolutePath();
 	}
 	
 	@Override

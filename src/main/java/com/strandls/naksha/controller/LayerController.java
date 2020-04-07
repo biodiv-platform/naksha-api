@@ -17,6 +17,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
+import com.strandls.authentication_utility.filter.ValidateUser;
 import com.strandls.naksha.ApiConstants;
 import com.strandls.naksha.pojo.response.LayerAttributes;
 import com.strandls.naksha.pojo.response.ObservationLocationInfo;
@@ -48,6 +49,7 @@ public interface LayerController {
 	@ApiOperation(value = "Upload Layer", notes = "Returns succuess failure", response = String.class)
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "file not present", response = String.class),
 			@ApiResponse(code = 500, message = "ERROR", response = String.class) })
+	@ValidateUser
 	public Response upload(@Context HttpServletRequest request, final FormDataMultiPart multiPart);
 
 	@POST
@@ -55,6 +57,7 @@ public interface LayerController {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "prepate shape file", notes = "Return the shape file location", response = Map.class)
+	@ValidateUser
 	public Response prepareDownload(@Context HttpServletRequest request, String jsonString) throws FileNotFoundException;
 
 	@GET

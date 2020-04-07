@@ -37,12 +37,13 @@ public class OGR2OGR {
 	private String lco;
 
 	private String ogrCommand;
-	
+
 	private String query;
-	
+
 	private String shpFile;
-	
-	public OGR2OGR(String formatName, String nlt, String nln, String lco, String query, String shpFile) throws InvalidAttributesException {
+
+	public OGR2OGR(String formatName, String nlt, String nln, String lco, String query, String shpFile)
+			throws InvalidAttributesException {
 		super();
 		this.user = NakshaConfig.getString(GEOSERVER_DBUSER);
 		this.dbName = NakshaConfig.getString(GEOSERVER_DBNAME);
@@ -52,11 +53,11 @@ public class OGR2OGR {
 
 		this.formatName = formatName;
 		this.nlt = nlt;
-		if(nlt == null)
+		if (nlt == null)
 			nlt = "PROMOTE_TO_MULTI";
 		this.nln = nln;
 		this.lco = lco;
-		
+
 		this.query = query;
 		this.shpFile = shpFile;
 		init();
@@ -72,11 +73,11 @@ public class OGR2OGR {
 				conn += " password=" + password;
 			ogrCommand += " PG:\"" + conn + "\" ";
 			ogrCommand += shpFile;
-			if(nlt != null) 
+			if (nlt != null)
 				ogrCommand += " -nlt " + nlt;
-			if(nln != null)
+			if (nln != null)
 				ogrCommand += " -nln " + nln;
-			if(lco != null)
+			if (lco != null)
 				ogrCommand += " -lco " + lco;
 			break;
 		case POSTGRES_TO_SHP:
@@ -95,47 +96,51 @@ public class OGR2OGR {
 		}
 	}
 
-	public int execute() throws InterruptedException {
+	public Process execute(String command) throws InterruptedException {
 		ProcessBuilder pb = new ProcessBuilder();
-		pb.command("bash", "-c", ogrCommand);
+		pb.command("bash", "-c", command);
 		try {
-			pb.start();
-			return 0;
+			Process process = pb.start();
+			return process;
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return -1;
+		return null;
 	}
 
-	public int addColumnDescription(String layerName, JSONObject layerColumnDescription) {
-		
+	public Process execute() throws InterruptedException {
+		return execute(ogrCommand);
+	}
+
+	public Process addColumnDescription(String layerName, JSONObject layerColumnDescription) {
+
 		String comments = "";
-		
-		for(String key : layerColumnDescription.keySet()) {
+
+		for (String key : layerColumnDescription.keySet()) {
 			String columnName = key.toString();
 			String description = layerColumnDescription.getString(key);
-			
+
 			String comment = "";
 			comment += "PGPASSWORD=" + password;
 			comment += " psql ";
 			comment += " -h " + host;
 			comment += " -d " + dbName;
 			comment += " -a -U " + user;
-			String sqlComment = "COMMENT ON COLUMN public." + layerName + "." + columnName + " IS \'" + description + "\'";
+			String sqlComment = "COMMENT ON COLUMN public." + layerName + "." + columnName + " IS \'" + description
+					+ "\'";
 			comment += " -c " + "\"" + sqlComment + "\"";
-			comment +=";";
+			comment += ";";
 			comments += comment;
 		}
-		
+
 		ProcessBuilder pb = new ProcessBuilder();
 		pb.command("bash", "-c", comments);
-		
+
 		try {
-			pb.start();
-			return 0;
+			return pb.start();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return -1;
+		return null;
 	}
 }

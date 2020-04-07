@@ -2,16 +2,23 @@ package com.strandls.naksha.controller.impl;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+import javax.naming.directory.InvalidAttributesException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
+import org.pac4j.core.profile.CommonProfile;
+
 import com.google.inject.Inject;
+import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.naksha.controller.LayerController;
 import com.strandls.naksha.pojo.response.LayerAttributes;
 import com.strandls.naksha.service.MetaLayerService;
@@ -41,9 +48,11 @@ public class LayerControllerImpl implements LayerController {
 	@Override
 	public Response prepareDownload(HttpServletRequest request, String jsonString) throws FileNotFoundException {
 
+		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+		System.out.println(profile);
+		
 		String uri = request.getRequestURI();
 		try {
-			/*
 			ExecutorService service = Executors.newFixedThreadPool(10);
 			service.execute(new Runnable() {
 				@Override
@@ -55,8 +64,6 @@ public class LayerControllerImpl implements LayerController {
 					}	
 				}
 			});
-			*/
-			metaLayerService.prepareDownloadLayer(uri, jsonString);
 			Map<String, String> retValue = new HashMap<String, String>();
 			retValue.put("success", "The layer download process has started. You will receive the mail shortly");
 			return Response.ok().entity(retValue).build();
@@ -70,25 +77,6 @@ public class LayerControllerImpl implements LayerController {
 	public Response download(String hashKey, String layerName) throws FileNotFoundException {
 		try {
 			String fileLocation = metaLayerService.getFileLocation(hashKey, layerName);
-			
-			/*
-			File shapeFileDirectory = new File(fileLocation.substring(0, fileLocation.indexOf(".zip")));
-			byte[] buffer = new byte[1024];
-			FileOutputStream fos = new FileOutputStream(fileLocation);
-			ZipOutputStream zos = new ZipOutputStream(fos);
-			for (File file : shapeFileDirectory.listFiles()) {
-				FileInputStream fis = new FileInputStream(file);
-				zos.putNextEntry(new ZipEntry(file.getName()));
-				int length;
-				while ((length = fis.read(buffer)) > 0) {
-					zos.write(buffer, 0, length);
-				}
-				zos.closeEntry();
-				fis.close();
-			}
-			zos.finish();
-			zos.close();
-			*/
 			return Response.ok(new File(fileLocation))
 					.header("Content-Disposition", "attachment; filename=\"" + layerName + "\"").build();
 		} catch (Exception e) {
