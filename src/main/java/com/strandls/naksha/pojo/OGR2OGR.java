@@ -52,9 +52,10 @@ public class OGR2OGR {
 		this.host = NakshaConfig.getString(GEOSERVER_HOST);
 
 		this.formatName = formatName;
-		this.nlt = nlt;
 		if (nlt == null)
-			nlt = "PROMOTE_TO_MULTI";
+			this.nlt = "PROMOTE_TO_MULTI";
+		else
+			this.nlt = nlt;
 		this.nln = nln;
 		this.lco = lco;
 

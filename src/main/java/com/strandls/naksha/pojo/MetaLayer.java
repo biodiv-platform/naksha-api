@@ -5,6 +5,8 @@ import java.sql.Timestamp;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -21,7 +23,7 @@ import com.strandls.naksha.pojo.enumtype.LayerStatus;
 import com.strandls.naksha.pojo.enumtype.LayerType;
 
 @Entity
-@Table(name = "Meta_Layer_Table")
+@Table(name = "`Meta_Layer_Table`")
 @XmlRootElement
 @JsonIgnoreProperties
 public class MetaLayer implements Serializable {
@@ -52,10 +54,12 @@ public class MetaLayer implements Serializable {
 	private String layerDescription;
 
 	@Column(name = "layer_type")
+	@Enumerated(EnumType.STRING)
 	private LayerType layerType;
 
 	// 0 - Inactive, 1 - active
 	@Column(name = "layer_status")
+	@Enumerated(EnumType.STRING)
 	private LayerStatus layerStatus;
 
 	@Column(name = "geo_column")
@@ -97,9 +101,11 @@ public class MetaLayer implements Serializable {
 	private String summaryColumns;
 
 	@Column(name = "download_access")
+	@Enumerated(EnumType.STRING)
 	private DownloadAccess downloadAccess;
 
 	@Column(name = "edit_access")
+	@Enumerated(EnumType.STRING)
 	private EditAccess editAccess;
 
 	// Default attribute column to color by
