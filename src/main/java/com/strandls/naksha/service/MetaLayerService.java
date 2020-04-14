@@ -9,12 +9,13 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.json.simple.parser.ParseException;
 
+import com.strandls.naksha.NakshaConfig;
 import com.sun.jersey.multipart.FormDataMultiPart;
 
 public interface MetaLayerService {
 
-	public static final String WORKSPACE = "biodiv";
-	public static final String DATASTORE = "ibp";
+	public static final String WORKSPACE = NakshaConfig.getString("workspace");
+	public static final String DATASTORE = NakshaConfig.getString("datastore");
 
 	public Map<String, String> uploadLayer(HttpServletRequest request, FormDataMultiPart multiPart)
 			throws IOException, ParseException, InvalidAttributesException, InterruptedException;

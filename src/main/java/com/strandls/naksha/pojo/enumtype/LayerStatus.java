@@ -8,6 +8,8 @@ import javax.xml.bind.annotation.XmlType;
 @XmlEnum
 public enum LayerStatus {
 
+	@XmlEnumValue("Pending")
+	PENDING("PENDING"),
 	@XmlEnumValue("InActive")
 	INACTIVE("INACTIVE"),
 	@XmlEnumValue("Active")
