@@ -14,7 +14,7 @@ import com.sun.jersey.multipart.FormDataMultiPart;
 public interface MetaLayerService {
 
 	public static final String WORKSPACE = "biodiv";
-	public static final String DATASTORE = "postgis";
+	public static final String DATASTORE = "ibp";
 
 	public Map<String, String> uploadLayer(HttpServletRequest request, FormDataMultiPart multiPart)
 			throws IOException, ParseException, InvalidAttributesException, InterruptedException;
