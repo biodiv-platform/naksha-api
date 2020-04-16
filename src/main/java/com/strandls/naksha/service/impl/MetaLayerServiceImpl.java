@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -94,7 +93,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	}
 	
 	@Override
-	public void prepareDownloadLayer(String uri, String jsonString) throws InvalidAttributesException, InterruptedException, IOException {
+	public void prepareDownloadLayer(String uri, String hashKey, String jsonString) throws InvalidAttributesException, InterruptedException, IOException {
 		
 		JSONObject jsonObject = new JSONObject(jsonString);
 		
@@ -117,7 +116,6 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			directory.mkdir();
 		}
 		
-		String hashKey = UUID.randomUUID().toString();
 		String shapeFileDirectoryPath = DOWNLOAD_BASE_LOCATION + File.separator + hashKey;
 		File shapeFileDirectory = new File(shapeFileDirectoryPath);
 		if(!shapeFileDirectory.exists()) {
@@ -180,7 +178,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	
 	@Override
 	public String getFileLocation(String hashKey, String layerName) {
-		return DOWNLOAD_BASE_LOCATION + File.separator + hashKey + File.separator + layerName;
+		return DOWNLOAD_BASE_LOCATION + File.separator + hashKey + File.separator + layerName + ".zip";
 	}
 	
 	@Override

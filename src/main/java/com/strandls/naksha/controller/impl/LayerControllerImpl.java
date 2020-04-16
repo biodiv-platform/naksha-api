@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -15,6 +16,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
+import org.json.JSONObject;
 import org.pac4j.core.profile.CommonProfile;
 
 import com.google.inject.Inject;
@@ -52,19 +54,26 @@ public class LayerControllerImpl implements LayerController {
 		System.out.println(profile);
 		
 		String uri = request.getRequestURI();
+		String hashKey = UUID.randomUUID().toString();
+		
 		try {
 			ExecutorService service = Executors.newFixedThreadPool(10);
 			service.execute(new Runnable() {
 				@Override
 				public void run() {
 					try {
-						metaLayerService.prepareDownloadLayer(uri, jsonString);
+						metaLayerService.prepareDownloadLayer(uri, hashKey, jsonString);
 					} catch (InvalidAttributesException | InterruptedException | IOException e) {
 						e.printStackTrace();
 					}	
 				}
 			});
+			
+			JSONObject jsonObject = new JSONObject(jsonString);
+			String layerName = jsonObject.getString("layerName");
+			
 			Map<String, String> retValue = new HashMap<String, String>();
+			retValue.put("url", uri + "/" + hashKey + "/" + layerName);
 			retValue.put("success", "The layer download process has started. You will receive the mail shortly");
 			return Response.ok().entity(retValue).build();
 		} catch (Exception e) {

@@ -20,11 +20,10 @@ public interface MetaLayerService {
 	public Map<String, String> uploadLayer(HttpServletRequest request, FormDataMultiPart multiPart)
 			throws IOException, ParseException, InvalidAttributesException, InterruptedException;
 
-	public void prepareDownloadLayer(String uri, String jsonString)
+	public void prepareDownloadLayer(String uri, String hashKey, String jsonString)
 			throws InvalidAttributesException, InterruptedException, FileNotFoundException, IOException;
 
 	public String removeLayer(String layerName);
 
 	public String getFileLocation(String hashKey, String layerName);
-
 }
