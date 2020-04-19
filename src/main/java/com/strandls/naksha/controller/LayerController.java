@@ -6,6 +6,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -19,6 +20,7 @@ import javax.ws.rs.core.StreamingOutput;
 
 import com.strandls.authentication_utility.filter.ValidateUser;
 import com.strandls.naksha.ApiConstants;
+import com.strandls.naksha.pojo.MetaLayer;
 import com.strandls.naksha.pojo.response.LayerAttributes;
 import com.strandls.naksha.pojo.response.ObservationLocationInfo;
 import com.sun.jersey.multipart.FormDataMultiPart;
@@ -42,6 +44,13 @@ public interface LayerController {
 	@Produces(MediaType.TEXT_PLAIN)
 	public String ping();
 
+	@Path("all")
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Get meta data of all the layers", response = MetaLayer.class, responseContainer = "List")
+	public Response findAll(@Context HttpServletRequest request, @DefaultValue("-1") @QueryParam("limit") Integer limit,
+			@DefaultValue("-1") @QueryParam("offset") Integer offset);
+
 	@POST
 	@Path("upload")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -58,15 +67,17 @@ public interface LayerController {
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "prepate shape file", notes = "Return the shape file location", response = Map.class)
 	@ValidateUser
-	public Response prepareDownload(@Context HttpServletRequest request, String jsonString) throws FileNotFoundException;
+	public Response prepareDownload(@Context HttpServletRequest request, String jsonString)
+			throws FileNotFoundException;
 
 	@GET
 	@Path("download/{hashKey}/{layerName}")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces("application/zip")
 	@ApiOperation(value = "Download the shp file", notes = "Return the shp file", response = StreamingOutput.class)
-	public Response download(@PathParam("hashKey") String hashKey, @PathParam("layerName") String layerName) throws FileNotFoundException;
-	
+	public Response download(@PathParam("hashKey") String hashKey, @PathParam("layerName") String layerName)
+			throws FileNotFoundException;
+
 	@GET
 	@Path(ApiConstants.LAYERINFO)
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -79,8 +90,7 @@ public interface LayerController {
 	@Path("/attributes")
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<LayerAttributes> attributes(@QueryParam("layername") String layername);
-	
-	
+
 	@GET
 	@Path("/tags")
 	@Produces(MediaType.APPLICATION_JSON)

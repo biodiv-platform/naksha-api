@@ -85,6 +85,15 @@ public abstract class AbstractDao<T, K extends Serializable> {
 		return entities;
 	}
 	
+	@SuppressWarnings("unchecked")
+	public List<T> findAll(int limit, int offset) {
+		Session session = sessionFactory.openSession();
+		Criteria criteria = session.createCriteria(daoType)
+				.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+		List<T> entities = criteria.setFirstResult(offset).setMaxResults(limit).list();
+		return entities;
+	}
+	
 	//TODO:improve this to do dynamic finder on any property
 	public T findByPropertyWithCondition(String property, String value, String condition) {
 		String queryStr = "" +

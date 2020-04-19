@@ -22,6 +22,7 @@ import org.pac4j.core.profile.CommonProfile;
 import com.google.inject.Inject;
 import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.naksha.controller.LayerController;
+import com.strandls.naksha.pojo.MetaLayer;
 import com.strandls.naksha.pojo.response.LayerAttributes;
 import com.strandls.naksha.service.MetaLayerService;
 import com.sun.jersey.multipart.FormDataMultiPart;
@@ -37,9 +38,20 @@ public class LayerControllerImpl implements LayerController {
 	}
 
 	@Override
+	public Response findAll(HttpServletRequest request, Integer limit, Integer offset) {
+		try {
+			List<MetaLayer> metaLayers = metaLayerService.findAll(request, limit, offset);
+			return Response.ok().entity(metaLayers).build();
+		} catch (Exception e) {
+			throw new WebApplicationException(
+					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
+		}
+	}
+
+	@Override
 	public Response upload(@Context HttpServletRequest request, final FormDataMultiPart multiPart) {
 		try {
-			Map<String, String> result = metaLayerService.uploadLayer(request, multiPart);
+			Map<String, Object> result = metaLayerService.uploadLayer(request, multiPart);
 			return Response.ok().entity(result).build();
 		} catch (Exception e) {
 			throw new WebApplicationException(
@@ -52,10 +64,10 @@ public class LayerControllerImpl implements LayerController {
 
 		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 		System.out.println(profile);
-		
+
 		String uri = request.getRequestURI();
 		String hashKey = UUID.randomUUID().toString();
-		
+
 		try {
 			ExecutorService service = Executors.newFixedThreadPool(10);
 			service.execute(new Runnable() {
@@ -65,13 +77,13 @@ public class LayerControllerImpl implements LayerController {
 						metaLayerService.prepareDownloadLayer(uri, hashKey, jsonString);
 					} catch (InvalidAttributesException | InterruptedException | IOException e) {
 						e.printStackTrace();
-					}	
+					}
 				}
 			});
-			
+
 			JSONObject jsonObject = new JSONObject(jsonString);
 			String layerName = jsonObject.getString("layerName");
-			
+
 			Map<String, String> retValue = new HashMap<String, String>();
 			retValue.put("url", uri + "/" + hashKey + "/" + layerName);
 			retValue.put("success", "The layer download process has started. You will receive the mail shortly");

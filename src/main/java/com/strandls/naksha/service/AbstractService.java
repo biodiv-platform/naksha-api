@@ -65,6 +65,15 @@ public abstract class  AbstractService<T> {
 		}
 	}
 	
+	public List<T> findAll(int limit, int offset) {
+		try {
+			List<T> entities = this.dao.findAll(limit, offset);
+			return entities;
+		} catch (RuntimeException re) {
+			throw re;
+		}
+	}
+	
 	public T findByPropertyWithCondtion(String property, String value, String condition) {
 		return dao.findByPropertyWithCondition(property, value, condition);
 	}

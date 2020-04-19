@@ -30,6 +30,8 @@ import com.strandls.naksha.service.MetaLayerService;
 import com.strandls.naksha.utils.MetaLayerUtil;
 import com.sun.jersey.multipart.FormDataMultiPart;
 
+import it.geosolutions.geoserver.rest.decoder.RESTLayer;
+
 public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements MetaLayerService {
 
 	@Inject
@@ -46,12 +48,23 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	}
 
 	@Override
-	public Map<String, String> uploadLayer(HttpServletRequest request, FormDataMultiPart multiPart)
+	public List<MetaLayer> findAll(HttpServletRequest request, Integer limit, Integer offset) {
+		List<MetaLayer> metaLayers;
+		if(limit == -1 || offset == -1)
+			metaLayers = findAll();
+		else
+			metaLayers = findAll(limit, offset);
+		return metaLayers;
+	}
+	
+	@Override
+	public Map<String, Object> uploadLayer(HttpServletRequest request, FormDataMultiPart multiPart)
 			throws IOException, ParseException, InvalidAttributesException, InterruptedException {
-		Map<String, String> result = new HashMap<String, String>();
+		Map<String, Object> result = new HashMap<String, Object>();
 
 		Map<String, String> copiedFiles = MetaLayerUtil.copyFiles(multiPart);
 		String dirPath = copiedFiles.get("dirPath");
+		result.put("Files copied to", dirPath);
 
 		String jsonString = MetaLayerUtil.getMetadataAsJson(multiPart).toJSONString();
 		JSONObject jsonObject = new JSONObject(jsonString);
@@ -64,6 +77,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		MetaLayer metaLayer = objectMapper.readValue(jsonObject.toString(), MetaLayer.class);
 		metaLayer.setDirPath(dirPath);
 		metaLayer = save(metaLayer);
+		result.put("Meta layer table entry", metaLayer.getId());
 
 		String layerTableName = "lyr_" + metaLayer.getId() + "_" + layerName;
 
@@ -73,12 +87,14 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			throw new IOException("Layer upload on the postgis failed");
 		} else {
 			process.waitFor();
+			result.put("Table created for layer", layerTableName);
 		}
 		process = ogr2ogr.addColumnDescription(layerTableName, layerColumnDescription);
 		if( process == null) {
 			throw new IOException("Comment could not be added to table");
 		} else {
 			process.waitFor();
+			result.put("Comments added", "success");
 		}
 
 		List<String> keywords = new ArrayList<String>();
@@ -87,8 +103,10 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		if(!isPublished) {
 			throw new IOException("Geoserver publication of layer failed");
 		}
+		result.put("Uplaoded on geoserver", layerTableName);
+		RESTLayer layer = geoserverService.getManager().getReader().getLayer(WORKSPACE, layerTableName);
+		result.put("Geoserver layer url", layer.getResourceUrl());
 
-		result.put("success", "File upload succesful");
 		return result;
 	}
 	
