@@ -73,4 +73,11 @@ public interface GeoserverController {
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "Tiles not found", response = String.class) })
 	public Response fetchTiles(@PathParam("layer") String layer, @PathParam("z") String z, @PathParam("x") String x,
 			@PathParam("y") String y);
+	
+	@GET
+	@Path(ApiConstants.STYLES + "/{layerName}/{columnName}")
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Fetch Styles", notes = "Retruns Styles", response = String.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Styles not found", response = String.class) })
+	public Response fetchStyle1(@PathParam("layerName") String layerName, @PathParam("columnName") String columnName);
 }

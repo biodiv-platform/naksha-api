@@ -19,6 +19,8 @@ public interface MetaLayerService {
 	public static final String WORKSPACE = NakshaConfig.getString("workspace");
 	public static final String DATASTORE = NakshaConfig.getString("datastore");
 
+	public MetaLayer findByLayerTableName(String layerName);
+	
 	public List<MetaLayer> findAll(HttpServletRequest request, Integer limit, Integer offset);
 
 	public Map<String, Object> uploadLayer(HttpServletRequest request, FormDataMultiPart multiPart)

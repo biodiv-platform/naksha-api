@@ -15,13 +15,18 @@ import org.w3c.dom.Document;
 import com.google.inject.Inject;
 import com.strandls.naksha.controller.GeoserverController;
 import com.strandls.naksha.pojo.response.GeoserverLayerStyles;
+import com.strandls.naksha.pojo.style.JsonStyle;
 import com.strandls.naksha.service.GeoserverService;
+import com.strandls.naksha.service.GeoserverStyleService;
 import com.strandls.naksha.utils.Utils;
 
 public class GeoserverControllerImpl implements GeoserverController {
 
 	@Inject
 	private GeoserverService geoserverService;
+	
+	@Inject
+	private GeoserverStyleService geoserverStyleService;
 
 	@Override
 	public Response fetchAllLayers(String workspace) {
@@ -123,6 +128,17 @@ public class GeoserverControllerImpl implements GeoserverController {
 		String url = "gwc/service/tms/1.0.0/" + layer + "@EPSG%3A900913@pbf/" + z + "/" + x + "/" + y + ".pbf";
 		byte[] file = geoserverService.getRequest(url, null);
 		return Response.ok(new ByteArrayInputStream(file)).build();
+	}
+
+	@Override
+	public Response fetchStyle1(String layerName, String columnName) {
+		try {
+			JsonStyle style = geoserverStyleService.generateJsonStyle(layerName, columnName);
+			return Response.status(Status.OK).entity(style).build();
+		} catch (Exception e) {
+			throw new WebApplicationException(
+					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
+		}
 	}
 
 }

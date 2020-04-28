@@ -39,24 +39,30 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 	@Inject
 	private GeoserverService geoserverService;
-	
-	public static final String DOWNLOAD_BASE_LOCATION = NakshaConfig.getString(MetaLayerUtil.TEMP_DIR_PATH) + File.separator + "temp_zip";
-	
+
+	public static final String DOWNLOAD_BASE_LOCATION = NakshaConfig.getString(MetaLayerUtil.TEMP_DIR_PATH)
+			+ File.separator + "temp_zip";
+
 	@Inject
 	public MetaLayerServiceImpl(MetaLayerDao dao) {
 		super(dao);
 	}
 
 	@Override
+	public MetaLayer findByLayerTableName(String layerName) {
+		return findByPropertyWithCondtion("layerTableName", layerName, "=");
+	}
+
+	@Override
 	public List<MetaLayer> findAll(HttpServletRequest request, Integer limit, Integer offset) {
 		List<MetaLayer> metaLayers;
-		if(limit == -1 || offset == -1)
+		if (limit == -1 || offset == -1)
 			metaLayers = findAll();
 		else
 			metaLayers = findAll(limit, offset);
 		return metaLayers;
 	}
-	
+
 	@Override
 	public Map<String, Object> uploadLayer(HttpServletRequest request, FormDataMultiPart multiPart)
 			throws IOException, ParseException, InvalidAttributesException, InterruptedException {
@@ -68,7 +74,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		String jsonString = MetaLayerUtil.getMetadataAsJson(multiPart).toJSONString();
 		JSONObject jsonObject = new JSONObject(jsonString);
-		
+
 		JSONObject layerColumnDescription = (JSONObject) jsonObject.remove("$layerColumnDescription");
 
 		String layerName = multiPart.getField("shp").getContentDisposition().getFileName().split("\\.")[0]
@@ -80,17 +86,20 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		result.put("Meta layer table entry", metaLayer.getId());
 
 		String layerTableName = "lyr_" + metaLayer.getId() + "_" + layerName;
+		metaLayer.setLayerTableName(layerTableName);
+		update(metaLayer);
 
-		OGR2OGR ogr2ogr = new OGR2OGR(OGR2OGR.SHP_TO_POSTGRES, null, layerTableName, null, null, copiedFiles.get("shp"));
+		OGR2OGR ogr2ogr = new OGR2OGR(OGR2OGR.SHP_TO_POSTGRES, null, layerTableName, null, null,
+				copiedFiles.get("shp"));
 		Process process = ogr2ogr.execute();
-		if( process == null) {
+		if (process == null) {
 			throw new IOException("Layer upload on the postgis failed");
 		} else {
 			process.waitFor();
 			result.put("Table created for layer", layerTableName);
 		}
 		process = ogr2ogr.addColumnDescription(layerTableName, layerColumnDescription);
-		if( process == null) {
+		if (process == null) {
 			throw new IOException("Comment could not be added to table");
 		} else {
 			process.waitFor();
@@ -99,8 +108,9 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		List<String> keywords = new ArrayList<String>();
 		keywords.add(layerTableName);
-		boolean isPublished = geoserverService.publishLayer(WORKSPACE, DATASTORE, layerTableName, null, layerTableName, keywords);
-		if(!isPublished) {
+		boolean isPublished = geoserverService.publishLayer(WORKSPACE, DATASTORE, layerTableName, null, layerTableName,
+				keywords);
+		if (!isPublished) {
 			throw new IOException("Geoserver publication of layer failed");
 		}
 		result.put("Uplaoded on geoserver", layerTableName);
@@ -109,99 +119,100 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		return result;
 	}
-	
+
 	@Override
-	public void prepareDownloadLayer(String uri, String hashKey, String jsonString) throws InvalidAttributesException, InterruptedException, IOException {
-		
+	public void prepareDownloadLayer(String uri, String hashKey, String jsonString)
+			throws InvalidAttributesException, InterruptedException, IOException {
+
 		JSONObject jsonObject = new JSONObject(jsonString);
-		
+
 		String layerName = jsonObject.getString("layerName");
-		
+
 		List<String> attributeList = new ArrayList<String>();
 		JSONArray attributeArray = jsonObject.getJSONArray("attributeList");
 		attributeArray.forEach(jO -> {
 			attributeList.add(jO.toString());
 		});
-		
+
 		JSONArray filterArray = jsonObject.getJSONArray("filterArray");
-		filterArray.forEach( fA -> {
-			
+		filterArray.forEach(fA -> {
+
 		});
-		
-		
+
 		File directory = new File(DOWNLOAD_BASE_LOCATION);
-		if(!directory.exists()) {
+		if (!directory.exists()) {
 			directory.mkdir();
 		}
-		
+
 		String shapeFileDirectoryPath = DOWNLOAD_BASE_LOCATION + File.separator + hashKey;
 		File shapeFileDirectory = new File(shapeFileDirectoryPath);
-		if(!shapeFileDirectory.exists()) {
+		if (!shapeFileDirectory.exists()) {
 			shapeFileDirectory.mkdir();
 		}
-		
+
 		shapeFileDirectoryPath += File.separator + layerName;
 		shapeFileDirectory = new File(shapeFileDirectoryPath);
-		if(!shapeFileDirectory.exists()) {
+		if (!shapeFileDirectory.exists()) {
 			shapeFileDirectory.mkdir();
 		}
-		
+
 		String attributeString = "";
-		if(attributeList.size() > 0) {
-			for(String attribute : attributeList) {
+		if (attributeList.size() > 0) {
+			for (String attribute : attributeList) {
 				attributeString += attribute + ", ";
 			}
 			attributeString += "wkb_geometry ";
-		} else 
+		} else
 			attributeString = "*";
 		String query = "select " + attributeString + " from " + layerName;
-		
+
 		shapeFileDirectoryPath = shapeFileDirectory.getAbsolutePath();
 		OGR2OGR ogr2ogr = new OGR2OGR(OGR2OGR.POSTGRES_TO_SHP, null, layerName, null, query, shapeFileDirectoryPath);
 		Process process = ogr2ogr.execute();
-		if( process == null) {
+		if (process == null) {
 			throw new IOException("Shape file creation failed");
 		} else {
 			process.waitFor();
 		}
-		
+
 		String zipFileLocation = shapeFileDirectoryPath + ".zip";
 
 		zipFolder(zipFileLocation, shapeFileDirectory);
 
 		System.out.println(uri + "/" + hashKey + "/" + layerName);
-		
+
 		// TODO : send mail notification for download url
 		// return directory.getAbsolutePath();
 	}
-	
+
 	public void zipFolder(String zipFileLocation, File fileDirectory) throws IOException {
 		FileOutputStream fos = new FileOutputStream(zipFileLocation);
-        ZipOutputStream zipOut = new ZipOutputStream(fos);
-        for (File fileToZip : fileDirectory.listFiles()) {
-            FileInputStream fis = new FileInputStream(fileToZip);
-            ZipEntry zipEntry = new ZipEntry(fileToZip.getName());
-            zipOut.putNextEntry(zipEntry);
- 
-            byte[] bytes = new byte[1024];
-            int length;
-            while((length = fis.read(bytes)) >= 0) {
-                zipOut.write(bytes, 0, length);
-            }
-            fis.close();
-        }
-        zipOut.close();
-        fos.close();
+		ZipOutputStream zipOut = new ZipOutputStream(fos);
+		for (File fileToZip : fileDirectory.listFiles()) {
+			FileInputStream fis = new FileInputStream(fileToZip);
+			ZipEntry zipEntry = new ZipEntry(fileToZip.getName());
+			zipOut.putNextEntry(zipEntry);
+
+			byte[] bytes = new byte[1024];
+			int length;
+			while ((length = fis.read(bytes)) >= 0) {
+				zipOut.write(bytes, 0, length);
+			}
+			fis.close();
+		}
+		zipOut.close();
+		fos.close();
 	}
-	
+
 	@Override
 	public String getFileLocation(String hashKey, String layerName) {
 		return DOWNLOAD_BASE_LOCATION + File.separator + hashKey + File.separator + layerName + ".zip";
 	}
-	
+
 	@Override
 	public String removeLayer(String layerName) {
-		// TODO : Remove the copied files from the file system. (Need to take a call on this)
+		// TODO : Remove the copied files from the file system. (Need to take a call on
+		// this)
 		// TODO : Delete table from the database
 		// TODO : Mark the entry in the metalayer as inactive.
 		// TODO : remove-publish layer from the geoserver
