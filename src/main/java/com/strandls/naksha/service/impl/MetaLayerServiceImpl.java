@@ -67,30 +67,46 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	public Map<String, Object> uploadLayer(HttpServletRequest request, FormDataMultiPart multiPart)
 			throws IOException, ParseException, InvalidAttributesException, InterruptedException {
 		Map<String, Object> result = new HashMap<String, Object>();
-
-		Map<String, String> copiedFiles = MetaLayerUtil.copyFiles(multiPart);
-		String dirPath = copiedFiles.get("dirPath");
-		result.put("Files copied to", dirPath);
-
+		
 		String jsonString = MetaLayerUtil.getMetadataAsJson(multiPart).toJSONString();
 		JSONObject jsonObject = new JSONObject(jsonString);
-
 		JSONObject layerColumnDescription = (JSONObject) jsonObject.remove("$layerColumnDescription");
+		JSONObject layerFileDescription = (JSONObject) jsonObject.remove("$layerFileDescription");
 
-		String layerName = multiPart.getField("shp").getContentDisposition().getFileName().split("\\.")[0]
-				.toLowerCase();
-
+		String fileType = layerFileDescription.getString("fileType");
+		Map<String, String> copiedFiles;
+		String ogrInputFileLocation;
+		String layerName;
+		
+		if("shp".equals(fileType)) {
+			copiedFiles = MetaLayerUtil.copyFiles(multiPart);
+			ogrInputFileLocation = copiedFiles.get("shp");
+			layerName = multiPart.getField("shp").getContentDisposition().getFileName().split("\\.")[0]
+					.toLowerCase();
+		} else if("csv".equals(fileType)) {
+			copiedFiles = MetaLayerUtil.copyCSVFile(multiPart, layerFileDescription);
+			ogrInputFileLocation = copiedFiles.get("vrt");
+			layerName = multiPart.getField("csv").getContentDisposition().getFileName().split("\\.")[0]
+					.toLowerCase();
+		} else {
+			throw new IllegalArgumentException("Invalid file type");
+		}
+		
+		String dirPath = copiedFiles.get("dirPath");
+		result.put("Files copied to", dirPath);
+				
 		MetaLayer metaLayer = objectMapper.readValue(jsonObject.toString(), MetaLayer.class);
 		metaLayer.setDirPath(dirPath);
 		metaLayer = save(metaLayer);
 		result.put("Meta layer table entry", metaLayer.getId());
-
+		
 		String layerTableName = "lyr_" + metaLayer.getId() + "_" + layerName;
 		metaLayer.setLayerTableName(layerTableName);
 		update(metaLayer);
 
 		OGR2OGR ogr2ogr = new OGR2OGR(OGR2OGR.SHP_TO_POSTGRES, null, layerTableName, null, null,
-				copiedFiles.get("shp"));
+				ogrInputFileLocation);
+		
 		Process process = ogr2ogr.execute();
 		if (process == null) {
 			throw new IOException("Layer upload on the postgis failed");
@@ -116,7 +132,6 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		result.put("Uplaoded on geoserver", layerTableName);
 		RESTLayer layer = geoserverService.getManager().getReader().getLayer(WORKSPACE, layerTableName);
 		result.put("Geoserver layer url", layer.getResourceUrl());
-
 		return result;
 	}
 
