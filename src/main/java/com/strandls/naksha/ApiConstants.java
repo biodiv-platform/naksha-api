@@ -13,5 +13,5 @@ public class ApiConstants {
 	public static final String LEGEND = "/legend";
 	public static final String GEOSERVER = "/geoserver";
 	public static final String LAYERINFO = "/layerinfo";
-
+	public static final String OBSERVATION = "/observation";
 }
