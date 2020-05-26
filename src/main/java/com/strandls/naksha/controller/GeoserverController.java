@@ -16,7 +16,8 @@ import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.w3c.dom.Document;
 
-import com.google.inject.Inject;
+import javax.inject.Inject;
+
 import com.strandls.naksha.ApiConstants;
 import com.strandls.naksha.geoserver.GeoServerIntegrationService;
 import com.strandls.naksha.geoserver.GeoserverService;

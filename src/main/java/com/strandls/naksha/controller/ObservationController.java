@@ -17,7 +17,8 @@ import javax.ws.rs.core.Response.Status;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 
-import com.google.inject.Inject;
+import javax.inject.Inject;
+
 import com.strandls.esmodule.controllers.GeoServiceApi;
 import com.strandls.naksha.ApiConstants;
 import com.strandls.naksha.NakshaConfig;
