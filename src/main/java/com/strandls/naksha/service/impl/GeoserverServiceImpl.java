@@ -1,5 +1,7 @@
 package com.strandls.naksha.service.impl;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -86,6 +88,11 @@ public class GeoserverServiceImpl implements GeoserverService {
 		layerEncoder.setEnabled(true);
 
 		return manager.getPublisher().publishDBLayer(workspace, datastore, fte, layerEncoder);
+	}
+	
+	@Override
+	public boolean publishGeoTiffLayer(String workspace, String datastore, File geoTiffFile) throws FileNotFoundException {
+		return manager.getPublisher().publishGeoTIFF(workspace, datastore, geoTiffFile);
 	}
 
 	@Override

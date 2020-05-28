@@ -1,5 +1,7 @@
 package com.strandls.naksha.service;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.List;
 
 import org.apache.http.NameValuePair;
@@ -20,5 +22,7 @@ public interface GeoserverService {
 	public boolean removeLayer(String workspace, String layerName);
 
 	public byte[] getRequest(String url, List<NameValuePair> params);
+
+	boolean publishGeoTiffLayer(String workspace, String datastore, File geoTiffFile) throws FileNotFoundException;
 
 }

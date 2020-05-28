@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -63,11 +64,24 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		return metaLayers;
 	}
 
+	public void uploadGeoTiff(String geoLayerName, String inputGeoTiffFileLocation, Map<String, Object> result)
+			throws UnsupportedEncodingException, IOException, ParseException {
+		File inputGeoTiffFile = new File(inputGeoTiffFileLocation);
+		boolean isPublished = geoserverService.publishGeoTiffLayer(WORKSPACE, geoLayerName, inputGeoTiffFile);
+
+		if (!isPublished) {
+			throw new IOException("Geoserver publication of layer failed");
+		}
+		result.put("Uplaoded on geoserver", geoLayerName);
+		RESTLayer layer = geoserverService.getManager().getReader().getLayer(WORKSPACE, geoLayerName);
+		result.put("Geoserver layer url", layer.getResourceUrl());
+	}
+
 	@Override
 	public Map<String, Object> uploadLayer(HttpServletRequest request, FormDataMultiPart multiPart)
 			throws IOException, ParseException, InvalidAttributesException, InterruptedException {
 		Map<String, Object> result = new HashMap<String, Object>();
-		
+
 		String jsonString = MetaLayerUtil.getMetadataAsJson(multiPart).toJSONString();
 		JSONObject jsonObject = new JSONObject(jsonString);
 		JSONObject layerColumnDescription = (JSONObject) jsonObject.remove("$layerColumnDescription");
@@ -77,36 +91,58 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		Map<String, String> copiedFiles;
 		String ogrInputFileLocation;
 		String layerName;
-		
-		if("shp".equals(fileType)) {
+
+		if ("shp".equals(fileType)) {
 			copiedFiles = MetaLayerUtil.copyFiles(multiPart);
 			ogrInputFileLocation = copiedFiles.get("shp");
-			layerName = multiPart.getField("shp").getContentDisposition().getFileName().split("\\.")[0]
-					.toLowerCase();
-		} else if("csv".equals(fileType)) {
+			layerName = multiPart.getField("shp").getContentDisposition().getFileName().split("\\.")[0].toLowerCase();
+		} else if ("csv".equals(fileType)) {
 			copiedFiles = MetaLayerUtil.copyCSVFile(multiPart, layerFileDescription);
 			ogrInputFileLocation = copiedFiles.get("vrt");
-			layerName = multiPart.getField("csv").getContentDisposition().getFileName().split("\\.")[0]
-					.toLowerCase();
+			layerName = multiPart.getField("csv").getContentDisposition().getFileName().split("\\.")[0].toLowerCase();
+		} else if ("tif".equals(fileType)) {
+			copiedFiles = MetaLayerUtil.copyGeneralFile(multiPart, "tif", false);
+			ogrInputFileLocation = copiedFiles.get("tif");
+			layerName = multiPart.getField("tif").getContentDisposition().getFileName().split("\\.")[0].toLowerCase();
 		} else {
 			throw new IllegalArgumentException("Invalid file type");
 		}
-		
+
 		String dirPath = copiedFiles.get("dirPath");
 		result.put("Files copied to", dirPath);
-				
+
 		MetaLayer metaLayer = objectMapper.readValue(jsonObject.toString(), MetaLayer.class);
 		metaLayer.setDirPath(dirPath);
 		metaLayer = save(metaLayer);
 		result.put("Meta layer table entry", metaLayer.getId());
-		
+
 		String layerTableName = "lyr_" + metaLayer.getId() + "_" + layerName;
 		metaLayer.setLayerTableName(layerTableName);
 		update(metaLayer);
 
+		if ("tif".equals(fileType)) {
+			uploadGeoTiff(layerTableName, ogrInputFileLocation, result);
+			return result;
+		}
+		createDBTable(layerTableName, ogrInputFileLocation, layerColumnDescription, result);
+		
+		List<String> keywords = new ArrayList<String>();
+		keywords.add(layerTableName);
+		boolean isPublished = geoserverService.publishLayer(WORKSPACE, DATASTORE, layerTableName, null, layerTableName,
+				keywords);
+		if (!isPublished) {
+			throw new IOException("Geoserver publication of layer failed");
+		}
+		result.put("Uplaoded on geoserver", layerTableName);
+		RESTLayer layer = geoserverService.getManager().getReader().getLayer(WORKSPACE, layerTableName);
+		result.put("Geoserver layer url", layer.getResourceUrl());
+		return result;
+	}
+	
+	private void createDBTable(String layerTableName, String ogrInputFileLocation, JSONObject layerColumnDescription, Map<String, Object> result) throws InvalidAttributesException, InterruptedException, IOException {
 		OGR2OGR ogr2ogr = new OGR2OGR(OGR2OGR.SHP_TO_POSTGRES, null, layerTableName, null, null,
 				ogrInputFileLocation);
-		
+
 		Process process = ogr2ogr.execute();
 		if (process == null) {
 			throw new IOException("Layer upload on the postgis failed");
@@ -121,18 +157,6 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			process.waitFor();
 			result.put("Comments added", "success");
 		}
-
-		List<String> keywords = new ArrayList<String>();
-		keywords.add(layerTableName);
-		boolean isPublished = geoserverService.publishLayer(WORKSPACE, DATASTORE, layerTableName, null, layerTableName,
-				keywords);
-		if (!isPublished) {
-			throw new IOException("Geoserver publication of layer failed");
-		}
-		result.put("Uplaoded on geoserver", layerTableName);
-		RESTLayer layer = geoserverService.getManager().getReader().getLayer(WORKSPACE, layerTableName);
-		result.put("Geoserver layer url", layer.getResourceUrl());
-		return result;
 	}
 
 	@Override

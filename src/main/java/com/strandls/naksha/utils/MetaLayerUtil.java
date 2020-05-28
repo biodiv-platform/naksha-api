@@ -124,6 +124,17 @@ public class MetaLayerUtil {
 		result.put("dirPath", tmpDirPath);
 		return result;
 	}
+	
+	public static Map<String, String> copyGeneralFile(FormDataMultiPart multiPart, String type, boolean optional) throws IOException {
+		String dataPath = NakshaConfig.getString(TEMP_DIR_PATH) + File.separator + System.currentTimeMillis();
+		String tmpDirPath = dataPath + File.separator + "final";
+		String fileLocation =  copyFile(multiPart, type, tmpDirPath, optional);
+		
+		Map<String, String> result = new HashMap<String, String>();
+		result.put(type, fileLocation);
+		result.put("dirPath", tmpDirPath);
+		return result;
+	}
 
 	/**
 	 * This method save each file with given extension. If the extension is optional
