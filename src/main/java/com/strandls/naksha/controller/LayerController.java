@@ -14,13 +14,15 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import com.google.inject.Inject;
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+
+import javax.inject.Inject;
+
 import com.strandls.naksha.ApiConstants;
 import com.strandls.naksha.geoserver.GeoServerIntegrationService;
 import com.strandls.naksha.layers.LayerUploadService;
 import com.strandls.naksha.pojo.ObservationLocationInfo;
-import com.sun.jersey.multipart.FormDataBodyPart;
-import com.sun.jersey.multipart.FormDataMultiPart;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

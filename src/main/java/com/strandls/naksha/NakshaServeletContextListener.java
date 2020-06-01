@@ -11,6 +11,7 @@ import java.util.Map;
 import javax.servlet.ServletContextEvent;
 
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.glassfish.jersey.servlet.ServletContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +26,6 @@ import com.strandls.naksha.dao.DAOFactory;
 import com.strandls.naksha.dao.DAOModule;
 import com.strandls.naksha.geoserver.GeoserverModule;
 import com.strandls.naksha.layers.LayerUploadModule;
-import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 
 public class NakshaServeletContextListener extends GuiceServletContextListener {
 
@@ -63,16 +63,18 @@ public class NakshaServeletContextListener extends GuiceServletContextListener {
 				}
 
 				// ------------------------ End Geoserver related configurations
-				
+
 				Map<String, String> props = new HashMap<String, String>();
 				props.put("javax.ws.rs.Application", ApplicationConfig.class.getName());
+				props.put("jersey.config.server.provider.packages", "com");
 				props.put("jersey.config.server.wadl.disableWadl", "true");
-				
-				serve("/api/*").with(GuiceContainer.class,props);
+
+				bind(ServletContainer.class).in(Scopes.SINGLETON);
+				serve("/api/*").with(ServletContainer.class, props);
 
 			}
 
-		},new NakshaControllerModule(), new GeoserverModule(), new LayerUploadModule(), new DAOModule());
+		}, new NakshaControllerModule(), new GeoserverModule(), new LayerUploadModule(), new DAOModule());
 
 	}
 

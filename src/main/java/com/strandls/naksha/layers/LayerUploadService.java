@@ -12,7 +12,8 @@ import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
+import javax.inject.Inject;
+
 import com.strandls.naksha.NakshaConfig;
 import com.strandls.naksha.dao.LayerDAO;
 import com.strandls.naksha.layers.scripts.Import_data;
