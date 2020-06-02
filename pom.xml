@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>naksha-api</groupId>
     <artifactId>naksha-api</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>war</packaging>
 
     <name>Naksha API</name>
@@ -32,12 +32,12 @@
         <repository>
             <id>central</id>
             <name>jfrog-releases</name>
-            <url>https://venus.strandls.com/artifactory/libs-release-local</url>
+            <url>https://pamba.strandls.com/artifactory/libs-release-local</url>
         </repository>
         <snapshotRepository>
             <id>snapshots</id>
             <name>jfrog-snapshots</name>
-            <url>https://venus.strandls.com/artifactory/libs-snapshot-local</url>
+            <url>https://pamba.strandls.com/artifactory/libs-snapshot-local</url>
         </snapshotRepository>
     </distributionManagement>
 
@@ -48,13 +48,13 @@
             </snapshots>
             <id>central</id>
             <name>libs-release</name>
-            <url>https://venus.strandls.com/artifactory/libs-release</url>
+            <url>https://pamba.strandls.com/artifactory/libs-release</url>
         </repository>
         <repository>
             <snapshots />
             <id>snapshots</id>
             <name>libs-snapshot</name>
-            <url>https://venus.strandls.com/artifactory/libs-snapshot</url>
+            <url>https://pamba.strandls.com/artifactory/libs-snapshot</url>
         </repository>
     </repositories>
 
@@ -332,7 +332,7 @@
                             <locations>
                                 ${location}
                             </locations>
-                            <schemes>http,https</schemes>
+                            <schemes>http</schemes>
                             <host>localhost:8080</host>
                             <basePath>${base-path}</basePath>
                             <info>
