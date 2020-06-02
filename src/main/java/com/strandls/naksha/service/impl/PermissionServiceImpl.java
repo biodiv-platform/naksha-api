@@ -4,12 +4,12 @@ import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import com.google.inject.Inject;
 import com.strandls.naksha.dao.NakshaPermissionDao;
 import com.strandls.naksha.pojo.NakshaPermission;
 import com.strandls.naksha.pojo.enumtype.PermissionType;

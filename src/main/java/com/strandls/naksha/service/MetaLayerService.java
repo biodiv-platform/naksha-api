@@ -8,11 +8,11 @@ import java.util.Map;
 import javax.naming.directory.InvalidAttributesException;
 import javax.servlet.http.HttpServletRequest;
 
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.json.simple.parser.ParseException;
 
 import com.strandls.naksha.NakshaConfig;
 import com.strandls.naksha.pojo.MetaLayer;
-import com.sun.jersey.multipart.FormDataMultiPart;
 
 public interface MetaLayerService {
 

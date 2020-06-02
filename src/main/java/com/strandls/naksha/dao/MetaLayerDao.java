@@ -1,9 +1,10 @@
 package com.strandls.naksha.dao;
 
+import javax.inject.Inject;
+
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
-import com.google.inject.Inject;
 import com.strandls.naksha.pojo.MetaLayer;
 
 public class MetaLayerDao extends AbstractDao<MetaLayer, Long>{

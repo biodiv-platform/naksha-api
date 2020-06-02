@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.inject.Inject;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -12,7 +13,6 @@ import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.w3c.dom.Document;
 
-import com.google.inject.Inject;
 import com.strandls.naksha.controller.GeoserverController;
 import com.strandls.naksha.pojo.response.GeoserverLayerStyles;
 import com.strandls.naksha.pojo.style.JsonStyle;
@@ -27,6 +27,10 @@ public class GeoserverControllerImpl implements GeoserverController {
 	
 	@Inject
 	private GeoserverStyleService geoserverStyleService;
+	
+	@Inject
+	public GeoserverControllerImpl() {
+	}
 
 	@Override
 	public Response fetchAllLayers(String workspace) {

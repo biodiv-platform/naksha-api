@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Inject;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -12,7 +13,6 @@ import javax.ws.rs.core.Response.Status;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 
-import com.google.inject.Inject;
 import com.strandls.esmodule.controllers.GeoServiceApi;
 import com.strandls.naksha.NakshaConfig;
 import com.strandls.naksha.controller.ObservationController;

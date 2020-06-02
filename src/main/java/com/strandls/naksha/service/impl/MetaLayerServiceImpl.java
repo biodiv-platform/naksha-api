@@ -12,15 +12,16 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import javax.inject.Inject;
 import javax.naming.directory.InvalidAttributesException;
 import javax.servlet.http.HttpServletRequest;
 
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.simple.parser.ParseException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Inject;
 import com.strandls.naksha.NakshaConfig;
 import com.strandls.naksha.dao.MetaLayerDao;
 import com.strandls.naksha.pojo.MetaLayer;
@@ -29,7 +30,6 @@ import com.strandls.naksha.service.AbstractService;
 import com.strandls.naksha.service.GeoserverService;
 import com.strandls.naksha.service.MetaLayerService;
 import com.strandls.naksha.utils.MetaLayerUtil;
-import com.sun.jersey.multipart.FormDataMultiPart;
 
 import it.geosolutions.geoserver.rest.decoder.RESTLayer;
 

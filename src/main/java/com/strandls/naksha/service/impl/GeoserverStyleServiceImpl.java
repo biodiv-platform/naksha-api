@@ -6,7 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
-import com.google.inject.Inject;
+import javax.inject.Inject;
+
 import com.strandls.naksha.dao.GeoserverStyleDao;
 import com.strandls.naksha.pojo.MetaLayer;
 import com.strandls.naksha.pojo.enumtype.LayerType;
@@ -42,6 +43,10 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 	
 	private static final int VERSION = 8;
 
+	@Inject
+	public GeoserverStyleServiceImpl() {
+	}
+	
 	@Override
 	public JsonStyle generateJsonStyle(String layerName, String columnName) {
 

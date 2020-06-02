@@ -2,11 +2,11 @@ package com.strandls.naksha.controller.impl;
 
 import java.util.Map;
 
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
-import com.google.inject.Inject;
 import com.strandls.naksha.controller.PermissionController;
 import com.strandls.naksha.service.PermissionService;
 

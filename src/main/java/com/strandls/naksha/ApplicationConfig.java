@@ -20,8 +20,18 @@ import java.util.Set;
 
 import javax.ws.rs.core.Application;
 
+import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.server.spi.Container;
+import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
+import org.glassfish.jersey.servlet.ServletContainer;
+import org.jvnet.hk2.guice.bridge.api.GuiceBridge;
+import org.jvnet.hk2.guice.bridge.api.GuiceIntoHK2Bridge;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.inject.Injector;
+import com.strandls.authentication_utility.filter.InterceptorModule;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
@@ -34,7 +44,7 @@ import io.swagger.jaxrs.config.BeanConfig;
 public class ApplicationConfig extends Application {
 
 	private static final Logger logger = LoggerFactory.getLogger(ApplicationConfig.class);
-    //private static final Log LOG = LogFactory.getLog(HttpClient.class);
+	// private static final Log LOG = LogFactory.getLog(HttpClient.class);
 
 	/**
 	 * 
@@ -73,8 +83,41 @@ public class ApplicationConfig extends Application {
 
 		resource.add(io.swagger.jaxrs.listing.SwaggerSerializers.class);
 		resource.add(io.swagger.jaxrs.listing.ApiListingResource.class);
+		
+		resource.add(MultiPartFeature.class);
 
 		return resource;
+	}
+
+	@Override
+	public Set<Object> getSingletons() {
+
+		Set<Object> singletons = new HashSet<Object>();
+		singletons.add(new ContainerLifecycleListener() {
+
+			@Override
+			public void onStartup(Container container) {
+				ServletContainer servletContainer = (ServletContainer) container;
+				ServiceLocator serviceLocator = container.getApplicationHandler().getInjectionManager()
+						.getInstance(ServiceLocator.class);
+				GuiceBridge.getGuiceBridge().initializeGuiceBridge(serviceLocator);
+				GuiceIntoHK2Bridge guiceBridge = serviceLocator.getService(GuiceIntoHK2Bridge.class);
+				Injector injector = (Injector) servletContainer.getServletContext()
+						.getAttribute(Injector.class.getName());
+				guiceBridge.bridgeGuiceInjector(injector);
+			}
+
+			@Override
+			public void onShutdown(Container container) {
+			}
+
+			@Override
+			public void onReload(Container container) {
+			}
+		});
+
+		singletons.add(new InterceptorModule());
+		return singletons;
 	}
 
 	protected List<Class<?>> getSwaggerAnnotationClassesFromPackage(String packageName)

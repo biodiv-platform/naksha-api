@@ -10,35 +10,66 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import javax.inject.Inject;
 import javax.naming.directory.InvalidAttributesException;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.json.JSONObject;
 import org.pac4j.core.profile.CommonProfile;
 
-import com.google.inject.Inject;
 import com.strandls.authentication_utility.util.AuthUtil;
+import com.strandls.naksha.ApiConstants;
 import com.strandls.naksha.controller.LayerController;
 import com.strandls.naksha.pojo.MetaLayer;
 import com.strandls.naksha.pojo.response.LayerAttributes;
+import com.strandls.naksha.pojo.response.ObservationLocationInfo;
 import com.strandls.naksha.service.MetaLayerService;
-import com.sun.jersey.multipart.FormDataMultiPart;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
+@Api("Layer Service")
+@Path(ApiConstants.LAYER)
 public class LayerControllerImpl implements LayerController {
 
-	@Inject
 	private MetaLayerService metaLayerService;
 
+	@Inject
+	public LayerControllerImpl(MetaLayerService metaLayerService) {
+		this.metaLayerService = metaLayerService;
+	}
+
 	@Override
+	@Path("ping")
+	@GET
+	@Produces(MediaType.TEXT_PLAIN)
 	public String ping() {
 		return "pong";
 	}
 
 	@Override
-	public Response findAll(HttpServletRequest request, Integer limit, Integer offset) {
+	@Path("all")
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Get meta data of all the layers", response = MetaLayer.class, responseContainer = "List")
+	public Response findAll(@Context HttpServletRequest request, @DefaultValue("-1") @QueryParam("limit") Integer limit,
+			@DefaultValue("-1") @QueryParam("offset") Integer offset) {
 		try {
 			List<MetaLayer> metaLayers = metaLayerService.findAll(request, limit, offset);
 			return Response.ok().entity(metaLayers).build();
@@ -49,6 +80,14 @@ public class LayerControllerImpl implements LayerController {
 	}
 
 	@Override
+	@Path("upload")
+	@POST
+	@Consumes({MediaType.MULTIPART_FORM_DATA})
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Upload Layer", notes = "Returns succuess failure", response = String.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "file not present", response = String.class),
+			@ApiResponse(code = 500, message = "ERROR", response = String.class) })
+	//@ValidateUser
 	public Response upload(@Context HttpServletRequest request, final FormDataMultiPart multiPart) {
 		try {
 			Map<String, Object> result = metaLayerService.uploadLayer(request, multiPart);
@@ -60,7 +99,13 @@ public class LayerControllerImpl implements LayerController {
 	}
 
 	@Override
-	public Response prepareDownload(HttpServletRequest request, String jsonString) throws FileNotFoundException {
+	@Path("download")
+	@POST
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "prepate shape file", notes = "Return the shape file location", response = Map.class)
+	//@ValidateUser
+	public Response prepareDownload(@Context HttpServletRequest request, String jsonString) throws FileNotFoundException {
 
 		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 		System.out.println(profile);
@@ -95,7 +140,12 @@ public class LayerControllerImpl implements LayerController {
 	}
 
 	@Override
-	public Response download(String hashKey, String layerName) throws FileNotFoundException {
+	@Path("download/{hashKey}/{layerName}")
+	@GET
+	@Consumes(MediaType.TEXT_PLAIN)
+	@Produces("application/zip")
+	@ApiOperation(value = "Download the shp file", notes = "Return the shp file", response = StreamingOutput.class)
+	public Response download(@PathParam("hashKey") String hashKey,  @PathParam("layerName") String layerName) throws FileNotFoundException {
 		try {
 			String fileLocation = metaLayerService.getFileLocation(hashKey, layerName);
 			return Response.ok(new File(fileLocation))
@@ -107,7 +157,13 @@ public class LayerControllerImpl implements LayerController {
 	}
 
 	@Override
-	public Response getLayerInfo(String lat, String lon) {
+	@Path(ApiConstants.LAYERINFO)
+	@GET
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Find layer info By Latitude and Longitude", notes = " Returns Layer Details", response = ObservationLocationInfo.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Layer info notfound", response = String.class) })
+	public Response getLayerInfo(@QueryParam("lat") String lat, @QueryParam("lon") String lon) {
 		// TODO Auto-generated method stub
 		// Here we need to get info from four different layer and return the observation
 		// info about it.
@@ -120,7 +176,10 @@ public class LayerControllerImpl implements LayerController {
 	}
 
 	@Override
-	public List<LayerAttributes> attributes(String layername) {
+	@Path("/attributes")
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	public List<LayerAttributes> attributes(@QueryParam("layername") String layername) {
 		// TODO Auto-generated method stub
 		// Get the layer attribute from given layer. basically column name and
 		// description.
@@ -136,7 +195,10 @@ public class LayerControllerImpl implements LayerController {
 	}
 
 	@Override
-	public List<String> tags(String tag) {
+	@Path("/tags")
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	public List<String> tags(@QueryParam("tag") String tag) {
 		// TODO Auto-generated method stub
 		// Get layer name with tags.
 		// return layerService.getLayerNamesWithTag(tag);

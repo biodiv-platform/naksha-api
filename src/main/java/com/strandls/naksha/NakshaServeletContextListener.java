@@ -20,6 +20,7 @@ import java.util.Map;
 import javax.servlet.ServletContextEvent;
 
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.glassfish.jersey.servlet.ServletContainer;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.slf4j.Logger;
@@ -28,12 +29,12 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Scopes;
 import com.google.inject.servlet.GuiceServletContextListener;
+import com.google.inject.servlet.ServletModule;
 import com.strandls.naksha.controller.ControllerModule;
 import com.strandls.naksha.dao.DaoModule;
 import com.strandls.naksha.service.ServiceModule;
-import com.sun.jersey.guice.JerseyServletModule;
-import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 
 public class NakshaServeletContextListener extends GuiceServletContextListener {
 
@@ -47,7 +48,7 @@ public class NakshaServeletContextListener extends GuiceServletContextListener {
 
 	@Override
 	protected Injector getInjector() {
-		Injector injector = Guice.createInjector(new JerseyServletModule() {
+		Injector injector = Guice.createInjector(new ServletModule() {
 			@Override
 			protected void configureServlets() {
 				PoolingHttpClientConnectionManager manager = new PoolingHttpClientConnectionManager();
@@ -82,7 +83,8 @@ public class NakshaServeletContextListener extends GuiceServletContextListener {
 				props.put("javax.ws.rs.Application", ApplicationConfig.class.getName());
 				props.put("jersey.config.server.wadl.disableWadl", "true");
 
-				serve("/api/*").with(GuiceContainer.class, props);
+				bind(ServletContainer.class).in(Scopes.SINGLETON);
+				serve("/api/*").with(ServletContainer.class, props);
 			}
 		}, new ControllerModule(), new DaoModule(), new ServiceModule());
 

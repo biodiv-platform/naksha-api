@@ -2,18 +2,21 @@ package com.strandls.naksha.dao;
 
 import java.util.List;
 
+import javax.inject.Inject;
 import javax.persistence.NoResultException;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
 
-import com.google.inject.Inject;
-
 public class GeoserverStyleDao {
 	
 	@Inject
 	private SessionFactory sessionFactory;
+
+	@Inject
+	public GeoserverStyleDao() {
+	}
 	
 	public List<Object[]> getColumnTypes(String tableName) {
 		String queryStr = "select column_name, data_type from information_schema.columns where table_name = '"
