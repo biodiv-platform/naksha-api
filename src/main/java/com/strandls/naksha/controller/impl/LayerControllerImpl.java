@@ -48,11 +48,10 @@ import io.swagger.annotations.ApiResponses;
 @Path(ApiConstants.LAYER)
 public class LayerControllerImpl implements LayerController {
 
+	@Inject
 	private MetaLayerService metaLayerService;
 
-	@Inject
-	public LayerControllerImpl(MetaLayerService metaLayerService) {
-		this.metaLayerService = metaLayerService;
+	public LayerControllerImpl() {
 	}
 
 	@Override

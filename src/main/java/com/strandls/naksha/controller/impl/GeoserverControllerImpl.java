@@ -5,7 +5,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
@@ -13,6 +19,7 @@ import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.w3c.dom.Document;
 
+import com.strandls.naksha.ApiConstants;
 import com.strandls.naksha.controller.GeoserverController;
 import com.strandls.naksha.pojo.response.GeoserverLayerStyles;
 import com.strandls.naksha.pojo.style.JsonStyle;
@@ -20,6 +27,13 @@ import com.strandls.naksha.service.GeoserverService;
 import com.strandls.naksha.service.GeoserverStyleService;
 import com.strandls.naksha.utils.Utils;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
+@Api("Geoserver Service")
+@Path(ApiConstants.GEOSERVER)
 public class GeoserverControllerImpl implements GeoserverController {
 
 	@Inject
@@ -33,7 +47,12 @@ public class GeoserverControllerImpl implements GeoserverController {
 	}
 
 	@Override
-	public Response fetchAllLayers(String workspace) {
+	@GET
+	@Path(ApiConstants.LAYERS + "/{workspace}" +  ApiConstants.WFS)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Fetch all Layer", notes = "Returns all Layers Details", response = String.class, responseContainer = "List")
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Details not found", response = String.class) })
+	public Response fetchAllLayers(@PathParam("workspace") String workspace) {
 		try {
 			ArrayList<NameValuePair> params = new ArrayList<>();
 			params.add(new BasicNameValuePair("REQUEST", "GetCapabilities"));
@@ -48,7 +67,12 @@ public class GeoserverControllerImpl implements GeoserverController {
 	}
 
 	@Override
-	public Response getCapabilities(String workspace) {
+	@GET
+	@Path(ApiConstants.LAYERS + "/{workspace}" + ApiConstants.WMS)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Capabilities", notes = " Returns Capabilities", response = String.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Details not found", response = String.class) })
+	public Response getCapabilities(@PathParam("workspace") String workspace) {
 		try {
 			ArrayList<NameValuePair> params = new ArrayList<>();
 			params.add(new BasicNameValuePair("REQUEST", "GetCapabilities"));
@@ -63,7 +87,12 @@ public class GeoserverControllerImpl implements GeoserverController {
 	}
 
 	@Override
-	public Response fetchAllStyles(String id) {
+	@GET
+	@Path(ApiConstants.LAYERS + "/{id}" + ApiConstants.STYLES)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Fetch All Styles", notes = "Return All Styles", response = GeoserverLayerStyles.class, responseContainer = "List")
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Details not found", response = String.class) })
+	public Response fetchAllStyles(@PathParam("id") String id) {
 		try {
 			String url = "wms";
 
@@ -84,7 +113,12 @@ public class GeoserverControllerImpl implements GeoserverController {
 	}
 
 	@Override
-	public Response fetchStyle(String id) {
+	@GET
+	@Path(ApiConstants.STYLES + "/{id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Fetch Styles", notes = "Retruns Styles", response = String.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Styles not found", response = String.class) })
+	public Response fetchStyle(@PathParam("id") String id) {
 		try {
 			String url = "styles/" + id;
 			String style = new String(geoserverService.getRequest(url, null));
@@ -96,7 +130,14 @@ public class GeoserverControllerImpl implements GeoserverController {
 	}
 
 	@Override
-	public Response fetchThumbnail(String id, String wspace, String para, String width, String height, String srs) {
+	@GET
+	@Path(ApiConstants.THUMBNAILS + "/{workspace}/{id}")
+	@Produces("image/gif")
+	@ApiOperation(value = "Fetch Thumbnails", notes = "Return Thumbnails", response = ByteArrayInputStream.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Thumbnail not found", response = String.class) })
+	public Response fetchThumbnail(@PathParam("id") String id, @PathParam("workspace") String wspace,
+			@QueryParam("bbox") String para, @QueryParam("width") String width, @QueryParam("height") String height,
+			@QueryParam("srs") String srs) {
 		String url = "wms";
 
 		ArrayList<NameValuePair> params = new ArrayList<>();
@@ -112,7 +153,12 @@ public class GeoserverControllerImpl implements GeoserverController {
 	}
 
 	@Override
-	public Response fetchLegend(String layer, String style) {
+	@GET
+	@Path(ApiConstants.LEGEND + "/{layer}/{style}")
+	@Produces("image/png")
+	@ApiOperation(value = "Fetch Legend", notes = "Return Legend", response = ByteArrayInputStream.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Legend not found", response = String.class) })
+	public Response fetchLegend(@PathParam("layer") String layer, @PathParam("style") String style) {
 		String url = "wms";
 
 		ArrayList<NameValuePair> params = new ArrayList<>();
@@ -128,14 +174,25 @@ public class GeoserverControllerImpl implements GeoserverController {
 	}
 
 	@Override
-	public Response fetchTiles(String layer, String z, String x, String y) {
+	@GET
+	@Path("/gwc/service/tms/1.0.0/{layer}/{z}/{x}/{y}")
+	@Produces("application/x-protobuf")
+	@ApiOperation(value = "Fetch Tiles", notes = "Return Tiles", response = ByteArrayInputStream.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Tiles not found", response = String.class) })
+	public Response fetchTiles(@PathParam("layer") String layer, @PathParam("z") String z, @PathParam("x") String x,
+			@PathParam("y") String y) {
 		String url = "gwc/service/tms/1.0.0/" + layer + "@EPSG%3A900913@pbf/" + z + "/" + x + "/" + y + ".pbf";
 		byte[] file = geoserverService.getRequest(url, null);
 		return Response.ok(new ByteArrayInputStream(file)).build();
 	}
 
 	@Override
-	public Response fetchStyle1(String layerName, String columnName) {
+	@GET
+	@Path(ApiConstants.STYLES + "/{layerName}/{columnName}")
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Fetch Styles", notes = "Retruns Styles", response = String.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Styles not found", response = String.class) })
+	public Response fetchStyle1(@PathParam("layerName") String layerName, @PathParam("columnName") String columnName) {
 		try {
 			JsonStyle style = geoserverStyleService.generateJsonStyle(layerName, columnName);
 			return Response.status(Status.OK).entity(style).build();
