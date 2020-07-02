@@ -48,6 +48,11 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 	}
 	
 	@Override
+	public List<Object[]> getColumnName(String tableName) {
+		return geoserverStyleDao.getColumnNames(tableName);
+	}
+	
+	@Override
 	public JsonStyle generateJsonStyle(String layerName, String columnName) {
 
 		Map<String, StyledSource> sources = getSource(layerName);

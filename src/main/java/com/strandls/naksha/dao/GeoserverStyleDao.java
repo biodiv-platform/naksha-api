@@ -24,6 +24,12 @@ public class GeoserverStyleDao {
 		return executeQuery(queryStr);
 	}
 	
+	public List<Object[]> getColumnNames(String tableName) {
+		String queryStr = "select column_name, data_type from information_schema.columns where table_name = '"
+				+ tableName + "'";
+		return executeQuery(queryStr);
+	}
+	
 	public String getColumnType(String tableName, String columnName) {
 		String queryStr = "select data_type from information_schema.columns where table_name = '"
 				+ tableName + "' and column_name = '" + columnName + "'";

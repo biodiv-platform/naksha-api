@@ -94,6 +94,19 @@ public class GeoserverControllerImpl implements GeoserverController {
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "Details not found", response = String.class) })
 	public Response fetchAllStyles(@PathParam("id") String id) {
 		try {
+			List<Object[]> columnNames = geoserverStyleService.getColumnName(id);
+			List<GeoserverLayerStyles> styles = new ArrayList<GeoserverLayerStyles>();
+			for(Object[] row: columnNames) {
+				GeoserverLayerStyles geoserverLayerStyles = new GeoserverLayerStyles(row[0].toString(), row[1].toString());
+				styles.add(geoserverLayerStyles);
+			}
+			return Response.status(Status.OK).entity(styles).build();
+		} catch (Exception e) {
+			throw new WebApplicationException(
+					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
+		}
+		/*
+		try {
 			String url = "wms";
 
 			ArrayList<NameValuePair> params = new ArrayList<>();
@@ -110,6 +123,7 @@ public class GeoserverControllerImpl implements GeoserverController {
 			throw new WebApplicationException(
 					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
 		}
+		*/
 	}
 
 	@Override
