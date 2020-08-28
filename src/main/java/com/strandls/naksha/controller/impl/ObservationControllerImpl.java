@@ -91,7 +91,7 @@ public class ObservationControllerImpl implements ObservationController {
 			type = type == null ? NakshaConfig.getString("observation.es.type") : type;
 			geoField = geoField == null ? NakshaConfig.getString("observation.es.geoField") : geoField;
 
-			Map<String, Object> geoHashToDocCount = geoServiceApi.getGeoAggregation(index, type, geoField, precision,
+			Map<String, Object> geoHashToDocCount = geoServiceApi.getGeoAggregation_0(index, type, geoField, precision,
 					top, left, bottom, right, speciesId);
 			return Response.ok().entity(geoHashToDocCount).build();
 		} catch (Exception e) {
