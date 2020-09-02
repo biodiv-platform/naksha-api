@@ -39,7 +39,7 @@ public class MetaLayer implements Serializable {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "meta_layer_id_generator")
-	@SequenceGenerator(name = "meta_layer_id_generator", sequenceName = "meta_layer_id_seq", allocationSize = 50)
+	@SequenceGenerator(name = "meta_layer_id_generator", sequenceName = "meta_layer_id_seq", allocationSize = 1)
 	@Column(name = "id", updatable = false, nullable = false)
 	private Long id;
 

@@ -140,7 +140,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	}
 	
 	private void createDBTable(String layerTableName, String ogrInputFileLocation, JSONObject layerColumnDescription, Map<String, Object> result) throws InvalidAttributesException, InterruptedException, IOException {
-		OGR2OGR ogr2ogr = new OGR2OGR(OGR2OGR.SHP_TO_POSTGRES, null, layerTableName, null, null,
+		OGR2OGR ogr2ogr = new OGR2OGR(OGR2OGR.SHP_TO_POSTGRES, null, layerTableName, "precision=NO", null,
 				ogrInputFileLocation);
 
 		Process process = ogr2ogr.execute();
