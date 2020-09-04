@@ -5,11 +5,24 @@ public class GeoserverLayerStyles {
 	private String styleName;
 	
 	private String styleTitle;
-
-	public GeoserverLayerStyles(String styleId, String styleName) {
+	
+	private String styleType;
+	
+	public GeoserverLayerStyles() {
 		super();
-		this.styleName = styleId;
-		this.styleTitle = styleName;
+	}
+
+	public GeoserverLayerStyles(String styleName, String styleTitle) {
+		super();
+		this.styleName = styleName;
+		this.styleTitle = styleTitle;
+	}
+
+	public GeoserverLayerStyles(String styleName, String styleTitle, String styleType) {
+		super();
+		this.styleName = styleName;
+		this.styleTitle = styleTitle;
+		this.styleType = styleType;
 	}
 
 	public String getStyleName() {
@@ -27,5 +40,12 @@ public class GeoserverLayerStyles {
 	public void setStyleTitle(String styleTitle) {
 		this.styleTitle = styleTitle;
 	}
-	
+
+	public String getStyleType() {
+		return styleType;
+	}
+
+	public void setStyleType(String styleType) {
+		this.styleType = styleType;
+	}
 }

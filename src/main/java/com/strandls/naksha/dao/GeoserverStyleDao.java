@@ -25,8 +25,13 @@ public class GeoserverStyleDao {
 	}
 	
 	public List<Object[]> getColumnNames(String tableName) {
-		String queryStr = "select column_name, data_type from information_schema.columns where table_name = '"
-				+ tableName + "'";
+		String queryStr = "SELECT c.column_name, pgd.description, c.data_type "
+				+ "from pg_catalog.pg_statio_all_tables as st "
+				+ "inner join pg_catalog.pg_description pgd on (pgd.objoid=st.relid) "
+				+ "right outer join information_schema.columns c on (pgd.objsubid=c.ordinal_position and  c.table_schema=st.schemaname and c.table_name=st.relname) "
+				+ "where table_schema = 'public' and table_name = '" + tableName + "' and pgd.description is not null";
+		//String queryStr = "select column_name, data_type from information_schema.columns where table_name = '"
+		//		+ tableName + "'";
 		return executeQuery(queryStr);
 	}
 	

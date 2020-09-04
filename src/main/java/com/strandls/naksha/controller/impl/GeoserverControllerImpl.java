@@ -97,7 +97,7 @@ public class GeoserverControllerImpl implements GeoserverController {
 			List<Object[]> columnNames = geoserverStyleService.getColumnName(id);
 			List<GeoserverLayerStyles> styles = new ArrayList<GeoserverLayerStyles>();
 			for(Object[] row: columnNames) {
-				GeoserverLayerStyles geoserverLayerStyles = new GeoserverLayerStyles(row[0].toString(), row[1].toString());
+				GeoserverLayerStyles geoserverLayerStyles = new GeoserverLayerStyles(row[0].toString(), row[1].toString(), row[2].toString());
 				styles.add(geoserverLayerStyles);
 			}
 			return Response.status(Status.OK).entity(styles).build();
