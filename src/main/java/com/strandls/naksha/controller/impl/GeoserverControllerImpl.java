@@ -21,10 +21,12 @@ import org.w3c.dom.Document;
 
 import com.strandls.naksha.ApiConstants;
 import com.strandls.naksha.controller.GeoserverController;
+import com.strandls.naksha.pojo.MetaLayer;
 import com.strandls.naksha.pojo.response.GeoserverLayerStyles;
 import com.strandls.naksha.pojo.style.JsonStyle;
 import com.strandls.naksha.service.GeoserverService;
 import com.strandls.naksha.service.GeoserverStyleService;
+import com.strandls.naksha.service.MetaLayerService;
 import com.strandls.naksha.utils.Utils;
 
 import io.swagger.annotations.Api;
@@ -41,6 +43,9 @@ public class GeoserverControllerImpl implements GeoserverController {
 	
 	@Inject
 	private GeoserverStyleService geoserverStyleService;
+	
+	@Inject
+	private MetaLayerService metaLayerService;
 	
 	@Inject
 	public GeoserverControllerImpl() {
@@ -94,11 +99,19 @@ public class GeoserverControllerImpl implements GeoserverController {
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "Details not found", response = String.class) })
 	public Response fetchAllStyles(@PathParam("id") String id) {
 		try {
+			MetaLayer metaLayer = metaLayerService.findByLayerTableName(id);
+			String colorByColumn = metaLayer.getColorBy();
 			List<Object[]> columnNames = geoserverStyleService.getColumnName(id);
 			List<GeoserverLayerStyles> styles = new ArrayList<GeoserverLayerStyles>();
 			for(Object[] row: columnNames) {
-				GeoserverLayerStyles geoserverLayerStyles = new GeoserverLayerStyles(row[0].toString(), row[1].toString(), row[2].toString());
-				styles.add(geoserverLayerStyles);
+				String styleColumnName        = row[0].toString();
+				String styleColumnTitle       = row[1].toString();
+				String styleColumnDescription = row[2].toString();
+				GeoserverLayerStyles geoserverLayerStyles = new GeoserverLayerStyles(styleColumnName, styleColumnTitle, styleColumnDescription);
+				if(styleColumnName.equalsIgnoreCase(colorByColumn))
+					styles.add(0, geoserverLayerStyles);
+				else
+					styles.add(geoserverLayerStyles);
 			}
 			return Response.status(Status.OK).entity(styles).build();
 		} catch (Exception e) {
