@@ -1,4 +1,4 @@
-package com.strandls.naksha.pojo.style;
+package com.strandls.naksha.style.json;
 
 import java.util.List;
 

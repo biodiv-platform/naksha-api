@@ -23,10 +23,10 @@ import com.strandls.naksha.ApiConstants;
 import com.strandls.naksha.controller.GeoserverController;
 import com.strandls.naksha.pojo.MetaLayer;
 import com.strandls.naksha.pojo.response.GeoserverLayerStyles;
-import com.strandls.naksha.pojo.style.JsonStyle;
 import com.strandls.naksha.service.GeoserverService;
 import com.strandls.naksha.service.GeoserverStyleService;
 import com.strandls.naksha.service.MetaLayerService;
+import com.strandls.naksha.style.json.JsonStyle;
 import com.strandls.naksha.utils.Utils;
 
 import io.swagger.annotations.Api;

@@ -2,7 +2,7 @@ package com.strandls.naksha.service;
 
 import java.util.List;
 
-import com.strandls.naksha.pojo.style.JsonStyle;
+import com.strandls.naksha.style.json.JsonStyle;
 
 public interface GeoserverStyleService {
 

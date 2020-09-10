@@ -11,16 +11,16 @@ import javax.inject.Inject;
 import com.strandls.naksha.dao.GeoserverStyleDao;
 import com.strandls.naksha.pojo.MetaLayer;
 import com.strandls.naksha.pojo.enumtype.LayerType;
-import com.strandls.naksha.pojo.style.CircleLayerPaint;
-import com.strandls.naksha.pojo.style.FillLayerPaint;
-import com.strandls.naksha.pojo.style.JsonStyle;
-import com.strandls.naksha.pojo.style.LineLayerPaint;
-import com.strandls.naksha.pojo.style.StyleColor;
-import com.strandls.naksha.pojo.style.StylePaint;
-import com.strandls.naksha.pojo.style.StyledLayer;
-import com.strandls.naksha.pojo.style.StyledSource;
 import com.strandls.naksha.service.GeoserverStyleService;
 import com.strandls.naksha.service.MetaLayerService;
+import com.strandls.naksha.style.json.CircleLayerPaint;
+import com.strandls.naksha.style.json.FillLayerPaint;
+import com.strandls.naksha.style.json.JsonStyle;
+import com.strandls.naksha.style.json.LineLayerPaint;
+import com.strandls.naksha.style.json.StyleColor;
+import com.strandls.naksha.style.json.StylePaint;
+import com.strandls.naksha.style.json.StyledLayer;
+import com.strandls.naksha.style.json.StyledSource;
 
 public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 
