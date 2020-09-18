@@ -17,10 +17,11 @@ public interface GeoserverService {
 	public GeoServerRESTManager getManager();
 	
 	public boolean publishLayer(String workspace, String datastore, String layerName, String srs, String layerTitle,
-			List<String> keywords);
+			List<String> keywords, List<String> styles);
 	
 	public boolean removeLayer(String workspace, String layerName);
 
+	public byte[] postRequest(String uri, String styleContent, String contentType, List<NameValuePair> params);
 	public byte[] getRequest(String url, List<NameValuePair> params);
 
 	boolean publishGeoTiffLayer(String workspace, String datastore, File geoTiffFile) throws FileNotFoundException;

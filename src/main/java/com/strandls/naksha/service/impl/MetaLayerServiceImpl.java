@@ -28,6 +28,7 @@ import com.strandls.naksha.pojo.MetaLayer;
 import com.strandls.naksha.pojo.OGR2OGR;
 import com.strandls.naksha.service.AbstractService;
 import com.strandls.naksha.service.GeoserverService;
+import com.strandls.naksha.service.GeoserverStyleService;
 import com.strandls.naksha.service.MetaLayerService;
 import com.strandls.naksha.utils.MetaLayerUtil;
 
@@ -40,6 +41,9 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 	@Inject
 	private GeoserverService geoserverService;
+	
+	@Inject
+	private GeoserverStyleService geoserverStyleService;
 
 	public static final String DOWNLOAD_BASE_LOCATION = NakshaConfig.getString(MetaLayerUtil.TEMP_DIR_PATH)
 			+ File.separator + "temp_zip";
@@ -128,8 +132,10 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		
 		List<String> keywords = new ArrayList<String>();
 		keywords.add(layerTableName);
+		
+		List<String> styles = geoserverStyleService.publishAllStyles(layerTableName, WORKSPACE);
 		boolean isPublished = geoserverService.publishLayer(WORKSPACE, DATASTORE, layerTableName, null, layerTableName,
-				keywords);
+				keywords, styles);
 		if (!isPublished) {
 			throw new IOException("Geoserver publication of layer failed");
 		}

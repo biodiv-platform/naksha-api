@@ -24,6 +24,7 @@ import com.strandls.naksha.NakshaConfig;
 public class MetaLayerUtil {
 
 	public static final String TEMP_DIR_PATH = "tmpDir.path";
+	public static final String TEMP_DIR_GEOSERVER_PATH = "tmpDirGeoserverPath";
 
 	private static final String[] COMPULSORY_EXTENSIONS = { "shp", "dbf", "shx" };
 	private static final String[] OPTIONAL_EXTENSIONS = { "prj", "sbn", "sbx", "fbn", "fbx", "ain", "aih", "ixs", "mxs",
