@@ -10,6 +10,7 @@ public interface GeoserverController {
 
 	public Response fetchAllStyles(String id);
 
+	public Response fetchStyle(String workspaces, String id);
 	public Response fetchStyle(String id);
 
 	public Response fetchThumbnail(String id, String wspace, String para, String width, String height, String srs);
@@ -19,4 +20,5 @@ public interface GeoserverController {
 	public Response fetchTiles(String layer, String z, String x, String y);
 
 	public Response fetchStyle1(String layerName, String columnName);
+
 }

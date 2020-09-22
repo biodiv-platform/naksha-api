@@ -141,6 +141,23 @@ public class GeoserverControllerImpl implements GeoserverController {
 
 	@Override
 	@GET
+	@Path("/workspaces/{workspaces}" + ApiConstants.STYLES + "/{id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Fetch Styles", notes = "Retruns Styles", response = String.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Styles not found", response = String.class) })
+	public Response fetchStyle(@PathParam("workspaces") String workspaces, @PathParam("id") String id) {
+		try {
+			String url = "rest/workspaces/" + workspaces + "/styles/" + id;
+			String style = new String(geoserverService.getRequest(url, null));
+			return Response.status(Status.OK).entity(style).build();
+		} catch (Exception e) {
+			throw new WebApplicationException(
+					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
+		}
+	}
+	
+	@Override
+	@GET
 	@Path(ApiConstants.STYLES + "/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "Fetch Styles", notes = "Retruns Styles", response = String.class)

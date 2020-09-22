@@ -126,6 +126,10 @@ public class GeoserverServiceImpl implements GeoserverService {
 			if (params != null)
 				builder.setParameters(params);
 			HttpGet request = new HttpGet(builder.build());
+			
+			String userPass = userName + ":" + password;
+			byte[] encoding = Base64.getEncoder().encode(userPass.getBytes("UTF-8"));
+			request.setHeader("Authorization", "Basic " + new String(encoding));
 
 			httpclient = HttpClients.createDefault();
 
