@@ -44,9 +44,11 @@ public class MetaLayer implements Serializable {
 	private Long id;
 
 	@Column(name = "layer_name")
+	@Type(type = "text")
 	private String layerName;
 
 	@Column(name = "layer_table_name")
+	@Type(type = "text")
 	private String layerTableName;
 
 	@Column(name = "layer_description")
@@ -72,12 +74,15 @@ public class MetaLayer implements Serializable {
 	private Double maxScale;
 
 	@Column(name = "pdf_link")
+	@Type(type = "text")
 	private String pdfLink;
 
 	@Column(name = "url")
+	@Type(type = "text")
 	private String url;
 	
 	@Column(name = "shapeFiles")
+	@Type(type = "text")
 	private String dirPath;
 
 	// Person who upload the layer.
@@ -86,18 +91,22 @@ public class MetaLayer implements Serializable {
 
 	// Person who has contributed this layer.
 	@Column(name = "attribution")
+	@Type(type = "text")
 	private String attribution;
 
 	// Tags for layer
 	@Column(name = "tags")
+	@Type(type = "text")
 	private String tags;
 
 	// CC license
 	@Column(name = "license")
+	@Type(type = "text")
 	private String license;
 
 	// Attribute columns to be shown on mouse hover.
 	@Column(name = "summary_columns")
+	@Type(type = "text")
 	private String summaryColumns;
 
 	@Column(name = "download_access")
@@ -119,21 +128,25 @@ public class MetaLayer implements Serializable {
 	private String sizeBy;
 
 	@Column(name = "media_columns")
+	@Type(type = "text")
 	private String mediaColumns;
 
 	@Column(name = "page_id")
 	private Long pageId;
 
 	@Column(name = "italics_columns")
+	@Type(type = "text")
 	private String italicsColumns;
 
 	@Column(name = "create_by")
+	@Type(type = "text")
 	private String createdBy;
 
 	@Column(name = "created_date")
 	private Timestamp createdDate;
 
 	@Column(name = "modified_by")
+	@Type(type = "text")
 	private String modifiedBy;
 
 	@Column(name = "modified_date")

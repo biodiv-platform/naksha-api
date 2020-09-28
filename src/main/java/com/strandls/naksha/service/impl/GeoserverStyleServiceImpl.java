@@ -71,6 +71,7 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 		ALLOWED_TYPE.add("smallint");
 		ALLOWED_TYPE.add("double precision");
 		ALLOWED_TYPE.add("real");
+		ALLOWED_TYPE.add("text");
 		GEOSERVER_DATA_DIRECTORY = NakshaConfig.getString(MetaLayerUtil.TEMP_DIR_GEOSERVER_PATH);
 	}
 
@@ -95,7 +96,7 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 
 		LayerType layerType = metaLayer.getLayerType();
 
-		String styleType = columnType.startsWith("character") ? CATEGORICAL : INTERVAL;
+		String styleType = columnType.startsWith("character") || columnType.equalsIgnoreCase("text") ? CATEGORICAL : INTERVAL;
 
 		List<StyledLayer> layers = getStyledLayers(layerName, layerType, columnName, styleType, stops);
 
@@ -117,7 +118,7 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 
 	private List<List<Object>> getStops(String layerName, String columnName, String columnType) {
 		List<List<Object>> stops = new ArrayList<List<Object>>();
-		if (columnType.startsWith("character")) {
+		if (columnType.startsWith("character") || columnType.equalsIgnoreCase("text")) {
 			List<Object[]> values = geoserverStyleDao.getDistinctValues(layerName, columnName);
 			for (Object object : values) {
 				String color = getRandColor();

@@ -41,8 +41,10 @@ public class OGR2OGR {
 	private String query;
 
 	private String shpFile;
+	
+	private String encoding;
 
-	public OGR2OGR(String formatName, String nlt, String nln, String lco, String query, String shpFile)
+	public OGR2OGR(String formatName, String nlt, String nln, String lco, String query, String shpFile, String encoding)
 			throws InvalidAttributesException {
 		super();
 		this.user = NakshaConfig.getString(GEOSERVER_DBUSER);
@@ -61,6 +63,7 @@ public class OGR2OGR {
 
 		this.query = query;
 		this.shpFile = shpFile;
+		this.encoding = encoding;
 		init();
 	}
 
@@ -80,6 +83,8 @@ public class OGR2OGR {
 				ogrCommand += " -nln " + nln;
 			if (lco != null)
 				ogrCommand += " -lco " + lco;
+			if(encoding != null)
+				ogrCommand += " --config SHAPE_ENCODING " + this.encoding;
 			break;
 		case POSTGRES_TO_SHP:
 			ogrCommand = "ogr2ogr ";

@@ -128,7 +128,8 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			uploadGeoTiff(layerTableName, ogrInputFileLocation, result);
 			return result;
 		}
-		createDBTable(layerTableName, ogrInputFileLocation, layerColumnDescription, result);
+		
+		createDBTable(layerTableName, ogrInputFileLocation, layerColumnDescription, layerFileDescription, result);
 		
 		List<String> keywords = new ArrayList<String>();
 		keywords.add(layerTableName);
@@ -145,9 +146,12 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		return result;
 	}
 	
-	private void createDBTable(String layerTableName, String ogrInputFileLocation, JSONObject layerColumnDescription, Map<String, Object> result) throws InvalidAttributesException, InterruptedException, IOException {
+	private void createDBTable(String layerTableName, String ogrInputFileLocation, JSONObject layerColumnDescription, JSONObject layerFileDescription, Map<String, Object> result) throws InvalidAttributesException, InterruptedException, IOException {
+		
+		String encoding = layerFileDescription.getString("encoding");
+		
 		OGR2OGR ogr2ogr = new OGR2OGR(OGR2OGR.SHP_TO_POSTGRES, null, layerTableName, "precision=NO", null,
-				ogrInputFileLocation);
+				ogrInputFileLocation, encoding);
 
 		Process process = ogr2ogr.execute();
 		if (process == null) {
@@ -212,7 +216,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		String query = "select " + attributeString + " from " + layerName;
 
 		shapeFileDirectoryPath = shapeFileDirectory.getAbsolutePath();
-		OGR2OGR ogr2ogr = new OGR2OGR(OGR2OGR.POSTGRES_TO_SHP, null, layerName, null, query, shapeFileDirectoryPath);
+		OGR2OGR ogr2ogr = new OGR2OGR(OGR2OGR.POSTGRES_TO_SHP, null, layerName, null, query, shapeFileDirectoryPath, null);
 		Process process = ogr2ogr.execute();
 		if (process == null) {
 			throw new IOException("Shape file creation failed");
