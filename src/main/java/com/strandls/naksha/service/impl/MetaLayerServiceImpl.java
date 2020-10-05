@@ -26,6 +26,7 @@ import com.strandls.naksha.NakshaConfig;
 import com.strandls.naksha.dao.MetaLayerDao;
 import com.strandls.naksha.pojo.MetaLayer;
 import com.strandls.naksha.pojo.OGR2OGR;
+import com.strandls.naksha.pojo.response.ObservationLocationInfo;
 import com.strandls.naksha.service.AbstractService;
 import com.strandls.naksha.service.GeoserverService;
 import com.strandls.naksha.service.GeoserverStyleService;
@@ -41,9 +42,12 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 	@Inject
 	private GeoserverService geoserverService;
-	
+
 	@Inject
 	private GeoserverStyleService geoserverStyleService;
+
+	@Inject
+	private MetaLayerDao metaLayerDao;
 
 	public static final String DOWNLOAD_BASE_LOCATION = NakshaConfig.getString(MetaLayerUtil.TEMP_DIR_PATH)
 			+ File.separator + "temp_zip";
@@ -128,12 +132,12 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			uploadGeoTiff(layerTableName, ogrInputFileLocation, result);
 			return result;
 		}
-		
+
 		createDBTable(layerTableName, ogrInputFileLocation, layerColumnDescription, layerFileDescription, result);
-		
+
 		List<String> keywords = new ArrayList<String>();
 		keywords.add(layerTableName);
-		
+
 		List<String> styles = geoserverStyleService.publishAllStyles(layerTableName, WORKSPACE);
 		boolean isPublished = geoserverService.publishLayer(WORKSPACE, DATASTORE, layerTableName, null, layerTableName,
 				keywords, styles);
@@ -145,11 +149,13 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		result.put("Geoserver layer url", layer.getResourceUrl());
 		return result;
 	}
-	
-	private void createDBTable(String layerTableName, String ogrInputFileLocation, JSONObject layerColumnDescription, JSONObject layerFileDescription, Map<String, Object> result) throws InvalidAttributesException, InterruptedException, IOException {
-		
+
+	private void createDBTable(String layerTableName, String ogrInputFileLocation, JSONObject layerColumnDescription,
+			JSONObject layerFileDescription, Map<String, Object> result)
+			throws InvalidAttributesException, InterruptedException, IOException {
+
 		String encoding = layerFileDescription.getString("encoding");
-		
+
 		OGR2OGR ogr2ogr = new OGR2OGR(OGR2OGR.SHP_TO_POSTGRES, null, layerTableName, "precision=NO", null,
 				ogrInputFileLocation, encoding);
 
@@ -216,7 +222,8 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		String query = "select " + attributeString + " from " + layerName;
 
 		shapeFileDirectoryPath = shapeFileDirectory.getAbsolutePath();
-		OGR2OGR ogr2ogr = new OGR2OGR(OGR2OGR.POSTGRES_TO_SHP, null, layerName, null, query, shapeFileDirectoryPath, null);
+		OGR2OGR ogr2ogr = new OGR2OGR(OGR2OGR.POSTGRES_TO_SHP, null, layerName, null, query, shapeFileDirectoryPath,
+				null);
 		Process process = ogr2ogr.execute();
 		if (process == null) {
 			throw new IOException("Shape file creation failed");
@@ -266,5 +273,26 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		// TODO : Mark the entry in the metalayer as inactive.
 		// TODO : remove-publish layer from the geoserver
 		return "";
+	}
+
+	@Override
+	public ObservationLocationInfo getLayerInfo(String lon, String lat) {
+
+		String soil = getAttributeValueAtLatlon("descriptio", INDIA_SOIL, lon, lat);
+		String temp = getAttributeValueAtLatlon("temp_c", INDIA_TEMPERATURE, lon, lat);
+		String rainfall = getAttributeValueAtLatlon("rain_range", INDIA_RAINFALLZONE, lon, lat);
+		String tahsil = getAttributeValueAtLatlon("tahsil", INDIA_TAHSIL, lon, lat);
+		String forestType = getAttributeValueAtLatlon("type_desc", INDIA_FOREST_TYPE, lon, lat);
+
+		return new ObservationLocationInfo(soil, temp, rainfall, tahsil, forestType);
+	}
+	
+	private String getAttributeValueAtLatlon(String attribute, String layerName, String lon, String lat) {
+		
+		String queryStr = "SELECT " + attribute + " from " + layerName + " where st_contains"
+				+ "(" + layerName + "." + MetaLayerService.GEOMETRY_COLUMN_NAME + ", ST_GeomFromText('POINT(" + lon + " " + lat + ")',0))";
+		List<Object> result = metaLayerDao.executeQueryForSingleResult(queryStr);
+		
+		return result.get(0).toString();
 	}
 }

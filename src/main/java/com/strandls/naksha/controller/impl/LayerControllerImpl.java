@@ -163,15 +163,13 @@ public class LayerControllerImpl implements LayerController {
 	@ApiOperation(value = "Find layer info By Latitude and Longitude", notes = " Returns Layer Details", response = ObservationLocationInfo.class)
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "Layer info notfound", response = String.class) })
 	public Response getLayerInfo(@QueryParam("lat") String lat, @QueryParam("lon") String lon) {
-		// TODO Auto-generated method stub
-		// Here we need to get info from four different layer and return the observation
-		// info about it.
-		// 1. Get tahsil from lyr_115_india_tahsils
-		// 2. Get description from lyr_117_india_soils
-		// 3. Get type description from lyr_118_india_foresttypes;
-		// 4. Get rain range from lyr_119_india_rainfallzone.
-		// 5. Get temperature from lyr_162_india_temperature.
-		return null;
+		try {
+			ObservationLocationInfo observationLocationInfo = metaLayerService.getLayerInfo(lon, lat);
+			return Response.ok().entity(observationLocationInfo).build();
+		} catch (Exception e) {
+			throw new WebApplicationException(
+					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
+		}
 	}
 
 	@Override
