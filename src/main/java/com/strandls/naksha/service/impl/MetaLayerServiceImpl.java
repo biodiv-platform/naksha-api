@@ -293,6 +293,9 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 				+ "(" + layerName + "." + MetaLayerService.GEOMETRY_COLUMN_NAME + ", ST_GeomFromText('POINT(" + lon + " " + lat + ")',0))";
 		List<Object> result = metaLayerDao.executeQueryForSingleResult(queryStr);
 		
+		if(result.size() == 0)
+			return null;
+		
 		return result.get(0).toString();
 	}
 }
