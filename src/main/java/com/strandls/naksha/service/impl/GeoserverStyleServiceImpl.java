@@ -20,6 +20,7 @@ import com.strandls.naksha.NakshaConfig;
 import com.strandls.naksha.dao.GeoserverStyleDao;
 import com.strandls.naksha.pojo.MetaLayer;
 import com.strandls.naksha.pojo.enumtype.LayerType;
+import com.strandls.naksha.pojo.response.GeoserverLayerStyles;
 import com.strandls.naksha.pojo.response.MBStyle;
 import com.strandls.naksha.service.GeoserverService;
 import com.strandls.naksha.service.GeoserverStyleService;
@@ -79,6 +80,25 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 	public GeoserverStyleServiceImpl() {
 	}
 
+	@Override
+	public List<GeoserverLayerStyles> fetchAllStyles(String id) {
+		MetaLayer metaLayer = metaLayerService.findByLayerTableName(id);
+		String colorByColumn = metaLayer.getColorBy();
+		List<Object[]> columnNames = getColumnName(id);
+		List<GeoserverLayerStyles> styles = new ArrayList<GeoserverLayerStyles>();
+		for (Object[] row : columnNames) {
+			String styleName = metaLayer.getLayerTableName() + "_" + row[0].toString();
+			String styleTitle = row[1].toString();
+			String styleType = row[2].toString();
+			GeoserverLayerStyles geoserverLayerStyles = new GeoserverLayerStyles(styleName, styleTitle, styleType);
+			if (styleName.equalsIgnoreCase(colorByColumn))
+				styles.add(0, geoserverLayerStyles);
+			else
+				styles.add(geoserverLayerStyles);
+		}
+		return styles;
+	}
+	
 	@Override
 	public List<Object[]> getColumnName(String tableName) {
 		return geoserverStyleDao.getColumnNames(tableName);

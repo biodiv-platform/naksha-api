@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.strandls.naksha.pojo.response.GeoserverLayerStyles;
 import com.strandls.naksha.style.json.JsonStyle;
 
 public interface GeoserverStyleService {
@@ -14,5 +15,7 @@ public interface GeoserverStyleService {
 	public List<Object[]> getColumnName(String tableName);
 
 	public List<String> publishAllStyles(String layerTableName, String workspace) throws JsonGenerationException, JsonMappingException, IOException;
+
+	List<GeoserverLayerStyles> fetchAllStyles(String id);
 
 }

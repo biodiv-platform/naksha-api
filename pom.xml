@@ -226,6 +226,12 @@
 			<artifactId>authentication-utility</artifactId>
 			<version>1.0.0</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>com.strandls.biodiv</groupId>
+			<artifactId>user-client</artifactId>
+			<version>1.0.0</version>
+		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/com.googlecode.json-simple/json-simple -->
 		<dependency>
@@ -250,6 +256,12 @@
 			<groupId>it.geosolutions</groupId>
 			<artifactId>geoserver-manager</artifactId>
 			<version>1.7.0</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.vividsolutions/jts-io -->
+		<dependency>
+		    <groupId>com.vividsolutions</groupId>
+		    <artifactId>jts-io</artifactId>
+		    <version>1.14.0</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.json/json -->
 		<dependency>

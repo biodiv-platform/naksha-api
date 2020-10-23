@@ -10,7 +10,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
 
 import com.strandls.naksha.pojo.MetaLayer;
-import com.strandls.naksha.service.MetaLayerService;
 
 public class MetaLayerDao extends AbstractDao<MetaLayer, Long>{
 
@@ -44,5 +43,19 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long>{
 		}
 		session.close();
 		return entity;
+	}
+
+	public String getBoundingBox(String layerTableName) {
+		Session session = sessionFactory.openSession();
+		String queryStr = "select ST_ASTEXT(ST_Extent(wkb_geometry)) BBOX from " + layerTableName;
+		Query query = session.createNativeQuery(queryStr);
+		String bbox_wkt;
+		try {
+			bbox_wkt = (String) query.getSingleResult();
+		} catch(NoResultException e) {
+			throw e;
+		}	
+		session.close();
+		return bbox_wkt;
 	}
 }

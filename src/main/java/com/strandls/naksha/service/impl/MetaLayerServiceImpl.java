@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,22 +17,37 @@ import javax.inject.Inject;
 import javax.naming.directory.InvalidAttributesException;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.message.BasicNameValuePair;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.simple.parser.ParseException;
+import org.pac4j.core.profile.CommonProfile;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.strandls.authentication_utility.util.AuthUtil;
+import com.strandls.naksha.ApiConstants;
 import com.strandls.naksha.NakshaConfig;
 import com.strandls.naksha.dao.MetaLayerDao;
 import com.strandls.naksha.pojo.MetaLayer;
 import com.strandls.naksha.pojo.OGR2OGR;
+import com.strandls.naksha.pojo.enumtype.DownloadAccess;
+import com.strandls.naksha.pojo.enumtype.LayerStatus;
 import com.strandls.naksha.pojo.response.ObservationLocationInfo;
+import com.strandls.naksha.pojo.response.TOCLayer;
 import com.strandls.naksha.service.AbstractService;
 import com.strandls.naksha.service.GeoserverService;
 import com.strandls.naksha.service.GeoserverStyleService;
 import com.strandls.naksha.service.MetaLayerService;
 import com.strandls.naksha.utils.MetaLayerUtil;
+import com.strandls.user.ApiException;
+import com.strandls.user.controller.UserServiceApi;
+import com.strandls.user.pojo.UserIbp;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.io.WKTReader;
 
 import it.geosolutions.geoserver.rest.decoder.RESTLayer;
 
@@ -47,7 +63,13 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	private GeoserverStyleService geoserverStyleService;
 
 	@Inject
+	private UserServiceApi userServiceApi;
+
+	@Inject
 	private MetaLayerDao metaLayerDao;
+
+	@Inject
+	private GeometryFactory geoFactory;
 
 	public static final String DOWNLOAD_BASE_LOCATION = NakshaConfig.getString(MetaLayerUtil.TEMP_DIR_PATH)
 			+ File.separator + "temp_zip";
@@ -60,6 +82,87 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	@Override
 	public MetaLayer findByLayerTableName(String layerName) {
 		return findByPropertyWithCondtion("layerTableName", layerName, "=");
+	}
+
+	@Override
+	public List<TOCLayer> getTOCList(HttpServletRequest request, Integer limit, Integer offset)
+			throws ApiException, com.vividsolutions.jts.io.ParseException, URISyntaxException {
+
+		CommonProfile userProfile = AuthUtil.getProfileFromRequest(request);
+
+		List<MetaLayer> metaLayers = findAll(request, limit, offset);
+		List<TOCLayer> layerLists = new ArrayList<TOCLayer>();
+		for (MetaLayer metaLayer : metaLayers) {
+			Long authorId = metaLayer.getUploaderUserId();
+			UserIbp userIbp = userServiceApi.getUserIbp(authorId + "");
+
+			Boolean isDownloadable = false;
+			if (userIbp.getIsAdmin() || DownloadAccess.ALL.equals(metaLayer.getDownloadAccess())
+					|| (userProfile != null && userProfile.getId().equals(authorId.toString()))
+					|| checkDownLoadAccess(userProfile, metaLayer))
+				isDownloadable = true;
+
+			List<List<Double>> bbox = getBoundingBox(metaLayer);
+			String thumbnail = getThumbnail(request, metaLayer, bbox);
+			TOCLayer tocLayer = new TOCLayer(metaLayer, userIbp, isDownloadable, bbox, thumbnail);
+			layerLists.add(tocLayer);
+		}
+		return layerLists;
+	}
+
+	private String getThumbnail(HttpServletRequest request, MetaLayer metaLayer, List<List<Double>> bbox) throws URISyntaxException {
+		String bboxValue = bbox.get(0).get(0) + "," + bbox.get(0).get(1) + "," + bbox.get(1).get(0) + ","
+				+ bbox.get(1).get(1);
+
+		String uri = request.getContextPath() + request.getServletPath() + ApiConstants.GEOSERVER
+				+ ApiConstants.THUMBNAILS + "/" + MetaLayerService.WORKSPACE + "/" + metaLayer.getLayerTableName();
+
+		URIBuilder builder = new URIBuilder(uri);
+
+		ArrayList<NameValuePair> params = new ArrayList<NameValuePair>();
+		params.add(new BasicNameValuePair("layers", metaLayer.getLayerTableName()));
+		params.add(new BasicNameValuePair("bbox", bboxValue));
+		params.add(new BasicNameValuePair("request", "GetMap"));
+		params.add(new BasicNameValuePair("service", "WMS"));
+		params.add(new BasicNameValuePair("version", "1.1.0"));
+		params.add(new BasicNameValuePair("format", "image/gif"));
+		
+		if (params != null)
+			builder.setParameters(params);
+		return builder.build().toString();
+	}
+
+	private List<List<Double>> getBoundingBox(MetaLayer metaLayer) throws com.vividsolutions.jts.io.ParseException {
+		String bbox = metaLayerDao.getBoundingBox(metaLayer.getLayerTableName());
+
+		WKTReader reader = new WKTReader(geoFactory);
+		Geometry topology = reader.read(bbox);
+
+		Geometry envelop = topology.getEnvelope();
+
+		Double top = envelop.getCoordinates()[0].x, left = envelop.getCoordinates()[0].y,
+				bottom = envelop.getCoordinates()[2].x, right = envelop.getCoordinates()[2].y;
+
+		List<List<Double>> boundingBox = new ArrayList<List<Double>>();
+
+		List<Double> topLeft = new ArrayList<Double>();
+		List<Double> bottomRight = new ArrayList<Double>();
+
+		topLeft.add(top);
+		topLeft.add(left);
+
+		bottomRight.add(bottom);
+		bottomRight.add(right);
+
+		boundingBox.add(topLeft);
+		boundingBox.add(bottomRight);
+
+		return boundingBox;
+	}
+
+	private boolean checkDownLoadAccess(CommonProfile userProfile, MetaLayer metaLayer) {
+		// TODO : Need to add permission with the download access
+		return true;
 	}
 
 	@Override
@@ -144,6 +247,10 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		if (!isPublished) {
 			throw new IOException("Geoserver publication of layer failed");
 		}
+
+		metaLayer.setLayerStatus(LayerStatus.PENDING);
+		update(metaLayer);
+
 		result.put("Uplaoded on geoserver", layerTableName);
 		RESTLayer layer = geoserverService.getManager().getReader().getLayer(WORKSPACE, layerTableName);
 		result.put("Geoserver layer url", layer.getResourceUrl());
@@ -286,16 +393,16 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		return new ObservationLocationInfo(soil, temp, rainfall, tahsil, forestType);
 	}
-	
+
 	private String getAttributeValueAtLatlon(String attribute, String layerName, String lon, String lat) {
-		
-		String queryStr = "SELECT " + attribute + " from " + layerName + " where st_contains"
-				+ "(" + layerName + "." + MetaLayerService.GEOMETRY_COLUMN_NAME + ", ST_GeomFromText('POINT(" + lon + " " + lat + ")',0))";
+
+		String queryStr = "SELECT " + attribute + " from " + layerName + " where st_contains" + "(" + layerName + "."
+				+ MetaLayerService.GEOMETRY_COLUMN_NAME + ", ST_GeomFromText('POINT(" + lon + " " + lat + ")',0))";
 		List<Object> result = metaLayerDao.executeQueryForSingleResult(queryStr);
-		
-		if(result.size() == 0)
+
+		if (result.size() == 0)
 			return null;
-		
+
 		return result.get(0).toString();
 	}
 }

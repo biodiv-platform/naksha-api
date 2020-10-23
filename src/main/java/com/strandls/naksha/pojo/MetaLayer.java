@@ -109,10 +109,12 @@ public class MetaLayer implements Serializable {
 	@Type(type = "text")
 	private String summaryColumns;
 
+	// 0 - private, 1,2 - public in previous implementation
 	@Column(name = "download_access")
 	@Enumerated(EnumType.STRING)
 	private DownloadAccess downloadAccess;
 
+	// 0 - private, 1,2 - public in previous implementation
 	@Column(name = "edit_access")
 	@Enumerated(EnumType.STRING)
 	private EditAccess editAccess;

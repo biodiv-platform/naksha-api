@@ -3,6 +3,7 @@ package com.strandls.naksha.controller.impl;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,8 +36,11 @@ import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.naksha.ApiConstants;
 import com.strandls.naksha.controller.LayerController;
 import com.strandls.naksha.pojo.MetaLayer;
-import com.strandls.naksha.pojo.response.LayerAttributes;
+import com.strandls.naksha.pojo.response.GeoserverLayerStyles;
+import com.strandls.naksha.pojo.response.LayerInfoOnClick;
 import com.strandls.naksha.pojo.response.ObservationLocationInfo;
+import com.strandls.naksha.pojo.response.TOCLayer;
+import com.strandls.naksha.service.GeoserverStyleService;
 import com.strandls.naksha.service.MetaLayerService;
 
 import io.swagger.annotations.Api;
@@ -50,28 +54,46 @@ public class LayerControllerImpl implements LayerController {
 
 	@Inject
 	private MetaLayerService metaLayerService;
+	
+	@Inject
+	private GeoserverStyleService geoserverStyleService;
 
 	public LayerControllerImpl() {
-	}
-
-	@Override
-	@Path("ping")
-	@GET
-	@Produces(MediaType.TEXT_PLAIN)
-	public String ping() {
-		return "pong";
 	}
 
 	@Override
 	@Path("all")
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	@ApiOperation(value = "Get meta data of all the layers", response = MetaLayer.class, responseContainer = "List")
+	@ApiOperation(value = "Get meta data of all the layers", response = TOCLayer.class, responseContainer = "List")
 	public Response findAll(@Context HttpServletRequest request, @DefaultValue("-1") @QueryParam("limit") Integer limit,
 			@DefaultValue("-1") @QueryParam("offset") Integer offset) {
 		try {
-			List<MetaLayer> metaLayers = metaLayerService.findAll(request, limit, offset);
-			return Response.ok().entity(metaLayers).build();
+			List<TOCLayer> layerList = metaLayerService.getTOCList(request, limit, offset);
+			//List<MetaLayer> metaLayers = metaLayerService.findAll(request, limit, offset);
+			return Response.ok().entity(layerList).build();
+		} catch (Exception e) {
+			throw new WebApplicationException(
+					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
+		}
+	}
+	
+	@Override
+	@Path("onClick/{layer}")
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Get layer information for the layer on click", response = LayerInfoOnClick.class, responseContainer = "List")
+	public Response getLayerInfoOnClick(@PathParam("layer") String layer) {
+		try {
+			MetaLayer metaLayer = metaLayerService.findByLayerTableName(layer);
+			String titleColumn = metaLayer.getTitleColumn();
+			List<String> summaryColumn = new ArrayList<String>();
+			for(String column : metaLayer.getSummaryColumns().split(",")) {
+				summaryColumn.add(column);
+			}
+			List<GeoserverLayerStyles> styles = geoserverStyleService.fetchAllStyles(layer);
+			LayerInfoOnClick layerInfoOnClick = new LayerInfoOnClick(titleColumn, summaryColumn, styles);
+			return Response.ok().entity(layerInfoOnClick).build();
 		} catch (Exception e) {
 			throw new WebApplicationException(
 					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
@@ -170,36 +192,5 @@ public class LayerControllerImpl implements LayerController {
 			throw new WebApplicationException(
 					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
 		}
-	}
-
-	@Override
-	@Path("/attributes")
-	@GET
-	@Produces(MediaType.APPLICATION_JSON)
-	public List<LayerAttributes> attributes(@QueryParam("layername") String layername) {
-		// TODO Auto-generated method stub
-		// Get the layer attribute from given layer. basically column name and
-		// description.
-		// return layerService.getLayerAttributes(layername);
-		/*
-		 * SELECT c.column_name, pgd.description\n" +
-		 * "FROM pg_catalog.pg_statio_all_tables as st\n" +
-		 * "INNER JOIN pg_catalog.pg_description pgd on (pgd.objoid=st.relid)\n" +
-		 * "RIGHT OUTER JOIN information_schema.columns c on (pgd.objsubid=c.ordinal_position and  c.table_schema=st.schemaname and c.table_name=st.relname)\n"
-		 * + "WHERE table_schema = 'public' and table_name = ?"
-		 */
-		return null;
-	}
-
-	@Override
-	@Path("/tags")
-	@GET
-	@Produces(MediaType.APPLICATION_JSON)
-	public List<String> tags(@QueryParam("tag") String tag) {
-		// TODO Auto-generated method stub
-		// Get layer name with tags.
-		// return layerService.getLayerNamesWithTag(tag);
-		// "SELECT layer_tablename, tags FROM \"Meta_Layer\"";
-		return null;
 	}
 }

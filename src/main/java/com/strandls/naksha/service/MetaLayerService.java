@@ -2,6 +2,7 @@ package com.strandls.naksha.service;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 
@@ -13,6 +14,8 @@ import org.json.simple.parser.ParseException;
 
 import com.strandls.naksha.NakshaConfig;
 import com.strandls.naksha.pojo.MetaLayer;
+import com.strandls.naksha.pojo.response.TOCLayer;
+import com.strandls.user.ApiException;
 import com.strandls.naksha.pojo.response.ObservationLocationInfo;
 
 public interface MetaLayerService {
@@ -42,5 +45,7 @@ public interface MetaLayerService {
 	public String getFileLocation(String hashKey, String layerName);
 
 	public ObservationLocationInfo getLayerInfo(String lon, String lat);
+
+	public List<TOCLayer> getTOCList(HttpServletRequest request, Integer limit, Integer offset) throws ApiException, com.vividsolutions.jts.io.ParseException, URISyntaxException;
 
 }
