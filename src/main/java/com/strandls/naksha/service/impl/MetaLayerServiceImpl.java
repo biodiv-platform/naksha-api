@@ -114,8 +114,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		String bboxValue = bbox.get(0).get(0) + "," + bbox.get(0).get(1) + "," + bbox.get(1).get(0) + ","
 				+ bbox.get(1).get(1);
 
-		String uri = request.getContextPath() + request.getServletPath() + ApiConstants.GEOSERVER
-				+ ApiConstants.THUMBNAILS + "/" + MetaLayerService.WORKSPACE + "/" + metaLayer.getLayerTableName();
+		String uri = ApiConstants.GEOSERVER + ApiConstants.THUMBNAILS + "/" + MetaLayerService.WORKSPACE + "/" + metaLayer.getLayerTableName();
 
 		URIBuilder builder = new URIBuilder(uri);
 
