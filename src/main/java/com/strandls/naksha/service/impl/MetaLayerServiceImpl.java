@@ -35,6 +35,8 @@ import com.strandls.naksha.pojo.MetaLayer;
 import com.strandls.naksha.pojo.OGR2OGR;
 import com.strandls.naksha.pojo.enumtype.DownloadAccess;
 import com.strandls.naksha.pojo.enumtype.LayerStatus;
+import com.strandls.naksha.pojo.request.LayerFileDescription;
+import com.strandls.naksha.pojo.request.MetaData;
 import com.strandls.naksha.pojo.response.ObservationLocationInfo;
 import com.strandls.naksha.pojo.response.TOCLayer;
 import com.strandls.naksha.service.AbstractService;
@@ -94,6 +96,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		List<TOCLayer> layerLists = new ArrayList<TOCLayer>();
 		for (MetaLayer metaLayer : metaLayers) {
 			Long authorId = metaLayer.getUploaderUserId();
+
 			UserIbp userIbp = userServiceApi.getUserIbp(authorId + "");
 
 			Boolean isDownloadable = false;
@@ -110,11 +113,13 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		return layerLists;
 	}
 
-	private String getThumbnail(HttpServletRequest request, MetaLayer metaLayer, List<List<Double>> bbox) throws URISyntaxException {
+	private String getThumbnail(HttpServletRequest request, MetaLayer metaLayer, List<List<Double>> bbox)
+			throws URISyntaxException {
 		String bboxValue = bbox.get(0).get(0) + "," + bbox.get(0).get(1) + "," + bbox.get(1).get(0) + ","
 				+ bbox.get(1).get(1);
 
-		String uri = ApiConstants.GEOSERVER + ApiConstants.THUMBNAILS + "/" + MetaLayerService.WORKSPACE + "/" + metaLayer.getLayerTableName();
+		String uri = ApiConstants.GEOSERVER + ApiConstants.THUMBNAILS + "/" + MetaLayerService.WORKSPACE + "/"
+				+ metaLayer.getLayerTableName();
 
 		URIBuilder builder = new URIBuilder(uri);
 
@@ -125,7 +130,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		params.add(new BasicNameValuePair("service", "WMS"));
 		params.add(new BasicNameValuePair("version", "1.1.0"));
 		params.add(new BasicNameValuePair("format", "image/gif"));
-		
+
 		if (params != null)
 			builder.setParameters(params);
 		return builder.build().toString();
@@ -193,11 +198,13 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		Map<String, Object> result = new HashMap<String, Object>();
 
 		String jsonString = MetaLayerUtil.getMetadataAsJson(multiPart).toJSONString();
-		JSONObject jsonObject = new JSONObject(jsonString);
-		JSONObject layerColumnDescription = (JSONObject) jsonObject.remove("$layerColumnDescription");
-		JSONObject layerFileDescription = (JSONObject) jsonObject.remove("$layerFileDescription");
+		MetaData metaData = objectMapper.readValue(jsonString, MetaData.class);
+		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+		long uploaderUserId = Long.parseLong(profile.getId());
+		Map<String, String> layerColumnDescription = metaData.getLayerColumnDescription();
+		LayerFileDescription layerFileDescription = metaData.getLayerFileDescription();
+		String fileType = layerFileDescription.getFileType();
 
-		String fileType = layerFileDescription.getString("fileType");
 		Map<String, String> copiedFiles;
 		String ogrInputFileLocation;
 		String layerName;
@@ -220,9 +227,9 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		String dirPath = copiedFiles.get("dirPath");
 		result.put("Files copied to", dirPath);
+		metaData.setDirPath(dirPath);
 
-		MetaLayer metaLayer = objectMapper.readValue(jsonObject.toString(), MetaLayer.class);
-		metaLayer.setDirPath(dirPath);
+		MetaLayer metaLayer = new MetaLayer(metaData, uploaderUserId);
 		metaLayer = save(metaLayer);
 		result.put("Meta layer table entry", metaLayer.getId());
 
@@ -256,11 +263,11 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		return result;
 	}
 
-	private void createDBTable(String layerTableName, String ogrInputFileLocation, JSONObject layerColumnDescription,
-			JSONObject layerFileDescription, Map<String, Object> result)
-			throws InvalidAttributesException, InterruptedException, IOException {
+	private void createDBTable(String layerTableName, String ogrInputFileLocation,
+			Map<String, String> layerColumnDescription, LayerFileDescription layerFileDescription,
+			Map<String, Object> result) throws InvalidAttributesException, InterruptedException, IOException {
 
-		String encoding = layerFileDescription.getString("encoding");
+		String encoding = layerFileDescription.getEncoding();
 
 		OGR2OGR ogr2ogr = new OGR2OGR(OGR2OGR.SHP_TO_POSTGRES, null, layerTableName, "precision=NO", null,
 				ogrInputFileLocation, encoding);

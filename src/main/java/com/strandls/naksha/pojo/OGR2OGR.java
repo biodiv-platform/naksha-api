@@ -2,6 +2,7 @@ package com.strandls.naksha.pojo;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 import javax.naming.directory.InvalidAttributesException;
 
@@ -118,13 +119,13 @@ public class OGR2OGR {
 		return execute(ogrCommand);
 	}
 
-	public Process addColumnDescription(String layerName, JSONObject layerColumnDescription) {
+	public Process addColumnDescription(String layerName, Map<String, String> layerColumnDescription) {
 
 		String comments = "";
 
 		for (String key : layerColumnDescription.keySet()) {
 			String columnName = key.toString();
-			String description = layerColumnDescription.getString(key);
+			String description = layerColumnDescription.get(key);
 
 			String comment = "";
 			comment += "PGPASSWORD=" + password;

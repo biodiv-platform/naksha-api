@@ -21,11 +21,15 @@ import com.strandls.naksha.pojo.enumtype.DownloadAccess;
 import com.strandls.naksha.pojo.enumtype.EditAccess;
 import com.strandls.naksha.pojo.enumtype.LayerStatus;
 import com.strandls.naksha.pojo.enumtype.LayerType;
+import com.strandls.naksha.pojo.request.MetaData;
+
+import io.swagger.annotations.ApiModel;
 
 @Entity
 @Table(name = "`Meta_Layer_Table`")
 @XmlRootElement
 @JsonIgnoreProperties
+@ApiModel("MetaLayer")
 public class MetaLayer implements Serializable {
 
 	/**
@@ -65,7 +69,7 @@ public class MetaLayer implements Serializable {
 	private LayerStatus layerStatus;
 
 	@Column(name = "geo_column")
-	private String geo_column;
+	private String geoColumn;
 
 	@Column(name = "min_scale")
 	private Double minScale;
@@ -153,12 +157,43 @@ public class MetaLayer implements Serializable {
 
 	@Column(name = "modified_date")
 	private Timestamp modifiedDate;
-
+	
 	public MetaLayer() {
+		super();
+	}
+
+	public MetaLayer(MetaData metaData, Long uploaderUserId) {
+		this.layerName = metaData.getLayerName();
+		this.layerDescription = metaData.getLayerDescription();
+		this.layerType = metaData.getLayerType();
+		this.layerStatus = LayerStatus.PENDING;
+		this.geoColumn = metaData.getGeoColumn();
+		this.minScale = metaData.getMinScale();
+		this.maxScale = metaData.getMaxScale();
+		this.pdfLink = metaData.getPdfLink();
+		this.url = metaData.getUrl();
+		this.dirPath = metaData.getDirPath();
+		this.uploaderUserId = uploaderUserId;
+		this.attribution = metaData.getAttribution();
+		this.tags = metaData.getTags();
+		this.license = metaData.getLicense();
+		this.summaryColumns = metaData.getSummaryColumns();
+		this.downloadAccess = metaData.getDownloadAccess();
+		this.editAccess = metaData.getEditAccess();
+		this.colorBy = metaData.getColorBy();
+		this.titleColumn = metaData.getTitleColumn();
+		this.sizeBy = metaData.getSizeBy();
+		this.mediaColumns = metaData.getMediaColumns();
+		this.pageId = metaData.getPageId();
+		this.italicsColumns = metaData.getItalicsColumns();
+		this.createdBy = metaData.getCreatedBy();
+		this.createdDate = metaData.getCreatedDate();
+		this.modifiedBy = metaData.getModifiedBy();
+		this.modifiedDate = metaData.getModifiedDate();
 	}
 
 	public MetaLayer(Long id, String layerName, String layerTableName, String layerDescription, LayerType layerType,
-			LayerStatus layerStatus, String geo_column, Double minScale, Double maxScale, String pdfLink, String url,
+			LayerStatus layerStatus, String geoColumn, Double minScale, Double maxScale, String pdfLink, String url,
 			String dirPath, Long uploaderUserId, String attribution, String tags, String license, String summaryColumns,
 			DownloadAccess downloadAccess, EditAccess editAccess, String colorBy, String titleColumn, String sizeBy,
 			String mediaColumns, Long pageId, String italicsColumns, String createdBy, Timestamp createdDate,
@@ -170,7 +205,7 @@ public class MetaLayer implements Serializable {
 		this.layerDescription = layerDescription;
 		this.layerType = layerType;
 		this.layerStatus = layerStatus;
-		this.geo_column = geo_column;
+		this.geoColumn = geoColumn;
 		this.minScale = minScale;
 		this.maxScale = maxScale;
 		this.pdfLink = pdfLink;
@@ -243,12 +278,12 @@ public class MetaLayer implements Serializable {
 		this.layerStatus = layerStatus;
 	}
 
-	public String getGeo_column() {
-		return geo_column;
+	public String getGeoColumn() {
+		return geoColumn;
 	}
 
-	public void setGeo_column(String geo_column) {
-		this.geo_column = geo_column;
+	public void setGeoColumn(String geoColumn) {
+		this.geoColumn = geoColumn;
 	}
 
 	public Double getMinScale() {

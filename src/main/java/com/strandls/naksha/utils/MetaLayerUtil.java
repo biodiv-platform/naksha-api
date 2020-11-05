@@ -20,6 +20,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import com.strandls.naksha.NakshaConfig;
+import com.strandls.naksha.pojo.request.LayerFileDescription;
 
 public class MetaLayerUtil {
 
@@ -58,7 +59,7 @@ public class MetaLayerUtil {
 	 * @return location of the copied file
 	 * @throws IOException
 	 */
-	public static Map<String, String> copyCSVFile(FormDataMultiPart multiPart, org.json.JSONObject layerFileDescription) throws IOException {
+	public static Map<String, String> copyCSVFile(FormDataMultiPart multiPart, LayerFileDescription layerFileDescription) throws IOException {
 
 		Map<String, String> result = new HashMap<String, String>();
 		String dataPath = NakshaConfig.getString(TEMP_DIR_PATH) + File.separator + System.currentTimeMillis();
@@ -71,13 +72,13 @@ public class MetaLayerUtil {
 
 		result.put("csv", location);
 		
-		String encoding = layerFileDescription.getString("encoding");
-		String latColumnName = layerFileDescription.getString("latitude");
-		String lonColumnName = layerFileDescription.getString("longitude");
-		String field = layerFileDescription.getString("field");
-		String geoColumnType = layerFileDescription.getString("geoColumnType");
-		String layerSRS = layerFileDescription.getString("layerSRS");
-
+		String encoding = layerFileDescription.getEncoding();
+		String latColumnName = layerFileDescription.getLatColumnName();
+		String lonColumnName = layerFileDescription.getLonColumnName();
+		String field = layerFileDescription.getField();
+		String geoColumnType = layerFileDescription.getGeoColumnType();
+		String layerSRS = layerFileDescription.getLayerSRS();
+		
 		//String  vrtFileContent = createVRTFileContent(tmpDirPath, layerName, location, "wkbPoint", "EPSG:4326", "PointFromColumns", lonColumnName, latColumnName, field);
 		String  vrtFileContent = createVRTFileContent(tmpDirPath, layerName, location, geoColumnType, layerSRS, encoding, lonColumnName, latColumnName, field);
 		

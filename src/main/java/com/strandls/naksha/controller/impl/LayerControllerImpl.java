@@ -32,10 +32,12 @@ import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.json.JSONObject;
 import org.pac4j.core.profile.CommonProfile;
 
+import com.strandls.authentication_utility.filter.ValidateUser;
 import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.naksha.ApiConstants;
 import com.strandls.naksha.controller.LayerController;
 import com.strandls.naksha.pojo.MetaLayer;
+import com.strandls.naksha.pojo.request.MetaData;
 import com.strandls.naksha.pojo.response.GeoserverLayerStyles;
 import com.strandls.naksha.pojo.response.LayerInfoOnClick;
 import com.strandls.naksha.pojo.response.ObservationLocationInfo;
@@ -105,10 +107,10 @@ public class LayerControllerImpl implements LayerController {
 	@POST
 	@Consumes({MediaType.MULTIPART_FORM_DATA})
 	@Produces(MediaType.APPLICATION_JSON)
-	@ApiOperation(value = "Upload Layer", notes = "Returns succuess failure", response = String.class)
+	@ApiOperation(value = "Upload Layer", notes = "Returns succuess failure", response = MetaData.class)
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "file not present", response = String.class),
 			@ApiResponse(code = 500, message = "ERROR", response = String.class) })
-	//@ValidateUser
+	@ValidateUser
 	public Response upload(@Context HttpServletRequest request, final FormDataMultiPart multiPart) {
 		try {
 			Map<String, Object> result = metaLayerService.uploadLayer(request, multiPart);
