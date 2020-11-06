@@ -227,9 +227,8 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		String dirPath = copiedFiles.get("dirPath");
 		result.put("Files copied to", dirPath);
-		metaData.setDirPath(dirPath);
 
-		MetaLayer metaLayer = new MetaLayer(metaData, uploaderUserId);
+		MetaLayer metaLayer = new MetaLayer(metaData, uploaderUserId, dirPath);
 		metaLayer = save(metaLayer);
 		result.put("Meta layer table entry", metaLayer.getId());
 

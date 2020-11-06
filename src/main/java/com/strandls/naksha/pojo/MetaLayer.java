@@ -162,7 +162,7 @@ public class MetaLayer implements Serializable {
 		super();
 	}
 
-	public MetaLayer(MetaData metaData, Long uploaderUserId) {
+	public MetaLayer(MetaData metaData, Long uploaderUserId, String dirPath) {
 		this.layerName = metaData.getLayerName();
 		this.layerDescription = metaData.getLayerDescription();
 		this.layerType = metaData.getLayerType();
@@ -172,7 +172,7 @@ public class MetaLayer implements Serializable {
 		this.maxScale = metaData.getMaxScale();
 		this.pdfLink = metaData.getPdfLink();
 		this.url = metaData.getUrl();
-		this.dirPath = metaData.getDirPath();
+		this.dirPath = dirPath;
 		this.uploaderUserId = uploaderUserId;
 		this.attribution = metaData.getAttribution();
 		this.tags = metaData.getTags();

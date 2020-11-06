@@ -87,7 +87,7 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 		List<Object[]> columnNames = getColumnName(id);
 		List<GeoserverLayerStyles> styles = new ArrayList<GeoserverLayerStyles>();
 		for (Object[] row : columnNames) {
-			String styleName = metaLayer.getLayerTableName() + "_" + row[0].toString();
+			String styleName = row[0].toString();
 			String styleTitle = row[1].toString();
 			String styleType = row[2].toString();
 			GeoserverLayerStyles geoserverLayerStyles = new GeoserverLayerStyles(styleName, styleTitle, styleType);

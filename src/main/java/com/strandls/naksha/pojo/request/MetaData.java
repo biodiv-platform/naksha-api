@@ -17,7 +17,6 @@ public class MetaData {
 	private Double maxScale;
 	private String pdfLink;
 	private String url;
-	private String dirPath;
 	private String attribution;
 	private String tags;
 	private String license;
@@ -42,7 +41,7 @@ public class MetaData {
 	}
 
 	public MetaData(String layerName, String layerDescription, LayerType layerType, String geoColumn, Double minScale,
-			Double maxScale, String pdfLink, String url, String dirPath, String attribution, String tags,
+			Double maxScale, String pdfLink, String url, String attribution, String tags,
 			String license, String summaryColumns, DownloadAccess downloadAccess, EditAccess editAccess, String colorBy,
 			String titleColumn, String sizeBy, String mediaColumns, Long pageId, String italicsColumns,
 			String createdBy, Timestamp createdDate, String modifiedBy, Timestamp modifiedDate,
@@ -56,7 +55,6 @@ public class MetaData {
 		this.maxScale = maxScale;
 		this.pdfLink = pdfLink;
 		this.url = url;
-		this.dirPath = dirPath;
 		this.attribution = attribution;
 		this.tags = tags;
 		this.license = license;
@@ -139,14 +137,6 @@ public class MetaData {
 
 	public void setUrl(String url) {
 		this.url = url;
-	}
-
-	public String getDirPath() {
-		return dirPath;
-	}
-
-	public void setDirPath(String dirPath) {
-		this.dirPath = dirPath;
 	}
 
 	public String getAttribution() {

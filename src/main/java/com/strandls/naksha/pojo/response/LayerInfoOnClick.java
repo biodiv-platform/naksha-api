@@ -4,6 +4,7 @@ import java.util.List;
 
 public class LayerInfoOnClick {
 
+	private String layerName;
 	private String titleColumn;
 	private List<String> summaryColumn;
 	private List<GeoserverLayerStyles> styles;
@@ -12,11 +13,21 @@ public class LayerInfoOnClick {
 		super();
 	}
 
-	public LayerInfoOnClick(String titleColumn, List<String> summaryColumn, List<GeoserverLayerStyles> styles) {
+	public LayerInfoOnClick(String layerName, String titleColumn, List<String> summaryColumn,
+			List<GeoserverLayerStyles> styles) {
 		super();
+		this.layerName = layerName;
 		this.titleColumn = titleColumn;
 		this.summaryColumn = summaryColumn;
 		this.styles = styles;
+	}
+
+	public String getLayerName() {
+		return layerName;
+	}
+
+	public void setLayerName(String layerName) {
+		this.layerName = layerName;
 	}
 
 	public String getTitleColumn() {
@@ -42,4 +53,5 @@ public class LayerInfoOnClick {
 	public void setStyles(List<GeoserverLayerStyles> styles) {
 		this.styles = styles;
 	}
+
 }

@@ -94,7 +94,7 @@ public class LayerControllerImpl implements LayerController {
 				summaryColumn.add(column);
 			}
 			List<GeoserverLayerStyles> styles = geoserverStyleService.fetchAllStyles(layer);
-			LayerInfoOnClick layerInfoOnClick = new LayerInfoOnClick(titleColumn, summaryColumn, styles);
+			LayerInfoOnClick layerInfoOnClick = new LayerInfoOnClick(layer, titleColumn, summaryColumn, styles);
 			return Response.ok().entity(layerInfoOnClick).build();
 		} catch (Exception e) {
 			throw new WebApplicationException(
