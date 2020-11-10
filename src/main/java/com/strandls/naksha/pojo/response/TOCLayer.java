@@ -77,6 +77,8 @@ public class TOCLayer {
 		this.attribution = metaLayer.getAttribution();
 		this.tags = new ArrayList<String>();
 		for(String tag : metaLayer.getTags().split(",")) {
+			if(tag == null || "".equals(tag))
+				continue;
 			this.tags.add(tag.trim());
 		}
 		this.license = metaLayer.getLicense();

@@ -88,6 +88,8 @@ public class LayerControllerImpl implements LayerController {
 			String titleColumn = metaLayer.getTitleColumn();
 			List<String> summaryColumn = new ArrayList<String>();
 			for (String column : metaLayer.getSummaryColumns().split(",")) {
+				if(column == null || "".equals(column))
+					continue;
 				summaryColumn.add(column);
 			}
 			List<GeoserverLayerStyles> styles = geoserverStyleService.fetchAllStyles(layer);
