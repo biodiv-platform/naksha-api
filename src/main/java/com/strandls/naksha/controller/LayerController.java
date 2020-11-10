@@ -7,6 +7,8 @@ import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 
+import com.strandls.naksha.pojo.request.LayerDownload;
+
 /**
  * 
  * 
@@ -19,7 +21,7 @@ public interface LayerController {
 
 	public Response upload(HttpServletRequest request, final FormDataMultiPart multiPart);
 
-	public Response prepareDownload(HttpServletRequest request, String jsonString) throws FileNotFoundException;
+	public Response prepareDownload(HttpServletRequest request, LayerDownload layerDownload) throws FileNotFoundException;
 
 	public Response download(String hashKey, String layerName) throws FileNotFoundException;
 

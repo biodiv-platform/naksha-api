@@ -10,6 +10,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -21,8 +24,6 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.json.simple.parser.ParseException;
 import org.pac4j.core.profile.CommonProfile;
 
@@ -35,6 +36,7 @@ import com.strandls.naksha.pojo.MetaLayer;
 import com.strandls.naksha.pojo.OGR2OGR;
 import com.strandls.naksha.pojo.enumtype.DownloadAccess;
 import com.strandls.naksha.pojo.enumtype.LayerStatus;
+import com.strandls.naksha.pojo.request.LayerDownload;
 import com.strandls.naksha.pojo.request.LayerFileDescription;
 import com.strandls.naksha.pojo.request.MetaData;
 import com.strandls.naksha.pojo.response.ObservationLocationInfo;
@@ -52,6 +54,7 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.io.WKTReader;
 
 import it.geosolutions.geoserver.rest.decoder.RESTLayer;
+import net.minidev.json.JSONArray;
 
 public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements MetaLayerService {
 
@@ -288,23 +291,62 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	}
 
 	@Override
-	public void prepareDownloadLayer(String uri, String hashKey, String jsonString)
+	public Map<String, String> prepareDownloadLayer(HttpServletRequest request, LayerDownload layerDownload)
 			throws InvalidAttributesException, InterruptedException, IOException {
 
-		JSONObject jsonObject = new JSONObject(jsonString);
+		Map<String, String> retValue = new HashMap<String, String>();
 
-		String layerName = jsonObject.getString("layerName");
+		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 
-		List<String> attributeList = new ArrayList<String>();
-		JSONArray attributeArray = jsonObject.getJSONArray("attributeList");
-		attributeArray.forEach(jO -> {
-			attributeList.add(jO.toString());
+		if (!checkDownLoadAccess(profile, layerDownload)) {
+			retValue.put("failed", "User is not authorized to download the layer");
+			return retValue;
+		}
+
+		String uri = request.getRequestURI();
+		String hashKey = UUID.randomUUID().toString();
+
+		ExecutorService service = Executors.newFixedThreadPool(10);
+		service.execute(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					runDownloadLayer(uri, hashKey, layerDownload);
+				} catch (InvalidAttributesException | InterruptedException | IOException e) {
+					e.printStackTrace();
+				}
+			}
 		});
 
-		JSONArray filterArray = jsonObject.getJSONArray("filterArray");
-		filterArray.forEach(fA -> {
+		String layerName = layerDownload.getLayerName();
 
-		});
+		retValue.put("url", uri + "/" + hashKey + "/" + layerName);
+		retValue.put("success", "The layer download process has started. You will receive the mail shortly");
+		return retValue;
+	}
+
+	private boolean checkDownLoadAccess(CommonProfile profile, LayerDownload layerDownload) {
+		
+		MetaLayer metaLayer = findByLayerTableName(layerDownload.getLayerName());
+		
+		JSONArray roles = (JSONArray) profile.getAttribute("roles");
+		if (roles.contains("ROLE_ADMIN"))
+			return true;
+		
+		if (metaLayer.getDownloadAccess().equals(DownloadAccess.ALL)
+				|| metaLayer.getUploaderUserId().equals(Long.parseLong(profile.getId())))
+			return true;
+		
+		return false;
+	}
+
+	public void runDownloadLayer(String uri, String hashKey, LayerDownload layerDownload)
+			throws InvalidAttributesException, InterruptedException, IOException {
+
+		String layerName = layerDownload.getLayerName();
+
+		List<String> attributeList = layerDownload.getAttributeList();
+		//List<String> filterArray = layerDownload.getFilterArray();
 
 		File directory = new File(DOWNLOAD_BASE_LOCATION);
 		if (!directory.exists()) {

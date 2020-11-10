@@ -1,6 +1,5 @@
 package com.strandls.naksha.service;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -14,9 +13,10 @@ import org.json.simple.parser.ParseException;
 
 import com.strandls.naksha.NakshaConfig;
 import com.strandls.naksha.pojo.MetaLayer;
+import com.strandls.naksha.pojo.request.LayerDownload;
+import com.strandls.naksha.pojo.response.ObservationLocationInfo;
 import com.strandls.naksha.pojo.response.TOCLayer;
 import com.strandls.user.ApiException;
-import com.strandls.naksha.pojo.response.ObservationLocationInfo;
 
 public interface MetaLayerService {
 	
@@ -37,9 +37,9 @@ public interface MetaLayerService {
 	public Map<String, Object> uploadLayer(HttpServletRequest request, FormDataMultiPart multiPart)
 			throws IOException, ParseException, InvalidAttributesException, InterruptedException;
 
-	public void prepareDownloadLayer(String uri, String hashKey, String jsonString)
-			throws InvalidAttributesException, InterruptedException, FileNotFoundException, IOException;
-
+	public Map<String, String> prepareDownloadLayer(HttpServletRequest request, LayerDownload layerDownload)
+			throws InvalidAttributesException, InterruptedException, IOException;
+	
 	public String removeLayer(String layerName);
 
 	public String getFileLocation(String hashKey, String layerName);

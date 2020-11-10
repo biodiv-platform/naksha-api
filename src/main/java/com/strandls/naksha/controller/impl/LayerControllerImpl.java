@@ -1,18 +1,15 @@
 package com.strandls.naksha.controller.impl;
 
-import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import javax.inject.Inject;
-import javax.naming.directory.InvalidAttributesException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -26,17 +23,16 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.json.JSONObject;
-import org.pac4j.core.profile.CommonProfile;
 
 import com.strandls.authentication_utility.filter.ValidateUser;
-import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.naksha.ApiConstants;
 import com.strandls.naksha.controller.LayerController;
 import com.strandls.naksha.pojo.MetaLayer;
+import com.strandls.naksha.pojo.request.LayerDownload;
 import com.strandls.naksha.pojo.request.MetaData;
 import com.strandls.naksha.pojo.response.GeoserverLayerStyles;
 import com.strandls.naksha.pojo.response.LayerInfoOnClick;
@@ -44,9 +40,11 @@ import com.strandls.naksha.pojo.response.ObservationLocationInfo;
 import com.strandls.naksha.pojo.response.TOCLayer;
 import com.strandls.naksha.service.GeoserverStyleService;
 import com.strandls.naksha.service.MetaLayerService;
+import com.strandls.naksha.utils.Utils;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
@@ -56,7 +54,7 @@ public class LayerControllerImpl implements LayerController {
 
 	@Inject
 	private MetaLayerService metaLayerService;
-	
+
 	@Inject
 	private GeoserverStyleService geoserverStyleService;
 
@@ -72,14 +70,13 @@ public class LayerControllerImpl implements LayerController {
 			@DefaultValue("-1") @QueryParam("offset") Integer offset) {
 		try {
 			List<TOCLayer> layerList = metaLayerService.getTOCList(request, limit, offset);
-			//List<MetaLayer> metaLayers = metaLayerService.findAll(request, limit, offset);
 			return Response.ok().entity(layerList).build();
 		} catch (Exception e) {
 			throw new WebApplicationException(
 					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
 		}
 	}
-	
+
 	@Override
 	@Path("onClick/{layer}")
 	@GET
@@ -90,7 +87,7 @@ public class LayerControllerImpl implements LayerController {
 			MetaLayer metaLayer = metaLayerService.findByLayerTableName(layer);
 			String titleColumn = metaLayer.getTitleColumn();
 			List<String> summaryColumn = new ArrayList<String>();
-			for(String column : metaLayer.getSummaryColumns().split(",")) {
+			for (String column : metaLayer.getSummaryColumns().split(",")) {
 				summaryColumn.add(column);
 			}
 			List<GeoserverLayerStyles> styles = geoserverStyleService.fetchAllStyles(layer);
@@ -105,7 +102,7 @@ public class LayerControllerImpl implements LayerController {
 	@Override
 	@Path("upload")
 	@POST
-	@Consumes({MediaType.MULTIPART_FORM_DATA})
+	@Consumes({ MediaType.MULTIPART_FORM_DATA })
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "Upload Layer", notes = "Returns succuess failure", response = MetaData.class)
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "file not present", response = String.class),
@@ -127,34 +124,11 @@ public class LayerControllerImpl implements LayerController {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "prepate shape file", notes = "Return the shape file location", response = Map.class)
-	//@ValidateUser
-	public Response prepareDownload(@Context HttpServletRequest request, String jsonString) throws FileNotFoundException {
-
-		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
-		System.out.println(profile);
-
-		String uri = request.getRequestURI();
-		String hashKey = UUID.randomUUID().toString();
-
+	@ValidateUser
+	public Response prepareDownload(@Context HttpServletRequest request,
+			@ApiParam("layerDownload") LayerDownload layerDownload) throws FileNotFoundException {
 		try {
-			ExecutorService service = Executors.newFixedThreadPool(10);
-			service.execute(new Runnable() {
-				@Override
-				public void run() {
-					try {
-						metaLayerService.prepareDownloadLayer(uri, hashKey, jsonString);
-					} catch (InvalidAttributesException | InterruptedException | IOException e) {
-						e.printStackTrace();
-					}
-				}
-			});
-
-			JSONObject jsonObject = new JSONObject(jsonString);
-			String layerName = jsonObject.getString("layerName");
-
-			Map<String, String> retValue = new HashMap<String, String>();
-			retValue.put("url", uri + "/" + hashKey + "/" + layerName);
-			retValue.put("success", "The layer download process has started. You will receive the mail shortly");
+			Map<String, String> retValue = metaLayerService.prepareDownloadLayer(request, layerDownload);
 			return Response.ok().entity(retValue).build();
 		} catch (Exception e) {
 			throw new WebApplicationException(
@@ -168,14 +142,33 @@ public class LayerControllerImpl implements LayerController {
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces("application/zip")
 	@ApiOperation(value = "Download the shp file", notes = "Return the shp file", response = StreamingOutput.class)
-	public Response download(@PathParam("hashKey") String hashKey,  @PathParam("layerName") String layerName) throws FileNotFoundException {
+	public Response download(@PathParam("hashKey") String hashKey, @PathParam("layerName") String layerName)
+			throws FileNotFoundException {
 		try {
 			String fileLocation = metaLayerService.getFileLocation(hashKey, layerName);
-			return Response.ok(new File(fileLocation))
-					.header("Content-Disposition", "attachment; filename=\"" + layerName + "\"").build();
-		} catch (Exception e) {
-			throw new WebApplicationException(
-					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
+			InputStream in = new FileInputStream(fileLocation);
+			StreamingOutput sout;
+			sout = new StreamingOutput() {
+
+				@Override
+				public void write(OutputStream output) throws IOException, WebApplicationException {
+					byte[] buf = new byte[8192];
+					int c;
+					while ((c = in.read(buf, 0, buf.length)) > 0) {
+						output.write(buf, 0, c);
+						output.flush();
+					}
+					in.close();
+					output.close();
+				}
+			};
+
+			return Response.ok(sout).header("Content-Disposition", "attachment; filename=\"" + layerName + ".zip\"")
+					.cacheControl(Utils.getCacheControl()).build();
+		} catch (IOException e) {
+			e.printStackTrace();
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+
 		}
 	}
 

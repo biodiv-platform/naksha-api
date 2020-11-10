@@ -6,8 +6,6 @@ import java.util.Map;
 
 import javax.naming.directory.InvalidAttributesException;
 
-import org.json.JSONObject;
-
 import com.strandls.naksha.NakshaConfig;
 
 public class OGR2OGR {

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import javax.ws.rs.core.CacheControl;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -124,4 +125,11 @@ public class Utils {
 
 		return jsonObject.toString();
 	}
+
+	public static CacheControl getCacheControl() {
+		CacheControl cache = new CacheControl();
+		cache.setMaxAge(365 * 24 * 60 * 60);
+		return cache;
+	}
+
 }
