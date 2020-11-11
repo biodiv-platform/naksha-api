@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,14 +25,18 @@ import com.strandls.naksha.pojo.request.LayerFileDescription;
 
 public class MetaLayerUtil {
 
+	private MetaLayerUtil() {}
+	
 	public static final String TEMP_DIR_PATH = "tmpDir.path";
 	public static final String TEMP_DIR_GEOSERVER_PATH = "tmpDirGeoserverPath";
+	private static final String DIR_PATH = "dirPath";
+	private static final String FINAL = "final";
 
 	private static final String[] COMPULSORY_EXTENSIONS = { "shp", "dbf", "shx" };
 	private static final String[] OPTIONAL_EXTENSIONS = { "prj", "sbn", "sbx", "fbn", "fbx", "ain", "aih", "ixs", "mxs",
 			"atx", "shp.xml", "cpg", "qix" };
 
-	public static String createVRTFileContent(String tmpDirPath, String layerName, String csvFilePath,
+	public static String createVRTFileContent(String layerName, String csvFilePath,
 			String geometryType, String layerSRS, String encoding, String x, String y, String field) {
 
 		String vrtFileContent = "<OGRVRTDataSource>" + "\n";
@@ -63,7 +68,7 @@ public class MetaLayerUtil {
 
 		Map<String, String> result = new HashMap<String, String>();
 		String dataPath = NakshaConfig.getString(TEMP_DIR_PATH) + File.separator + System.currentTimeMillis();
-		String tmpDirPath = dataPath + File.separator + "final";
+		String tmpDirPath = dataPath + File.separator + FINAL;
 
 		String location = copyFile(multiPart, "csv", tmpDirPath, false);
 
@@ -79,20 +84,21 @@ public class MetaLayerUtil {
 		String geoColumnType = layerFileDescription.getGeoColumnType();
 		String layerSRS = layerFileDescription.getLayerSRS();
 		
-		//String  vrtFileContent = createVRTFileContent(tmpDirPath, layerName, location, "wkbPoint", "EPSG:4326", "PointFromColumns", lonColumnName, latColumnName, field);
-		String  vrtFileContent = createVRTFileContent(tmpDirPath, layerName, location, geoColumnType, layerSRS, encoding, lonColumnName, latColumnName, field);
+		String  vrtFileContent = createVRTFileContent(layerName, location, geoColumnType, layerSRS, encoding, lonColumnName, latColumnName, field);
 		
 		String vrtFilePath = createVRTFile(tmpDirPath, layerName, vrtFileContent);
 		result.put("vrt", vrtFilePath);
 
-		result.put("dirPath", tmpDirPath);
+		result.put(DIR_PATH, tmpDirPath);
 		return result;
 	}
 
 	private static String createVRTFile(String tmpDirPath, String layerName, String vrtFileContent) throws IOException {
 		File vrtFile = new File(tmpDirPath + File.separator + layerName + ".vrt");
-		if (!vrtFile.exists())
-			vrtFile.createNewFile();
+		if (!vrtFile.exists()) {
+			if(!vrtFile.createNewFile())
+				throw new IOException("Failed to create file");
+		}
 		FileOutputStream fos = new FileOutputStream(vrtFile);
 		byte[] bytes = vrtFileContent.getBytes();
 		fos.write(bytes);
@@ -111,7 +117,7 @@ public class MetaLayerUtil {
 
 		Map<String, String> result = new HashMap<String, String>();
 		String dataPath = NakshaConfig.getString(TEMP_DIR_PATH) + File.separator + System.currentTimeMillis();
-		String tmpDirPath = dataPath + File.separator + "final";
+		String tmpDirPath = dataPath + File.separator + FINAL;
 
 		for (String type : COMPULSORY_EXTENSIONS) {
 			String location = copyFile(multiPart, type, tmpDirPath, false);
@@ -123,18 +129,18 @@ public class MetaLayerUtil {
 			result.put(type, location);
 		}
 
-		result.put("dirPath", tmpDirPath);
+		result.put(DIR_PATH, tmpDirPath);
 		return result;
 	}
 	
 	public static Map<String, String> copyGeneralFile(FormDataMultiPart multiPart, String type, boolean optional) throws IOException {
 		String dataPath = NakshaConfig.getString(TEMP_DIR_PATH) + File.separator + System.currentTimeMillis();
-		String tmpDirPath = dataPath + File.separator + "final";
+		String tmpDirPath = dataPath + File.separator + FINAL;
 		String fileLocation =  copyFile(multiPart, type, tmpDirPath, optional);
 		
 		Map<String, String> result = new HashMap<String, String>();
 		result.put(type, fileLocation);
-		result.put("dirPath", tmpDirPath);
+		result.put(FINAL, tmpDirPath);
 		return result;
 	}
 
@@ -157,7 +163,7 @@ public class MetaLayerUtil {
 
 		FormDataBodyPart formdata = multiPart.getField(type);
 		if (formdata == null) {
-			if (optional == true)
+			if (optional)
 				return null;
 			throw new WebApplicationException(Response.status(Response.Status.BAD_REQUEST)
 					.entity(type.toUpperCase() + " file not present").build());
@@ -184,16 +190,15 @@ public class MetaLayerUtil {
 	 * @throws ParseException
 	 */
 	public static JSONObject getMetadataAsJson(FormDataMultiPart multiPart)
-			throws UnsupportedEncodingException, IOException, ParseException {
+			throws IOException, ParseException {
 		FormDataBodyPart formdata = multiPart.getField("metadata");
 		if (formdata == null) {
 			throw new WebApplicationException(
 					Response.status(Response.Status.BAD_REQUEST).entity("Metadata file not present").build());
 		}
 		InputStream metaDataInputStream = formdata.getValueAs(InputStream.class);
-		InputStreamReader inputStreamReader = new InputStreamReader(metaDataInputStream, "UTF-8");
+		InputStreamReader inputStreamReader = new InputStreamReader(metaDataInputStream, StandardCharsets.UTF_8);
 		JSONParser parser = new JSONParser();
-		JSONObject jsonObject = (JSONObject) parser.parse(inputStreamReader);
-		return jsonObject;
+		return (JSONObject) parser.parse(inputStreamReader);
 	}
 }

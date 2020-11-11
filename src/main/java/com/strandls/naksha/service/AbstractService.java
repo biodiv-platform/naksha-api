@@ -1,83 +1,54 @@
 package com.strandls.naksha.service;
 
-import java.lang.reflect.ParameterizedType;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.strandls.naksha.dao.AbstractDao;
 
+public abstract class AbstractService<T> {
 
-public abstract class  AbstractService<T> {
+	private AbstractDao<T, Long> dao;
+	private final Logger logger = LoggerFactory.getLogger(AbstractService.class);
 
-	public Class<T> entityClass;
-	private  AbstractDao<T, Long> dao;
-	
 	public AbstractService(AbstractDao<T, Long> dao) {
-		System.out.println("\nAbstractService constructor");
+		logger.info("\nAbstractService constructor");
 		this.dao = dao;
-		entityClass = ((Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0]);
 	}
 
 	public T save(T entity) {
-		try {
-			this.dao.save(entity);
-			return entity;
-		} catch (RuntimeException re) {
-			throw re;
-		}
+		this.dao.save(entity);
+		return entity;
 	}
 
-	public T update(T entity)  {
-		try {
-			this.dao.update(entity);
-			return entity;
-		} catch (RuntimeException re) {
-			throw re;
-		}
-
+	public T update(T entity) {
+		this.dao.update(entity);
+		return entity;
 	}
 
 	public T delete(Long id) {
-		try {
-			T entity = (T) this.dao.findById(id);
-			this.dao.delete(entity);
-			return entity;
-		} catch (RuntimeException re) {
-			throw re;
-		}
+		T entity = this.dao.findById(id);
+		this.dao.delete(entity);
+		return entity;
 	}
 
 	public T findById(Long id) {
-		try {
-			T entity = (T) this.dao.findById(id);
-			return entity;
-		} catch (RuntimeException re) {
-			throw re;
-		}
+		return this.dao.findById(id);
 	}
-	
+
 	public List<T> findAll() {
-		
-		try {
-			List<T> entities = this.dao.findAll();
-			return entities;
-		} catch (RuntimeException re) {
-			throw re;
-		}
+		return this.dao.findAll();
 	}
-	
+
 	public List<T> findAll(int limit, int offset) {
-		try {
-			List<T> entities = this.dao.findAll(limit, offset);
-			return entities;
-		} catch (RuntimeException re) {
-			throw re;
-		}
+		return  this.dao.findAll(limit, offset);
 	}
-	
+
 	public T findByPropertyWithCondtion(String property, String value, String condition) {
 		return dao.findByPropertyWithCondition(property, value, condition);
 	}
-	
+
 	public List<T> getByPropertyWithCondtion(String property, Object value, String condition, int limit, int offset) {
 		return dao.getByPropertyWithCondtion(property, value, condition, limit, offset);
 	}

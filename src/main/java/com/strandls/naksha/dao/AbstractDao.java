@@ -14,9 +14,8 @@ import org.hibernate.Transaction;
 
 public abstract class AbstractDao<T, K extends Serializable> {
 
-
 	protected SessionFactory sessionFactory;
-	
+
 	protected Class<? extends T> daoType;
 
 	protected AbstractDao(SessionFactory sessionFactory) {
@@ -30,9 +29,9 @@ public abstract class AbstractDao<T, K extends Serializable> {
 		try {
 			tx = session.beginTransaction();
 			session.save(entity);
-			tx.commit();			
+			tx.commit();
 		} catch (Exception e) {
-			if(tx!=null)
+			if (tx != null)
 				tx.rollback();
 			throw e;
 		} finally {
@@ -47,9 +46,9 @@ public abstract class AbstractDao<T, K extends Serializable> {
 		try {
 			tx = session.beginTransaction();
 			session.update(entity);
-			tx.commit();			
+			tx.commit();
 		} catch (Exception e) {
-			if(tx!=null)
+			if (tx != null)
 				tx.rollback();
 			throw e;
 		} finally {
@@ -64,9 +63,9 @@ public abstract class AbstractDao<T, K extends Serializable> {
 		try {
 			tx = session.beginTransaction();
 			session.delete(entity);
-			tx.commit();			
+			tx.commit();
 		} catch (Exception e) {
-			if(tx!=null)
+			if (tx != null)
 				tx.rollback();
 			throw e;
 		} finally {
@@ -80,59 +79,73 @@ public abstract class AbstractDao<T, K extends Serializable> {
 	@SuppressWarnings("unchecked")
 	public List<T> findAll() {
 		Session session = sessionFactory.openSession();
-		Criteria criteria = session.createCriteria(daoType);
-		List<T> entities = criteria.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY).list();
+		List<T> entities = null;
+		try {
+			Criteria criteria = session.createCriteria(daoType);
+			entities = criteria.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY).list();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			session.close();
+		}
 		return entities;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public List<T> findAll(int limit, int offset) {
+		
 		Session session = sessionFactory.openSession();
-		Criteria criteria = session.createCriteria(daoType)
-				.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
-		List<T> entities = criteria.setFirstResult(offset).setMaxResults(limit).list();
+		List<T> entities = null;
+		try {
+			Criteria criteria = session.createCriteria(daoType).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+			return criteria.setFirstResult(offset).setMaxResults(limit).list();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			session.close();
+		}
 		return entities;
 	}
-	
-	//TODO:improve this to do dynamic finder on any property
+
 	public T findByPropertyWithCondition(String property, String value, String condition) {
-		String queryStr = "" +
-			    "from "+daoType.getSimpleName()+" t " +
-			    "where t."+property+" "+condition+" :value" ;
+		String queryStr = "" + "from " + daoType.getSimpleName() + " t " + "where t." + property + " " + condition
+				+ " :value";
 		Session session = sessionFactory.openSession();
 		org.hibernate.query.Query query = session.createQuery(queryStr);
 		query.setParameter("value", value);
-		
+
 		T entity = null;
 		try {
 			entity = (T) query.getSingleResult();
-		} catch(NoResultException e) {
+		} catch (NoResultException e) {
+			e.printStackTrace();
 			throw e;
+		} finally {
+			session.close();
 		}
-		session.close();
 		return entity;
 
 	}
-	
+
 	public List<T> getByPropertyWithCondtion(String property, Object value, String condition, int limit, int offset) {
-		String queryStr = "" +
-			    "from "+daoType.getSimpleName()+" t " +
-			    "where t."+property+" "+condition+" :value" +
-			    " order by id";
+		String queryStr = "" + "from " + daoType.getSimpleName() + " t " + "where t." + property + " " + condition
+				+ " :value" + " order by id";
 		Session session = sessionFactory.openSession();
 		org.hibernate.query.Query query = session.createQuery(queryStr);
 		query.setParameter("value", value);
 
 		List<T> resultList = new ArrayList<T>();
 		try {
-			if(limit>0 && offset >= 0)
+			if (limit > 0 && offset >= 0)
 				query = query.setFirstResult(offset).setMaxResults(limit);
 			resultList = query.getResultList();
-			
+
 		} catch (NoResultException e) {
+			e.printStackTrace();
 			throw e;
+		} finally {
+			session.close();
 		}
-		session.close();
 		return resultList;
 	}
 }

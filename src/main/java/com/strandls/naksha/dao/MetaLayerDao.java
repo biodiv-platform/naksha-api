@@ -25,6 +25,7 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long>{
 		try {
 			entity = session.get(MetaLayer.class, id);
 		} catch (Exception e) {
+			e.printStackTrace();
 			throw e;
 		} finally {
 			session.close();
@@ -39,9 +40,11 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long>{
 		try {
 			entity = (List<Object>) query.getResultList();
 		} catch(NoResultException e) {
+			e.printStackTrace();
 			throw e;
+		} finally {
+			session.close();
 		}
-		session.close();
 		return entity;
 	}
 
@@ -49,13 +52,14 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long>{
 		Session session = sessionFactory.openSession();
 		String queryStr = "select ST_ASTEXT(ST_Extent(wkb_geometry)) BBOX from " + layerTableName;
 		Query query = session.createNativeQuery(queryStr);
-		String bbox_wkt;
+		String bboxWkt;
 		try {
-			bbox_wkt = (String) query.getSingleResult();
+			bboxWkt = (String) query.getSingleResult();
 		} catch(NoResultException e) {
+			e.printStackTrace();
 			throw e;
 		}	
 		session.close();
-		return bbox_wkt;
+		return bboxWkt;
 	}
 }

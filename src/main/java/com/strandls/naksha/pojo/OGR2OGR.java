@@ -101,30 +101,29 @@ public class OGR2OGR {
 		}
 	}
 
-	public Process execute(String command) throws InterruptedException {
+	public Process execute(String command) {
 		ProcessBuilder pb = new ProcessBuilder();
 		pb.command("bash", "-c", command);
 		try {
-			Process process = pb.start();
-			return process;
+			return pb.start();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		return null;
 	}
 
-	public Process execute() throws InterruptedException {
+	public Process execute() {
 		return execute(ogrCommand);
 	}
 
 	public Process addColumnDescription(String layerName, Map<String, String> layerColumnDescription) {
 
-		String comments = "";
+		StringBuilder comments = new StringBuilder();
 
-		for (String key : layerColumnDescription.keySet()) {
-			String columnName = key.toString();
-			String description = layerColumnDescription.get(key);
-
+		for (Map.Entry<String, String> entry : layerColumnDescription.entrySet()) {
+			String columnName = entry.getKey();
+			String description = layerColumnDescription.get(columnName);
+			
 			String comment = "";
 			comment += "PGPASSWORD=" + password;
 			comment += " psql ";
@@ -135,11 +134,11 @@ public class OGR2OGR {
 					+ "\'";
 			comment += " -c " + "\"" + sqlComment + "\"";
 			comment += ";";
-			comments += comment;
+			comments.append(comment);
 		}
 
 		ProcessBuilder pb = new ProcessBuilder();
-		pb.command("bash", "-c", comments);
+		pb.command("bash", "-c", comments.toString());
 
 		try {
 			return pb.start();

@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
 
@@ -34,7 +35,7 @@ import it.geosolutions.geoserver.rest.encoder.GSLayerEncoder;
 import it.geosolutions.geoserver.rest.encoder.feature.GSFeatureTypeEncoder;
 
 public class GeoserverServiceImpl implements GeoserverService {
-	
+
 	private final Logger logger = LoggerFactory.getLogger(GeoserverServiceImpl.class);
 
 	private String baseUrl;
@@ -42,34 +43,33 @@ public class GeoserverServiceImpl implements GeoserverService {
 	private String password;
 
 	private GeoServerRESTManager manager;
-	private HttpClientContext context;	
+	private HttpClientContext context;
 
 	@Inject
-	public GeoserverServiceImpl() throws IllegalArgumentException, MalformedURLException {
+	public GeoserverServiceImpl() throws MalformedURLException {
 		super();
 		this.baseUrl = NakshaConfig.getString(GEOSERVER_URL);
 		this.userName = NakshaConfig.getString(GEOSERVER_USER_NAME);
 		this.password = NakshaConfig.getString(GEOSERVER_PASSWORD);
-		
+
 		context = HttpClientContext.create();
 		context.setAttribute(HttpClientContext.COOKIE_STORE, new BasicCookieStore());
 
 		this.manager = new GeoServerRESTManager(new URL(baseUrl), userName, password);
 	}
 
-	public GeoserverServiceImpl(String baseUrl, String userName, String password)
-			throws IllegalArgumentException, MalformedURLException {
+	public GeoserverServiceImpl(String baseUrl, String userName, String password) throws MalformedURLException {
 		super();
 		this.baseUrl = baseUrl;
 		this.userName = userName;
 		this.password = password;
-		
+
 		context = HttpClientContext.create();
 		context.setAttribute(HttpClientContext.COOKIE_STORE, new BasicCookieStore());
-		
+
 		this.manager = new GeoServerRESTManager(new URL(baseUrl), userName, password);
 	}
-	
+
 	@Override
 	public GeoServerRESTManager getManager() {
 		return manager;
@@ -89,15 +89,16 @@ public class GeoserverServiceImpl implements GeoserverService {
 			fte.addKeyword(keyword);
 
 		GSLayerEncoder layerEncoder = new GSLayerEncoder();
-		for(String style : styles)
+		for (String style : styles)
 			layerEncoder.addStyle(style);
 		layerEncoder.setEnabled(true);
 
 		return manager.getPublisher().publishDBLayer(workspace, datastore, fte, layerEncoder);
 	}
-	
+
 	@Override
-	public boolean publishGeoTiffLayer(String workspace, String datastore, File geoTiffFile) throws FileNotFoundException {
+	public boolean publishGeoTiffLayer(String workspace, String datastore, File geoTiffFile)
+			throws FileNotFoundException {
 		return manager.getPublisher().publishGeoTIFF(workspace, datastore, geoTiffFile);
 	}
 
@@ -105,7 +106,7 @@ public class GeoserverServiceImpl implements GeoserverService {
 	public boolean removeLayer(String workspace, String layerName) {
 		return manager.getPublisher().removeLayer(workspace, layerName);
 	}
-	
+
 	/**
 	 * Makes http get request to geoserver
 	 * 
@@ -126,9 +127,9 @@ public class GeoserverServiceImpl implements GeoserverService {
 			if (params != null)
 				builder.setParameters(params);
 			HttpGet request = new HttpGet(builder.build());
-			
+
 			String userPass = userName + ":" + password;
-			byte[] encoding = Base64.getEncoder().encode(userPass.getBytes("UTF-8"));
+			byte[] encoding = Base64.getEncoder().encode(userPass.getBytes(StandardCharsets.UTF_8.name()));
 			request.setHeader("Authorization", "Basic " + new String(encoding));
 
 			httpclient = HttpClients.createDefault();
@@ -154,7 +155,7 @@ public class GeoserverServiceImpl implements GeoserverService {
 
 		return byteArrayResponse != null ? byteArrayResponse : new byte[0];
 	}
-	
+
 	@Override
 	public byte[] postRequest(String uri, String styleContent, String contentType, List<NameValuePair> params) {
 		CloseableHttpResponse response = null;
@@ -166,27 +167,27 @@ public class GeoserverServiceImpl implements GeoserverService {
 			URIBuilder builder = new URIBuilder(baseUrl + uri);
 			if (params != null)
 				builder.setParameters(params);
-			
+
 			HttpPost request = new HttpPost(builder.build());
 
 			request.setHeader("Content-type", contentType);
-			
-			if(styleContent != null && !styleContent.isEmpty()) {
+
+			if (styleContent != null && !styleContent.isEmpty()) {
 				StringEntity stringEntity = new StringEntity(styleContent);
 				request.setEntity(stringEntity);
 			}
-			
+
 			String userPass = userName + ":" + password;
-			byte[] encoding = Base64.getEncoder().encode(userPass.getBytes("UTF-8"));
+			byte[] encoding = Base64.getEncoder().encode(userPass.getBytes(StandardCharsets.UTF_8));
 			request.setHeader("Authorization", "Basic " + new String(encoding));
-			
+
 			httpclient = HttpClients.createDefault();
 			response = httpclient.execute(request, context);
 			HttpEntity entity = response.getEntity();
-						
+
 			byteArrayResponse = EntityUtils.toByteArray(entity);
 			EntityUtils.consume(entity);
-			
+
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 			logger.error("Error while trying to send request at URL {}", uri);

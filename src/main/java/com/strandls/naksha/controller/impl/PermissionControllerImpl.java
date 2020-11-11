@@ -31,6 +31,7 @@ public class PermissionControllerImpl implements PermissionController {
 	
 	@Inject
 	public PermissionControllerImpl() {
+		// Default constructor
 	}
 	
 	@Override

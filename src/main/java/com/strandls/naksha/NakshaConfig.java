@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory;
  * @author mukund
  */
 public class NakshaConfig {
+	
+	private NakshaConfig() {}
 
 	private static final Logger logger = LoggerFactory.getLogger(NakshaConfig.class);
 

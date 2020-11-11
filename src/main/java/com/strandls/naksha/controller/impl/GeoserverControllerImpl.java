@@ -43,6 +43,7 @@ public class GeoserverControllerImpl implements GeoserverController {
 
 	@Inject
 	public GeoserverControllerImpl() {
+		// Default constructor
 	}
 
 	@Override

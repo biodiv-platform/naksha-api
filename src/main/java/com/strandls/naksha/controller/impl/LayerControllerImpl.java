@@ -153,7 +153,7 @@ public class LayerControllerImpl implements LayerController {
 			sout = new StreamingOutput() {
 
 				@Override
-				public void write(OutputStream output) throws IOException, WebApplicationException {
+				public void write(OutputStream output) throws IOException{
 					byte[] buf = new byte[8192];
 					int c;
 					while ((c = in.read(buf, 0, buf.length)) > 0) {

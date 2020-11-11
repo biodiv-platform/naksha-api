@@ -11,12 +11,14 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.ws.rs.core.Application;
 
@@ -44,7 +46,6 @@ import io.swagger.jaxrs.config.BeanConfig;
 public class ApplicationConfig extends Application {
 
 	private static final Logger logger = LoggerFactory.getLogger(ApplicationConfig.class);
-	// private static final Log LOG = LogFactory.getLog(HttpClient.class);
 
 	/**
 	 * 
@@ -108,11 +109,13 @@ public class ApplicationConfig extends Application {
 			}
 
 			@Override
-			public void onShutdown(Container container) {
+			public void onShutdown(Container container) { 
+				// Default implementation ignored 
 			}
 
 			@Override
 			public void onReload(Container container) {
+				// Default implementation ignored
 			}
 		});
 
@@ -126,7 +129,6 @@ public class ApplicationConfig extends Application {
 		List<String> classNames = getClassNamesFromPackage(packageName);
 		List<Class<?>> classes = new ArrayList<Class<?>>();
 		for (String className : classNames) {
-			// logger.info(className);
 			Class<?> cls = Class.forName(className);
 			Annotation[] annotations = cls.getAnnotations();
 
@@ -150,14 +152,16 @@ public class ApplicationConfig extends Application {
 		URI uri = new URI(packageURL.toString());
 		File folder = new File(uri.getPath());
 
-		Files.find(Paths.get(folder.getAbsolutePath()), 999, (p, bfa) -> bfa.isRegularFile()).forEach(file -> {
-			String name = file.toFile().getAbsolutePath().replaceAll(folder.getAbsolutePath() + File.separatorChar, "")
-					.replace(File.separatorChar, '.');
-			if (name.indexOf('.') != -1) {
-				name = packageName + '.' + name.substring(0, name.lastIndexOf('.'));
-				names.add(name);
-			}
-		});
+		try (Stream<Path> paths = Files.find(Paths.get(folder.getAbsolutePath()), 999, (p, bfa) -> bfa.isRegularFile())) {
+			paths.forEach(file -> {
+				String name = file.toFile().getAbsolutePath().replaceAll(folder.getAbsolutePath() + File.separatorChar, "")
+						.replace(File.separatorChar, '.');
+				if (name.indexOf('.') != -1) {
+					name = packageName + '.' + name.substring(0, name.lastIndexOf('.'));
+					names.add(name);
+				}
+			});
+		}
 
 		return names;
 	}

@@ -2,6 +2,8 @@ package com.strandls.naksha;
 
 public class ApiConstants {
 
+	private ApiConstants() {}
+	
 	// LayersController
 	public static final String UPLOADSHP = "/uploadshp";
 	public static final String DOWNLOADSHP = "/downloadshp";

@@ -12,9 +12,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import javax.inject.Inject;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strandls.naksha.NakshaConfig;
 import com.strandls.naksha.dao.GeoserverStyleDao;
@@ -45,15 +43,15 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 
 	@Inject
 	private GeoserverService geoserverService;
-	
+
 	@Inject
 	private ObjectMapper objectMapper;
 
 	private static final String[] COLOR_SCHEME = { "ffff7e", "f9d155", "f1a430", "a75118", "6c0000" };
-	
+
 	private static final Set<String> ALLOWED_TYPE;
 
-	private static final double golden_ratio_conjugate = 0.618033988749895;
+	private static final double GOLDEN_RATIO_CONJUGATE = 0.618033988749895;
 
 	private static final String CATEGORICAL = "categorical";
 	private static final String INTERVAL = "interval";
@@ -62,9 +60,12 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 	private static final String GEO_TYPE_CIRCLE = "circle";
 	private static final String GEO_TYPE_LINE = "line";
 
+	private static final String CHARACTER = "character";
+
 	private static final int VERSION = 8;
-	
-	private static String GEOSERVER_DATA_DIRECTORY = "";
+
+	private static String geoserverDataDirectory = "";
+
 	static {
 		ALLOWED_TYPE = new HashSet<String>();
 		ALLOWED_TYPE.add("bigint");
@@ -73,11 +74,12 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 		ALLOWED_TYPE.add("double precision");
 		ALLOWED_TYPE.add("real");
 		ALLOWED_TYPE.add("text");
-		GEOSERVER_DATA_DIRECTORY = NakshaConfig.getString(MetaLayerUtil.TEMP_DIR_GEOSERVER_PATH);
+		geoserverDataDirectory = NakshaConfig.getString(MetaLayerUtil.TEMP_DIR_GEOSERVER_PATH);
 	}
 
 	@Inject
 	public GeoserverStyleServiceImpl() {
+		// Default constructor
 	}
 
 	@Override
@@ -98,7 +100,7 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 		}
 		return styles;
 	}
-	
+
 	@Override
 	public List<Object[]> getColumnName(String tableName) {
 		return geoserverStyleDao.getColumnNames(tableName);
@@ -116,13 +118,12 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 
 		LayerType layerType = metaLayer.getLayerType();
 
-		String styleType = columnType.startsWith("character") || columnType.equalsIgnoreCase("text") ? CATEGORICAL : INTERVAL;
+		String styleType = columnType.startsWith(CHARACTER) || columnType.equalsIgnoreCase("text") ? CATEGORICAL
+				: INTERVAL;
 
 		List<StyledLayer> layers = getStyledLayers(layerName, layerType, columnName, styleType, stops);
 
-		JsonStyle jsonStyle = new JsonStyle(VERSION, sources, layers);
-
-		return jsonStyle;
+		return new JsonStyle(VERSION, sources, layers);
 	}
 
 	private Map<String, StyledSource> getSource(String layerName) {
@@ -138,7 +139,7 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 
 	private List<List<Object>> getStops(String layerName, String columnName, String columnType) {
 		List<List<Object>> stops = new ArrayList<List<Object>>();
-		if (columnType.startsWith("character") || columnType.equalsIgnoreCase("text")) {
+		if (columnType.startsWith(CHARACTER) || columnType.equalsIgnoreCase("text")) {
 			List<Object[]> values = geoserverStyleDao.getDistinctValues(layerName, columnName);
 			for (Object object : values) {
 				String color = getRandColor();
@@ -170,13 +171,13 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 	private String getRandColor() {
 		int rndr = ThreadLocalRandom.current().nextInt(150, 400 + 1);
 
-		double r = Math.floor(rndr * golden_ratio_conjugate);
+		double r = Math.floor(rndr * GOLDEN_RATIO_CONJUGATE);
 
 		int rndg = ThreadLocalRandom.current().nextInt(150, 400 + 1);
-		double g = Math.floor(rndg * golden_ratio_conjugate);
+		double g = Math.floor(rndg * GOLDEN_RATIO_CONJUGATE);
 
 		int rndb = ThreadLocalRandom.current().nextInt(150, 400 + 1);
-		double b = Math.floor(rndb * golden_ratio_conjugate);
+		double b = Math.floor(rndb * GOLDEN_RATIO_CONJUGATE);
 
 		return String.format("%x%x%x", (int) r, (int) g, (int) b);
 	}
@@ -209,7 +210,7 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 			geoType = GEO_TYPE_LINE;
 			break;
 		default:
-			return null;
+			return new ArrayList<StyledLayer>();
 		}
 
 		StyledLayer styledLayer = new StyledLayer(layerName, geoType, layerName, layerName, paint);
@@ -219,64 +220,62 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 	}
 
 	@Override
-	public List<String> publishAllStyles(String layerName, String workspace) throws JsonGenerationException, JsonMappingException, IOException {
+	public List<String> publishAllStyles(String layerName, String workspace) throws IOException {
 		List<Object[]> columnNameTypes = geoserverStyleDao.getColumnTypes(layerName);
 		List<String> styles = new ArrayList<String>();
 		for (Object[] columnNameType : columnNameTypes) {
 			String columnName = columnNameType[0].toString();
 			String columnType = columnNameType[1].toString();
-			
-			if (columnName.startsWith("__mlocate") || columnName.equalsIgnoreCase("ogc_fid"))
-				continue;
-			
-			if(!columnType.startsWith("character") && !ALLOWED_TYPE.contains(columnType))
+
+			if (columnName.startsWith("__mlocate") || columnName.equalsIgnoreCase("ogc_fid")
+					|| (!columnType.startsWith(CHARACTER) && !ALLOWED_TYPE.contains(columnType)))
 				continue;
 
 			String styleName = layerName + "_" + columnName;
-			
+
 			JsonStyle jsonStyle = generateJsonStyle(layerName, columnName);
-			publishStyleOnGeoserver(jsonStyle, styleName, workspace);
+			publishStyleOnGeoserver(styleName, workspace);
 			copyMBStyleToGeoserver(jsonStyle, styleName + ".json", workspace);
-			
+
 			styleName = workspace + ":" + styleName;
 			styles.add(styleName);
 		}
 		return styles;
 	}
-	
-	public byte[] publishStyleOnGeoserver(JsonStyle jsonStyle, String styleName, String workspace) {
+
+	public byte[] publishStyleOnGeoserver(String styleName, String workspace) {
 		String styleUri;
-		
-		if(workspace == null)
+
+		if (workspace == null)
 			styleUri = "rest/styles";
 		else
 			styleUri = "rest/workspaces/" + workspace + "/styles";
-	
+
 		byte[] bytes = null;
 		try {
 			MBStyle mbStyle = new MBStyle(styleName, styleName + ".json", "mbstyle");
-			bytes = geoserverService.postRequest(styleUri, objectMapper.writeValueAsString(mbStyle), "application/json", null);
-			
+			bytes = geoserverService.postRequest(styleUri, objectMapper.writeValueAsString(mbStyle), "application/json",
+					null);
+
 		} catch (JsonProcessingException e) {
 			e.printStackTrace();
 		}
 		return bytes;
 	}
 
-	private void copyMBStyleToGeoserver(JsonStyle jsonStyle, String styleName, String workspace) throws JsonGenerationException, JsonMappingException, IOException {
-		
-		String geoserverStyleFilePath = GEOSERVER_DATA_DIRECTORY + File.separator;
-		
-		if(workspace == null)
+	private void copyMBStyleToGeoserver(JsonStyle jsonStyle, String styleName, String workspace) throws IOException {
+
+		String geoserverStyleFilePath = geoserverDataDirectory + File.separator;
+
+		if (workspace == null)
 			geoserverStyleFilePath += "styles";
 		else
 			geoserverStyleFilePath += "workspaces" + File.separator + workspace + File.separator + "styles";
-		
+
 		geoserverStyleFilePath += File.separator + styleName;
-		
+
 		File file = new File(geoserverStyleFilePath);
-		objectMapper.writeValue(file, jsonStyle);		
+		objectMapper.writeValue(file, jsonStyle);
 	}
 
-	
 }

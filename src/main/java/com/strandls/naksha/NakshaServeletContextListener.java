@@ -50,18 +50,12 @@ public class NakshaServeletContextListener extends GuiceServletContextListener {
 
 	@Override
 	protected Injector getInjector() {
-		Injector injector = Guice.createInjector(new ServletModule() {
+		return Guice.createInjector(new ServletModule() {
 			@Override
 			protected void configureServlets() {
 				PoolingHttpClientConnectionManager manager = new PoolingHttpClientConnectionManager();
 				manager.setDefaultMaxPerRoute(MAX_CONNECTIONS_PER_ROUTE);
 				bind(PoolingHttpClientConnectionManager.class).toInstance(manager);
-				try {
-					Class.forName("org.postgresql.Driver");
-				} catch (ClassNotFoundException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
 
 				Configuration configuration = new Configuration();
 
@@ -91,8 +85,6 @@ public class NakshaServeletContextListener extends GuiceServletContextListener {
 				serve("/api/*").with(ServletContainer.class, props);
 			}
 		}, new ControllerModule(), new DaoModule(), new ServiceModule());
-
-		return injector;
 	}
 
 	protected List<Class<?>> getEntityClassesFromPackage(String packageName)
@@ -101,7 +93,6 @@ public class NakshaServeletContextListener extends GuiceServletContextListener {
 		List<String> classNames = getClassNamesFromPackage(packageName);
 		List<Class<?>> classes = new ArrayList<Class<?>>();
 		for (String className : classNames) {
-			// logger.info(className);
 			Class<?> cls = Class.forName(className);
 			Annotation[] annotations = cls.getAnnotations();
 

@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -103,21 +102,20 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			UserIbp userIbp = userServiceApi.getUserIbp(authorId + "");
 
 			Boolean isDownloadable = false;
-			if (userIbp.getIsAdmin() || DownloadAccess.ALL.equals(metaLayer.getDownloadAccess())
+			if (userIbp.getIsAdmin().equals(Boolean.TRUE) || DownloadAccess.ALL.equals(metaLayer.getDownloadAccess())
 					|| (userProfile != null && userProfile.getId().equals(authorId.toString()))
 					|| checkDownLoadAccess(userProfile, metaLayer))
 				isDownloadable = true;
 
 			List<List<Double>> bbox = getBoundingBox(metaLayer);
-			String thumbnail = getThumbnail(request, metaLayer, bbox);
+			String thumbnail = getThumbnail(metaLayer, bbox);
 			TOCLayer tocLayer = new TOCLayer(metaLayer, userIbp, isDownloadable, bbox, thumbnail);
 			layerLists.add(tocLayer);
 		}
 		return layerLists;
 	}
 
-	private String getThumbnail(HttpServletRequest request, MetaLayer metaLayer, List<List<Double>> bbox)
-			throws URISyntaxException {
+	private String getThumbnail(MetaLayer metaLayer, List<List<Double>> bbox) throws URISyntaxException {
 		String bboxValue = bbox.get(0).get(0) + "," + bbox.get(0).get(1) + "," + bbox.get(1).get(0) + ","
 				+ bbox.get(1).get(1);
 
@@ -134,8 +132,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		params.add(new BasicNameValuePair("version", "1.1.0"));
 		params.add(new BasicNameValuePair("format", "image/gif"));
 
-		if (params != null)
-			builder.setParameters(params);
+		builder.setParameters(params);
 		return builder.build().toString();
 	}
 
@@ -147,8 +144,10 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		Geometry envelop = topology.getEnvelope();
 
-		Double top = envelop.getCoordinates()[0].x, left = envelop.getCoordinates()[0].y,
-				bottom = envelop.getCoordinates()[2].x, right = envelop.getCoordinates()[2].y;
+		Double top = envelop.getCoordinates()[0].x;
+		Double left = envelop.getCoordinates()[0].y;
+		Double bottom = envelop.getCoordinates()[2].x;
+		Double right = envelop.getCoordinates()[2].y;
 
 		List<List<Double>> boundingBox = new ArrayList<List<Double>>();
 
@@ -167,11 +166,6 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		return boundingBox;
 	}
 
-	private boolean checkDownLoadAccess(CommonProfile userProfile, MetaLayer metaLayer) {
-		// TODO : Need to add permission with the download access
-		return true;
-	}
-
 	@Override
 	public List<MetaLayer> findAll(HttpServletRequest request, Integer limit, Integer offset) {
 		List<MetaLayer> metaLayers;
@@ -183,7 +177,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	}
 
 	public void uploadGeoTiff(String geoLayerName, String inputGeoTiffFileLocation, Map<String, Object> result)
-			throws UnsupportedEncodingException, IOException, ParseException {
+			throws IOException {
 		File inputGeoTiffFile = new File(inputGeoTiffFileLocation);
 		boolean isPublished = geoserverService.publishGeoTiffLayer(WORKSPACE, geoLayerName, inputGeoTiffFile);
 
@@ -307,14 +301,11 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		String hashKey = UUID.randomUUID().toString();
 
 		ExecutorService service = Executors.newFixedThreadPool(10);
-		service.execute(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					runDownloadLayer(uri, hashKey, layerDownload);
-				} catch (InvalidAttributesException | InterruptedException | IOException e) {
-					e.printStackTrace();
-				}
+		service.execute(() -> {
+			try {
+				runDownloadLayer(uri, hashKey, layerDownload);
+			} catch (InvalidAttributesException | InterruptedException | IOException e) {
+				e.printStackTrace();
 			}
 		});
 
@@ -326,18 +317,20 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	}
 
 	private boolean checkDownLoadAccess(CommonProfile profile, LayerDownload layerDownload) {
-		
 		MetaLayer metaLayer = findByLayerTableName(layerDownload.getLayerName());
-		
+		return checkDownLoadAccess(profile, metaLayer);
+	}
+
+	private boolean checkDownLoadAccess(CommonProfile profile, MetaLayer metaLayer) {
 		JSONArray roles = (JSONArray) profile.getAttribute("roles");
 		if (roles.contains("ROLE_ADMIN"))
 			return true;
-		
-		if (metaLayer.getDownloadAccess().equals(DownloadAccess.ALL)
-				|| metaLayer.getUploaderUserId().equals(Long.parseLong(profile.getId())))
-			return true;
-		
-		return false;
+
+		if (metaLayer == null)
+			return false;
+
+		return metaLayer.getDownloadAccess().equals(DownloadAccess.ALL)
+				|| metaLayer.getUploaderUserId().equals(Long.parseLong(profile.getId()));
 	}
 
 	public void runDownloadLayer(String uri, String hashKey, LayerDownload layerDownload)
@@ -346,7 +339,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		String layerName = layerDownload.getLayerName();
 
 		List<String> attributeList = layerDownload.getAttributeList();
-		//List<String> filterArray = layerDownload.getFilterArray();
+		List<String> filterArray = layerDownload.getFilterArray();
 
 		File directory = new File(DOWNLOAD_BASE_LOCATION);
 		if (!directory.exists()) {
@@ -365,14 +358,19 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			shapeFileDirectory.mkdir();
 		}
 
-		String attributeString = "";
-		if (attributeList.size() > 0) {
+		StringBuilder attributeString = new StringBuilder();
+		if (!attributeList.isEmpty()) {
 			for (String attribute : attributeList) {
-				attributeString += attribute + ", ";
+				attributeString.append(attribute + ", ");
 			}
-			attributeString += "wkb_geometry ";
+			attributeString.append("wkb_geometry ");
 		} else
-			attributeString = "*";
+			attributeString.append("*");
+		
+		for (String filter : filterArray) {
+			System.out.println(filter);
+		}
+		
 		String query = "select " + attributeString + " from " + layerName;
 
 		shapeFileDirectoryPath = shapeFileDirectory.getAbsolutePath();
@@ -447,7 +445,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 				+ MetaLayerService.GEOMETRY_COLUMN_NAME + ", ST_GeomFromText('POINT(" + lon + " " + lat + ")',0))";
 		List<Object> result = metaLayerDao.executeQueryForSingleResult(queryStr);
 
-		if (result.size() == 0)
+		if (result.isEmpty())
 			return null;
 
 		return result.get(0).toString();

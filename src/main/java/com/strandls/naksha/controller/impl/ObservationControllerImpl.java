@@ -39,6 +39,7 @@ public class ObservationControllerImpl implements ObservationController {
 
 	@Inject
 	public ObservationControllerImpl() {
+		// Default constructor
 	}
 
 	@Override

@@ -21,6 +21,7 @@ public class NakshaPermissionDao extends AbstractDao<NakshaPermission, Long>{
 		try {
 			entity = session.get(NakshaPermission.class, id);
 		} catch (Exception e) {
+			e.printStackTrace();
 			throw e;
 		} finally {
 			session.close();

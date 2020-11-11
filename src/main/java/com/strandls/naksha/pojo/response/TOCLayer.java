@@ -36,7 +36,6 @@ public class TOCLayer {
 
 	public TOCLayer() {
 		super();
-		// TODO Auto-generated constructor stub
 	}
 
 	public TOCLayer(Long id, String name, String title, String description, LayerType layerType, String pdfLink,

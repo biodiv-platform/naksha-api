@@ -16,6 +16,7 @@ public class GeoserverStyleDao {
 
 	@Inject
 	public GeoserverStyleDao() {
+		// default constructor
 	}
 	
 	public List<Object[]> getColumnTypes(String tableName) {
@@ -30,8 +31,6 @@ public class GeoserverStyleDao {
 				+ "inner join pg_catalog.pg_description pgd on (pgd.objoid=st.relid) "
 				+ "right outer join information_schema.columns c on (pgd.objsubid=c.ordinal_position and  c.table_schema=st.schemaname and c.table_name=st.relname) "
 				+ "where table_schema = 'public' and table_name = '" + tableName + "' and pgd.description is not null";
-		//String queryStr = "select column_name, data_type from information_schema.columns where table_name = '"
-		//		+ tableName + "'";
 		return executeQuery(queryStr);
 	}
 	
@@ -44,6 +43,7 @@ public class GeoserverStyleDao {
 		try {
 			entity = (String) query.getSingleResult();
 		} catch(NoResultException e) {
+			e.printStackTrace();
 			throw e;
 		}
 		session.close();
@@ -67,6 +67,7 @@ public class GeoserverStyleDao {
 		try {
 			entity = (List<Object[]>) query.getResultList();
 		} catch(NoResultException e) {
+			e.printStackTrace();
 			throw e;
 		}
 		session.close();

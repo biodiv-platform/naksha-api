@@ -26,30 +26,28 @@ public class PermissionServiceImpl extends AbstractService<NakshaPermission> imp
 	@Override
 	public Map<String, String> assignPermissions(HttpServletRequest request, String jsonString) {
 		JSONObject jsonObject = new JSONObject(jsonString);
-		
-		JSONArray userIdArray     = jsonObject.getJSONArray("userIds");
+
+		JSONArray userIdArray = jsonObject.getJSONArray("userIds");
 		JSONArray permissionArray = jsonObject.getJSONArray("permissions");
 		String resourceType = jsonObject.getString("resourceType");
 		BigInteger resourceId = jsonObject.getBigInteger("resourceId");
 		String type = "biodiv";
-		
+
 		// TODO : validate the users and permissions
 
 		Map<String, String> permissionMatrix = new HashMap<String, String>();
-		
-		userIdArray.forEach( userId -> {
-			permissionArray.forEach(permission -> {
-				NakshaPermission nakshaPermission = new NakshaPermission();
-				nakshaPermission.setPermission(PermissionType.fromValue(permission.toString()));
-				nakshaPermission.setResourceType(resourceType);
-				nakshaPermission.setResourceId(resourceId.longValue());
-				nakshaPermission.setUserId(Long.parseLong(userId.toString()));
-				nakshaPermission.setType(type);
-				save(nakshaPermission);
-				permissionMatrix.put(userId.toString(), permission.toString());
-			});
-		});
-		
+
+		userIdArray.forEach(userId -> permissionArray.forEach(permission -> {
+			NakshaPermission nakshaPermission = new NakshaPermission();
+			nakshaPermission.setPermission(PermissionType.fromValue(permission.toString()));
+			nakshaPermission.setResourceType(resourceType);
+			nakshaPermission.setResourceId(resourceId.longValue());
+			nakshaPermission.setUserId(Long.parseLong(userId.toString()));
+			nakshaPermission.setType(type);
+			save(nakshaPermission);
+			permissionMatrix.put(userId.toString(), permission.toString());
+		}));
+
 		return permissionMatrix;
 	}
 
