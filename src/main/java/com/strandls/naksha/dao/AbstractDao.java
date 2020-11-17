@@ -11,6 +11,7 @@ import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.hibernate.criterion.CriteriaSpecification;
 
 public abstract class AbstractDao<T, K extends Serializable> {
 
@@ -82,7 +83,7 @@ public abstract class AbstractDao<T, K extends Serializable> {
 		List<T> entities = null;
 		try {
 			Criteria criteria = session.createCriteria(daoType);
-			entities = criteria.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY).list();
+			entities = criteria.setResultTransformer(CriteriaSpecification.DISTINCT_ROOT_ENTITY).list();
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -97,7 +98,7 @@ public abstract class AbstractDao<T, K extends Serializable> {
 		Session session = sessionFactory.openSession();
 		List<T> entities = null;
 		try {
-			Criteria criteria = session.createCriteria(daoType).setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+			Criteria criteria = session.createCriteria(daoType).setResultTransformer(CriteriaSpecification.DISTINCT_ROOT_ENTITY);
 			return criteria.setFirstResult(offset).setMaxResults(limit).list();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -111,12 +112,12 @@ public abstract class AbstractDao<T, K extends Serializable> {
 		String queryStr = "" + "from " + daoType.getSimpleName() + " t " + "where t." + property + " " + condition
 				+ " :value";
 		Session session = sessionFactory.openSession();
-		org.hibernate.query.Query query = session.createQuery(queryStr);
+		org.hibernate.query.Query<T> query = session.createQuery(queryStr);
 		query.setParameter("value", value);
 
 		T entity = null;
 		try {
-			entity = (T) query.getSingleResult();
+			entity = query.getSingleResult();
 		} catch (NoResultException e) {
 			e.printStackTrace();
 			throw e;
@@ -131,10 +132,10 @@ public abstract class AbstractDao<T, K extends Serializable> {
 		String queryStr = "" + "from " + daoType.getSimpleName() + " t " + "where t." + property + " " + condition
 				+ " :value" + " order by id";
 		Session session = sessionFactory.openSession();
-		org.hibernate.query.Query query = session.createQuery(queryStr);
+		org.hibernate.query.Query<T> query = session.createQuery(queryStr);
 		query.setParameter("value", value);
 
-		List<T> resultList = new ArrayList<T>();
+		List<T> resultList = new ArrayList<>();
 		try {
 			if (limit > 0 && offset >= 0)
 				query = query.setFirstResult(offset).setMaxResults(limit);

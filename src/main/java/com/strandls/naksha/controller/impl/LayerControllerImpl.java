@@ -58,9 +58,6 @@ public class LayerControllerImpl implements LayerController {
 	@Inject
 	private GeoserverStyleService geoserverStyleService;
 
-	public LayerControllerImpl() {
-	}
-
 	@Override
 	@Path("all")
 	@GET
@@ -86,7 +83,7 @@ public class LayerControllerImpl implements LayerController {
 		try {
 			MetaLayer metaLayer = metaLayerService.findByLayerTableName(layer);
 			String titleColumn = metaLayer.getTitleColumn();
-			List<String> summaryColumn = new ArrayList<String>();
+			List<String> summaryColumn = new ArrayList<>();
 			for (String column : metaLayer.getSummaryColumns().split(",")) {
 				if(column == null || "".equals(column))
 					continue;
@@ -164,6 +161,7 @@ public class LayerControllerImpl implements LayerController {
 					output.close();
 				}
 			};
+			in.close();
 
 			return Response.ok(sout).header("Content-Disposition", "attachment; filename=\"" + layerName + ".zip\"")
 					.cacheControl(Utils.getCacheControl()).build();

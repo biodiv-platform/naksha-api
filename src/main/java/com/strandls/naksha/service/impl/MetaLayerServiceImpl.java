@@ -366,11 +366,11 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			attributeString.append("wkb_geometry ");
 		} else
 			attributeString.append("*");
-		
+
 		for (String filter : filterArray) {
 			System.out.println(filter);
 		}
-		
+
 		String query = "select " + attributeString + " from " + layerName;
 
 		shapeFileDirectoryPath = shapeFileDirectory.getAbsolutePath();
@@ -395,21 +395,20 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 	public void zipFolder(String zipFileLocation, File fileDirectory) throws IOException {
 		FileOutputStream fos = new FileOutputStream(zipFileLocation);
-		ZipOutputStream zipOut = new ZipOutputStream(fos);
-		for (File fileToZip : fileDirectory.listFiles()) {
-			FileInputStream fis = new FileInputStream(fileToZip);
-			ZipEntry zipEntry = new ZipEntry(fileToZip.getName());
-			zipOut.putNextEntry(zipEntry);
+		try (ZipOutputStream zipOut = new ZipOutputStream(fos)) {
+			for (File fileToZip : fileDirectory.listFiles()) {
+				try (FileInputStream fis = new FileInputStream(fileToZip)) {
+					ZipEntry zipEntry = new ZipEntry(fileToZip.getName());
+					zipOut.putNextEntry(zipEntry);
 
-			byte[] bytes = new byte[1024];
-			int length;
-			while ((length = fis.read(bytes)) >= 0) {
-				zipOut.write(bytes, 0, length);
+					byte[] bytes = new byte[1024];
+					int length;
+					while ((length = fis.read(bytes)) >= 0) {
+						zipOut.write(bytes, 0, length);
+					}
+				}
 			}
-			fis.close();
 		}
-		zipOut.close();
-		fos.close();
 	}
 
 	@Override
