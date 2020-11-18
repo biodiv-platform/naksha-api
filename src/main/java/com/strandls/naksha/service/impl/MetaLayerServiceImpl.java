@@ -25,6 +25,8 @@ import org.apache.http.message.BasicNameValuePair;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.json.simple.parser.ParseException;
 import org.pac4j.core.profile.CommonProfile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strandls.authentication_utility.util.AuthUtil;
@@ -56,6 +58,8 @@ import it.geosolutions.geoserver.rest.decoder.RESTLayer;
 import net.minidev.json.JSONArray;
 
 public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements MetaLayerService {
+	
+	private final Logger logger = LoggerFactory.getLogger(MetaLayerServiceImpl.class);
 
 	@Inject
 	private ObjectMapper objectMapper;
@@ -104,7 +108,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			Boolean isDownloadable = false;
 			if (userIbp.getIsAdmin().equals(Boolean.TRUE) || DownloadAccess.ALL.equals(metaLayer.getDownloadAccess())
 					|| (userProfile != null && userProfile.getId().equals(authorId.toString()))
-					|| checkDownLoadAccess(userProfile, metaLayer))
+					|| (userProfile != null && checkDownLoadAccess(userProfile, metaLayer)))
 				isDownloadable = true;
 
 			List<List<Double>> bbox = getBoundingBox(metaLayer);
@@ -305,7 +309,8 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			try {
 				runDownloadLayer(uri, hashKey, layerDownload);
 			} catch (InvalidAttributesException | InterruptedException | IOException e) {
-				e.printStackTrace();
+				logger.error(e.getMessage());
+				Thread.currentThread().interrupt();
 			}
 		});
 
@@ -368,7 +373,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			attributeString.append("*");
 
 		for (String filter : filterArray) {
-			System.out.println(filter);
+			logger.debug(filter);
 		}
 
 		String query = "select " + attributeString + " from " + layerName;
@@ -387,7 +392,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		zipFolder(zipFileLocation, shapeFileDirectory);
 
-		System.out.println(uri + "/" + hashKey + "/" + layerName);
+		logger.debug("{} / {} / {}", uri, hashKey, layerName);
 
 		// TODO : send mail notification for download url
 		// return directory.getAbsolutePath();
