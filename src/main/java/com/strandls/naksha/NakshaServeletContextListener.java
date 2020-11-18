@@ -34,6 +34,8 @@ import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.google.inject.servlet.ServletModule;
+import com.rabbitmq.client.Channel;
+import com.strandls.mail_utility.producer.RabbitMQProducer;
 import com.strandls.naksha.controller.ControllerModule;
 import com.strandls.naksha.dao.DaoModule;
 import com.strandls.naksha.service.ServiceModule;
@@ -69,11 +71,23 @@ public class NakshaServeletContextListener extends GuiceServletContextListener {
 					e.printStackTrace();
 					logger.error(e.getMessage());
 				}
+				
+				RabbitMqConnection rabbitConnetion = new RabbitMqConnection();
+				Channel channel = null;
+				try {
+					channel = rabbitConnetion.setRabbitMQConnetion();
+				} catch (Exception e) {
+					logger.error(e.getMessage());
+				}
+
+				bind(Channel.class).toInstance(channel);
+				RabbitMQProducer producer = new RabbitMQProducer(channel);
 
 				configuration = configuration.configure();
 				SessionFactory sessionFactory = configuration.buildSessionFactory();
 
 				ObjectMapper objectMapper = new ObjectMapper();
+				bind(RabbitMQProducer.class).toInstance(producer);
 				bind(ObjectMapper.class).toInstance(objectMapper);
 				bind(SessionFactory.class).toInstance(sessionFactory);
 				GeometryFactory geofactory = new GeometryFactory(new PrecisionModel(), 4326);

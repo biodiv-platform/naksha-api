@@ -45,6 +45,7 @@ import com.strandls.naksha.pojo.response.TOCLayer;
 import com.strandls.naksha.service.AbstractService;
 import com.strandls.naksha.service.GeoserverService;
 import com.strandls.naksha.service.GeoserverStyleService;
+import com.strandls.naksha.service.MailService;
 import com.strandls.naksha.service.MetaLayerService;
 import com.strandls.naksha.utils.MetaLayerUtil;
 import com.strandls.user.ApiException;
@@ -78,6 +79,9 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 	@Inject
 	private GeometryFactory geoFactory;
+	
+	@Inject
+	private MailService mailService;
 
 	public static final String DOWNLOAD_BASE_LOCATION = NakshaConfig.getString(MetaLayerUtil.TEMP_DIR_PATH)
 			+ File.separator + "temp_zip";
@@ -307,7 +311,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		ExecutorService service = Executors.newFixedThreadPool(10);
 		service.execute(() -> {
 			try {
-				runDownloadLayer(uri, hashKey, layerDownload);
+				runDownloadLayer(profile.getId(), uri, hashKey, layerDownload);
 			} catch (InvalidAttributesException | InterruptedException | IOException e) {
 				logger.error(e.getMessage());
 				Thread.currentThread().interrupt();
@@ -338,7 +342,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 				|| metaLayer.getUploaderUserId().equals(Long.parseLong(profile.getId()));
 	}
 
-	public void runDownloadLayer(String uri, String hashKey, LayerDownload layerDownload)
+	public void runDownloadLayer(String authorId, String uri, String hashKey, LayerDownload layerDownload)
 			throws InvalidAttributesException, InterruptedException, IOException {
 
 		String layerName = layerDownload.getLayerName();
@@ -394,6 +398,9 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		logger.debug("{} / {} / {}", uri, hashKey, layerName);
 
+		String url = uri + "/" + hashKey + "/" + layerName;
+		
+		mailService.sendMail(authorId, url, "naksha");
 		// TODO : send mail notification for download url
 		// return directory.getAbsolutePath();
 	}

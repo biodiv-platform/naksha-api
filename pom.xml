@@ -269,6 +269,17 @@
 			<artifactId>json</artifactId>
 			<version>20190722</version>
 		</dependency>
+		<dependency>
+		    <groupId>com.strandls.biodiv</groupId>
+		    <artifactId>mail-utility</artifactId>
+		    <version>1.0.0</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.rabbitmq/amqp-client -->
+		<dependency>
+		    <groupId>com.rabbitmq</groupId>
+		    <artifactId>amqp-client</artifactId>
+		    <version>5.8.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>
