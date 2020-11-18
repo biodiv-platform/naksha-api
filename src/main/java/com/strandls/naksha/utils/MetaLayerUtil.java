@@ -66,7 +66,7 @@ public class MetaLayerUtil {
 	 */
 	public static Map<String, String> copyCSVFile(FormDataMultiPart multiPart, LayerFileDescription layerFileDescription) throws IOException {
 
-		Map<String, String> result = new HashMap<String, String>();
+		Map<String, String> result = new HashMap<>();
 		String dataPath = NakshaConfig.getString(TEMP_DIR_PATH) + File.separator + System.currentTimeMillis();
 		String tmpDirPath = dataPath + File.separator + FINAL;
 
@@ -95,14 +95,13 @@ public class MetaLayerUtil {
 
 	private static String createVRTFile(String tmpDirPath, String layerName, String vrtFileContent) throws IOException {
 		File vrtFile = new File(tmpDirPath + File.separator + layerName + ".vrt");
-		if (!vrtFile.exists()) {
-			if(!vrtFile.createNewFile())
+		if (!vrtFile.exists() && !vrtFile.createNewFile()) {
 				throw new IOException("Failed to create file");
 		}
-		FileOutputStream fos = new FileOutputStream(vrtFile);
-		byte[] bytes = vrtFileContent.getBytes();
-		fos.write(bytes);
-		fos.close();
+		try (FileOutputStream fos = new FileOutputStream(vrtFile)) {
+			byte[] bytes = vrtFileContent.getBytes();
+			fos.write(bytes);		
+		}
 		return vrtFile.getAbsolutePath();
 	}
 
@@ -115,7 +114,7 @@ public class MetaLayerUtil {
 	 */
 	public static Map<String, String> copyFiles(FormDataMultiPart multiPart) throws IOException {
 
-		Map<String, String> result = new HashMap<String, String>();
+		Map<String, String> result = new HashMap<>();
 		String dataPath = NakshaConfig.getString(TEMP_DIR_PATH) + File.separator + System.currentTimeMillis();
 		String tmpDirPath = dataPath + File.separator + FINAL;
 
@@ -138,7 +137,7 @@ public class MetaLayerUtil {
 		String tmpDirPath = dataPath + File.separator + FINAL;
 		String fileLocation =  copyFile(multiPart, type, tmpDirPath, optional);
 		
-		Map<String, String> result = new HashMap<String, String>();
+		Map<String, String> result = new HashMap<>();
 		result.put(type, fileLocation);
 		result.put(FINAL, tmpDirPath);
 		return result;

@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.ws.rs.core.CacheControl;
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -40,12 +41,14 @@ public class Utils {
 
 	public static Document convertStringToDocument(String xmlStr) {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, ""); // Compliant
+		factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, ""); 
 		DocumentBuilder builder;
 		try {
 			builder = factory.newDocumentBuilder();
 			return builder.parse(new InputSource(new StringReader(xmlStr)));
 		} catch (Exception e) {
-			logger.error("Error while reading xml source string- {}", e);
+			logger.error("Error while reading xml source string- {}", e.getMessage());
 		}
 		return null;
 	}

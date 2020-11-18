@@ -38,7 +38,7 @@ public class GeoserverStyleDao {
 		String queryStr = "select data_type from information_schema.columns where table_name = '"
 				+ tableName + "' and column_name = '" + columnName + "'";
 		Session session = sessionFactory.openSession();
-		Query query = session.createNativeQuery(queryStr);
+		Query<Object> query = session.createNativeQuery(queryStr);
 		String entity;
 		try {
 			entity = (String) query.getSingleResult();
