@@ -33,15 +33,14 @@ public class RabbitMqConnection {
 		factory.setPort(rabbitmqPort);
 		factory.setUsername(rabbitmqUsername);
 		factory.setPassword(rabbitmqPassword);
-		try (Connection connection = factory.newConnection()) {
-			try (Channel channel = connection.createChannel()) {
-				channel.exchangeDeclare(EXCHANGE_BIODIV, "direct");
-				channel.queueDeclare(QUEUE_ELASTIC, false, false, false, null);
-				channel.queueBind(QUEUE_ELASTIC, EXCHANGE_BIODIV, ROUTING_ELASTIC);
-				channel.queueDeclare(MAIL_QUEUE, false, false, false, null);
-				channel.queueBind(MAIL_QUEUE, EXCHANGE_BIODIV, MAIL_ROUTING_KEY);
-				return channel;
-			}
-		}
+		
+		Connection connection = factory.newConnection();
+		Channel channel = connection.createChannel();
+		channel.exchangeDeclare(EXCHANGE_BIODIV, "direct");
+		channel.queueDeclare(QUEUE_ELASTIC, false, false, false, null);
+		channel.queueBind(QUEUE_ELASTIC, EXCHANGE_BIODIV, ROUTING_ELASTIC);
+		channel.queueDeclare(MAIL_QUEUE, false, false, false, null);
+		channel.queueBind(MAIL_QUEUE, EXCHANGE_BIODIV, MAIL_ROUTING_KEY);
+		return channel;
 	}
 }
