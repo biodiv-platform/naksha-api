@@ -51,12 +51,12 @@ public class GeoserverStyleDao {
 	}
 
 	public List<Object[]> getDistinctValues(String tableName, String columnName) {
-		String queryStr = "select distinct(" + columnName + ") from " + tableName;
+		String queryStr = "select distinct(\"" + columnName + "\") from " + tableName;
 		return executeQuery(queryStr);
 	}
 
 	public List<Object[]> getMinMaxValues(String tableName, String columnName) {
-		String queryStr = "select min(" + columnName + "), max(" + columnName + ") from " + tableName;
+		String queryStr = "select min(\"" + columnName + "\"), max(\"" + columnName + "\") from " + tableName;
 		return executeQuery(queryStr);
 	}
 	

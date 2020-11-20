@@ -72,6 +72,9 @@ public class NakshaServeletContextListener extends GuiceServletContextListener {
 					logger.error(e.getMessage());
 				}
 				
+				configuration = configuration.configure();
+				SessionFactory sessionFactory = configuration.buildSessionFactory();
+
 				RabbitMqConnection rabbitConnetion = new RabbitMqConnection();
 				Channel channel = null;
 				try {
@@ -79,13 +82,10 @@ public class NakshaServeletContextListener extends GuiceServletContextListener {
 				} catch (Exception e) {
 					logger.error(e.getMessage());
 				}
-
+				
 				bind(Channel.class).toInstance(channel);
 				RabbitMQProducer producer = new RabbitMQProducer(channel);
-
-				configuration = configuration.configure();
-				SessionFactory sessionFactory = configuration.buildSessionFactory();
-
+				
 				ObjectMapper objectMapper = new ObjectMapper();
 				bind(RabbitMQProducer.class).toInstance(producer);
 				bind(ObjectMapper.class).toInstance(objectMapper);
