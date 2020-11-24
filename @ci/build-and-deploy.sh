@@ -5,6 +5,7 @@ chmod +x @ci/maven-toolbox
 # Configure and build project
 ./@ci/maven-toolbox configure-properties src/main/resource/config.properties
 ./@ci/maven-toolbox configure-m2
+./@ci/maven-toolbox configure-hibernate
 ./@ci/maven-toolbox configure-pre-sdk
 mvn clean install
 ./@ci/maven-toolbox configure-sdk

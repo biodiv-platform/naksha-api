@@ -2,8 +2,11 @@ package com.strandls.naksha;
 
 public class ApiConstants {
 
+	private ApiConstants() {}
+	
 	// LayersController
 	public static final String UPLOADSHP = "/uploadshp";
+	public static final String DOWNLOADSHP = "/downloadshp";
 	public static final String LAYER = "/layer";
 	public static final String LAYERS = "/layers";
 	public static final String WFS = "/wfs";
@@ -14,4 +17,5 @@ public class ApiConstants {
 	public static final String GEOSERVER = "/geoserver";
 	public static final String LAYERINFO = "/layerinfo";
 	public static final String OBSERVATION = "/observation";
+	public static final String PERMISSION = "/permission";
 }

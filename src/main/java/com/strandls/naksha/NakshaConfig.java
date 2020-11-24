@@ -1,10 +1,9 @@
 package com.strandls.naksha;
 
-import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.builder.fluent.Configurations;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,22 +13,29 @@ import org.slf4j.LoggerFactory;
  * @author mukund
  */
 public class NakshaConfig {
+	
+	private NakshaConfig() {}
 
 	private static final Logger logger = LoggerFactory.getLogger(NakshaConfig.class);
 
-	public static String getString(String key) {
-		Configuration config;
-		Configurations configs = new Configurations();
-		String configFile = System.getenv("NAKSHA_CONFIG_PATH");
-		try {
-			config = configs.properties(new File(configFile != null ? configFile : "config.properties"));
-			return config.getString(key);
-		} catch (ConfigurationException cex) {
-			logger.error("Error while reading configuration. Message {}", cex.getMessage());
-		}
-		return null;
-	}
+	private static Properties properties;
 
+	static {
+		InputStream in = Thread.currentThread().getContextClassLoader()
+				.getResourceAsStream("config.properties");
+
+		properties = new Properties();
+		try {
+			properties.load(in);
+		} catch (IOException e) {
+			logger.error(e.getMessage());
+		}
+	}
+	
+	public static String getString(String key) {
+		return properties.getProperty(key);
+	}
+	
 	public static int getInt(String key) {
 		return Integer.parseInt(getString(key));
 	}
