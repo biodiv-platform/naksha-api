@@ -11,16 +11,19 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.ws.rs.core.Application;
 
 import org.glassfish.hk2.api.ServiceLocator;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.spi.Container;
 import org.glassfish.jersey.server.spi.ContainerLifecycleListener;
 import org.glassfish.jersey.servlet.ServletContainer;
@@ -30,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Injector;
+import com.strandls.authentication_utility.filter.InterceptorModule;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
@@ -66,7 +70,26 @@ public class ApplicationConfig extends Application {
 		beanConfig.setPrettyPrint(new Boolean(properties.getProperty("prettyPrint")));
 		beanConfig.setScan(new Boolean(properties.getProperty("scan")));
 	}
-	
+
+	@Override
+	public Set<Class<?>> getClasses() {
+		Set<Class<?>> resource = new HashSet<Class<?>>();
+
+		try {
+			List<Class<?>> swaggerClass = getSwaggerAnnotationClassesFromPackage("com");
+			resource.addAll(swaggerClass);
+		} catch (ClassNotFoundException | URISyntaxException | IOException e) {
+			logger.error(e.getMessage());
+		}
+
+		resource.add(io.swagger.jaxrs.listing.SwaggerSerializers.class);
+		resource.add(io.swagger.jaxrs.listing.ApiListingResource.class);
+		
+		resource.add(MultiPartFeature.class);
+
+		return resource;
+	}
+
 	@Override
 	public Set<Object> getSingletons() {
 
@@ -86,36 +109,18 @@ public class ApplicationConfig extends Application {
 			}
 
 			@Override
-			public void onShutdown(Container container) {
-				// TODO Auto-generated method stub
-
+			public void onShutdown(Container container) { 
+				// Default implementation ignored 
 			}
 
 			@Override
 			public void onReload(Container container) {
-				// TODO Auto-generated method stub
-
+				// Default implementation ignored
 			}
 		});
 
+		singletons.add(new InterceptorModule());
 		return singletons;
-	}
-
-	@Override
-	public Set<Class<?>> getClasses() {
-		Set<Class<?>> resource = new HashSet<Class<?>>();
-
-		try {
-			List<Class<?>> swaggerClass = getSwaggerAnnotationClassesFromPackage("com");
-			resource.addAll(swaggerClass);
-		} catch (ClassNotFoundException | URISyntaxException | IOException e) {
-			logger.error(e.getMessage());
-		}
-
-		resource.add(io.swagger.jaxrs.listing.SwaggerSerializers.class);
-		resource.add(io.swagger.jaxrs.listing.ApiListingResource.class);
-
-		return resource;
 	}
 
 	protected List<Class<?>> getSwaggerAnnotationClassesFromPackage(String packageName)
@@ -124,7 +129,6 @@ public class ApplicationConfig extends Application {
 		List<String> classNames = getClassNamesFromPackage(packageName);
 		List<Class<?>> classes = new ArrayList<Class<?>>();
 		for (String className : classNames) {
-			// logger.info(className);
 			Class<?> cls = Class.forName(className);
 			Annotation[] annotations = cls.getAnnotations();
 
@@ -148,14 +152,16 @@ public class ApplicationConfig extends Application {
 		URI uri = new URI(packageURL.toString());
 		File folder = new File(uri.getPath());
 
-		Files.find(Paths.get(folder.getAbsolutePath()), 999, (p, bfa) -> bfa.isRegularFile()).forEach(file -> {
-			String name = file.toFile().getAbsolutePath().replaceAll(folder.getAbsolutePath() + File.separatorChar, "")
-					.replace(File.separatorChar, '.');
-			if (name.indexOf('.') != -1) {
-				name = packageName + '.' + name.substring(0, name.lastIndexOf('.'));
-				names.add(name);
-			}
-		});
+		try (Stream<Path> paths = Files.find(Paths.get(folder.getAbsolutePath()), 999, (p, bfa) -> bfa.isRegularFile())) {
+			paths.forEach(file -> {
+				String name = file.toFile().getAbsolutePath().replaceAll(folder.getAbsolutePath() + File.separatorChar, "")
+						.replace(File.separatorChar, '.');
+				if (name.indexOf('.') != -1) {
+					name = packageName + '.' + name.substring(0, name.lastIndexOf('.'));
+					names.add(name);
+				}
+			});
+		}
 
 		return names;
 	}
