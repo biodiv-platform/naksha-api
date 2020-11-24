@@ -1,11 +1,11 @@
 package com.strandls.naksha.controller.impl;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -23,9 +23,10 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
+import org.apache.commons.io.IOUtils;
+import org.glassfish.jersey.media.multipart.ContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 
 import com.strandls.authentication_utility.filter.ValidateUser;
@@ -40,7 +41,6 @@ import com.strandls.naksha.pojo.response.ObservationLocationInfo;
 import com.strandls.naksha.pojo.response.TOCLayer;
 import com.strandls.naksha.service.GeoserverStyleService;
 import com.strandls.naksha.service.MetaLayerService;
-import com.strandls.naksha.utils.Utils;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -143,33 +143,22 @@ public class LayerControllerImpl implements LayerController {
 	@ApiOperation(value = "Download the shp file", notes = "Return the shp file", response = StreamingOutput.class)
 	public Response download(@PathParam("hashKey") String hashKey, @PathParam("layerName") String layerName)
 			throws FileNotFoundException {
-		try {
-			String fileLocation = metaLayerService.getFileLocation(hashKey, layerName);
-			InputStream in = new FileInputStream(fileLocation);
-			StreamingOutput sout;
-			sout = new StreamingOutput() {
+		String fileLocation = metaLayerService.getFileLocation(hashKey, layerName);
+		
+		File file = new File(fileLocation);
+	    if (!file.exists()) {
+	        return javax.ws.rs.core.Response.status(404).build();
+	    } else {
+	        ContentDisposition contentDisposition = ContentDisposition.type("attachment").fileName(file.getName()).creationDate(new Date()).build();
+	        return javax.ws.rs.core.Response.ok( (StreamingOutput) output -> {
+	            try {
+	                InputStream input = new FileInputStream( file );
+	                IOUtils.copy(input, output);
+	                output.flush();
+	            } catch ( Exception e ) { e.printStackTrace(); }
+	        } ).header( "Content-Disposition", contentDisposition ).build();
 
-				@Override
-				public void write(OutputStream output) throws IOException{
-					byte[] buf = new byte[8192];
-					int c;
-					while ((c = in.read(buf, 0, buf.length)) > 0) {
-						output.write(buf, 0, c);
-						output.flush();
-					}
-					in.close();
-					output.close();
-				}
-			};
-			in.close();
-
-			return Response.ok(sout).header("Content-Disposition", "attachment; filename=\"" + layerName + ".zip\"")
-					.cacheControl(Utils.getCacheControl()).build();
-		} catch (IOException e) {
-			e.printStackTrace();
-			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
-
-		}
+	    }
 	}
 
 	@Override
