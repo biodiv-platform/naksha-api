@@ -21,9 +21,11 @@ import org.apache.http.message.BasicNameValuePair;
 
 import com.strandls.naksha.ApiConstants;
 import com.strandls.naksha.controller.GeoserverController;
+import com.strandls.naksha.pojo.MetaLayer;
 import com.strandls.naksha.pojo.response.GeoserverLayerStyles;
 import com.strandls.naksha.service.GeoserverService;
 import com.strandls.naksha.service.GeoserverStyleService;
+import com.strandls.naksha.service.MetaLayerService;
 import com.strandls.naksha.utils.Utils;
 
 import io.swagger.annotations.Api;
@@ -40,6 +42,9 @@ public class GeoserverControllerImpl implements GeoserverController {
 
 	@Inject
 	private GeoserverStyleService geoserverStyleService;
+	
+	@Inject
+	private MetaLayerService metaLayerService;
 
 	@Inject
 	public GeoserverControllerImpl() {
@@ -109,6 +114,21 @@ public class GeoserverControllerImpl implements GeoserverController {
 			@QueryParam("bbox") String para, @DefaultValue("200") @QueryParam("width") String width, @DefaultValue("200") @QueryParam("height") String height,
 			 @DefaultValue("EPSG:4326") @QueryParam("srs") String srs) {
 		try {
+			MetaLayer metaLayer = metaLayerService.findByLayerTableName(id);
+			String colorBy = metaLayer.getColorBy();
+			
+			String style = id + "_";
+			if(colorBy == null || "".equals(colorBy) || "NA".equals(colorBy)) {
+				String summaryColumns = metaLayer.getSummaryColumns();
+				if(summaryColumns == null || "".equals(summaryColumns))
+					style = "";
+				else {
+					String column = metaLayer.getSummaryColumns().split(",")[0];
+					style += column;
+				}
+			} else 
+				style += colorBy;
+			
 			ArrayList<NameValuePair> params = new ArrayList<NameValuePair>();
 			params.add(new BasicNameValuePair("request", "GetMap"));
 			params.add(new BasicNameValuePair("layers", id));
@@ -119,6 +139,7 @@ public class GeoserverControllerImpl implements GeoserverController {
 			params.add(new BasicNameValuePair("height", height));
 			params.add(new BasicNameValuePair("srs", srs));
 			params.add(new BasicNameValuePair("format", "image/gif"));
+			params.add(new BasicNameValuePair("styles", style));
 
 			byte[] file = geoserverService.getRequest(wspace + "/wms", params);
 
