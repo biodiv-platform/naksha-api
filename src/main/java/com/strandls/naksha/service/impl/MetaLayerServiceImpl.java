@@ -109,12 +109,8 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 			UserIbp userIbp = userServiceApi.getUserIbp(authorId + "");
 
-			Boolean isDownloadable = false;
-			if (userIbp.getIsAdmin().equals(Boolean.TRUE) || DownloadAccess.ALL.equals(metaLayer.getDownloadAccess())
-					|| (userProfile != null && userProfile.getId().equals(authorId.toString()))
-					|| (userProfile != null && checkDownLoadAccess(userProfile, metaLayer)))
-				isDownloadable = true;
-
+			Boolean isDownloadable = checkDownLoadAccess(userProfile, metaLayer);
+				
 			List<List<Double>> bbox = getBoundingBox(metaLayer);
 			String thumbnail = getThumbnail(metaLayer, bbox);
 			TOCLayer tocLayer = new TOCLayer(metaLayer, userIbp, isDownloadable, bbox, thumbnail);
@@ -331,6 +327,9 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	}
 
 	private boolean checkDownLoadAccess(CommonProfile profile, MetaLayer metaLayer) {
+		if(profile == null) 
+			return false;
+		
 		JSONArray roles = (JSONArray) profile.getAttribute("roles");
 		if (roles.contains("ROLE_ADMIN"))
 			return true;
