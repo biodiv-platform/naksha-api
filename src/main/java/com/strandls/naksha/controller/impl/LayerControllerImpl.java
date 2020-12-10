@@ -42,6 +42,7 @@ import com.strandls.naksha.pojo.response.ObservationLocationInfo;
 import com.strandls.naksha.pojo.response.TOCLayer;
 import com.strandls.naksha.service.GeoserverStyleService;
 import com.strandls.naksha.service.MetaLayerService;
+import com.strandls.naksha.utils.Utils;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -184,8 +185,13 @@ public class LayerControllerImpl implements LayerController {
 	@DELETE
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "Get layer information for the layer on click", response = LayerInfoOnClick.class, responseContainer = "List")
-	public Response removeLayer(@PathParam("layer") String layer) {
+	@ValidateUser
+	public Response removeLayer(@Context HttpServletRequest request, @PathParam("layer") String layer) {
 		try {
+			if(!Utils.isAdmin(request)) {
+				throw new WebApplicationException(
+						Response.status(Response.Status.UNAUTHORIZED).entity("Only admin can delete the layer").build());
+			}
 			MetaLayer metaLayer = metaLayerService.removeLayer(layer);
 			return Response.ok().entity(metaLayer).build();
 		} catch (Exception e) {

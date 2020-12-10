@@ -172,14 +172,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 	@Override
 	public List<MetaLayer> findAll(HttpServletRequest request, Integer limit, Integer offset) {
-		List<MetaLayer> metaLayers;
-		if (limit == -1 || offset == -1)
-			metaLayers = findAll();
-		else
-			metaLayers = findAll(limit, offset);
 		return metaLayerDao.findAll(limit, offset);
-				
-		//return metaLayers;
 	}
 
 	public void uploadGeoTiff(String geoLayerName, String inputGeoTiffFileLocation, Map<String, Object> result)
@@ -438,6 +431,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		// TODO : remove-publish layer from the geoserver
 		MetaLayer metaLayer = findByLayerTableName(layerName);
 		metaLayer.setLayerStatus(LayerStatus.INACTIVE);
+		update(metaLayer);
 		return metaLayer;
 	}
 
