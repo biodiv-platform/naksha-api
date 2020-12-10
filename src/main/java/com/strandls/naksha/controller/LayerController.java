@@ -29,4 +29,6 @@ public interface LayerController {
 
 	public Response getLayerInfoOnClick(String layer);
 
+	public Response removeLayer(String layer);
+
 }

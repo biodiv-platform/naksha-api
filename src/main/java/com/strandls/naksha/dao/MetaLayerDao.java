@@ -1,5 +1,6 @@
 package com.strandls.naksha.dao;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -10,8 +11,9 @@ import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
 
 import com.strandls.naksha.pojo.MetaLayer;
+import com.strandls.naksha.pojo.enumtype.LayerStatus;
 
-public class MetaLayerDao extends AbstractDao<MetaLayer, Long>{
+public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 
 	@Inject
 	protected MetaLayerDao(SessionFactory sessionFactory) {
@@ -33,13 +35,34 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long>{
 		return entity;
 	}
 
+	@Override
+	public List<MetaLayer> findAll(int limit, int offset) {
+		String queryStr = "" + "from " + daoType.getSimpleName() + " t " + "where t.layerStatus != :value order by id";
+		Session session = sessionFactory.openSession();
+		org.hibernate.query.Query<MetaLayer> query = session.createQuery(queryStr, MetaLayer.class);
+		query.setParameter("value", LayerStatus.INACTIVE);
+
+		try {
+			List<MetaLayer> resultList = new ArrayList<>();
+			if (limit > 0 && offset >= 0)
+				query = query.setFirstResult(offset).setMaxResults(limit);
+			resultList = query.getResultList();
+			return resultList;
+		} catch (NoResultException e) {
+			e.printStackTrace();
+			throw e;
+		} finally {
+			session.close();
+		}
+	}
+
 	public List<Object> executeQueryForSingleResult(String queryStr) {
 		Session session = sessionFactory.openSession();
 		Query query = session.createNativeQuery(queryStr);
 		List<Object> entity;
 		try {
 			entity = (List<Object>) query.getResultList();
-		} catch(NoResultException e) {
+		} catch (NoResultException e) {
 			e.printStackTrace();
 			throw e;
 		} finally {
@@ -55,10 +78,10 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long>{
 		String bboxWkt;
 		try {
 			bboxWkt = (String) query.getSingleResult();
-		} catch(NoResultException e) {
+		} catch (NoResultException e) {
 			e.printStackTrace();
 			throw e;
-		}	
+		}
 		session.close();
 		return bboxWkt;
 	}

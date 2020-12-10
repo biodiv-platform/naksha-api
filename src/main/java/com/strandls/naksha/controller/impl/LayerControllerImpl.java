@@ -12,6 +12,7 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -172,6 +173,21 @@ public class LayerControllerImpl implements LayerController {
 		try {
 			ObservationLocationInfo observationLocationInfo = metaLayerService.getLayerInfo(lon, lat);
 			return Response.ok().entity(observationLocationInfo).build();
+		} catch (Exception e) {
+			throw new WebApplicationException(
+					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
+		}
+	}
+	
+	@Override
+	@Path("{layer}")
+	@DELETE
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Get layer information for the layer on click", response = LayerInfoOnClick.class, responseContainer = "List")
+	public Response removeLayer(@PathParam("layer") String layer) {
+		try {
+			MetaLayer metaLayer = metaLayerService.removeLayer(layer);
+			return Response.ok().entity(metaLayer).build();
 		} catch (Exception e) {
 			throw new WebApplicationException(
 					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());

@@ -40,7 +40,7 @@ public interface MetaLayerService {
 	public Map<String, String> prepareDownloadLayer(HttpServletRequest request, LayerDownload layerDownload)
 			throws InvalidAttributesException, InterruptedException, IOException;
 	
-	public String removeLayer(String layerName);
+	public MetaLayer removeLayer(String layerName);
 
 	public String getFileLocation(String hashKey, String layerName);
 
