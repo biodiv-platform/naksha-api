@@ -2,6 +2,7 @@ package com.strandls.naksha.pojo;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.util.Locale;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -177,7 +178,8 @@ public class MetaLayer implements Serializable {
 		this.attribution = metaData.getAttribution();
 		this.tags = metaData.getTags();
 		this.license = metaData.getLicense();
-		this.summaryColumns = metaData.getSummaryColumns();
+		if(metaData.getSummaryColumns()!=null)
+			this.summaryColumns = metaData.getSummaryColumns().toLowerCase(Locale.ROOT);
 		this.downloadAccess = metaData.getDownloadAccess();
 		this.editAccess = metaData.getEditAccess();
 		this.colorBy = metaData.getColorBy();

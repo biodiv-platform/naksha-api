@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.CacheControl;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
@@ -14,6 +15,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.json.JSONObject;
 import org.json.XML;
+import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -22,7 +24,10 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
+import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.naksha.pojo.response.GeoserverLayerStyles;
+
+import net.minidev.json.JSONArray;
 
 /**
  * Common utility methods
@@ -135,4 +140,14 @@ public class Utils {
 		return cache;
 	}
 
+	public static boolean isAdmin(HttpServletRequest request) {
+		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+		if(profile == null) return false;
+		
+		JSONArray roles = (JSONArray) profile.getAttribute("roles");
+		if (roles.contains("ROLE_ADMIN") )
+			return true;
+		
+		return false;
+	}
 }
