@@ -48,6 +48,7 @@ import com.strandls.naksha.service.GeoserverStyleService;
 import com.strandls.naksha.service.MailService;
 import com.strandls.naksha.service.MetaLayerService;
 import com.strandls.naksha.utils.MetaLayerUtil;
+import com.strandls.naksha.utils.Utils;
 import com.strandls.user.ApiException;
 import com.strandls.user.controller.UserServiceApi;
 import com.strandls.user.pojo.UserIbp;
@@ -104,7 +105,13 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		List<MetaLayer> metaLayers = findAll(request, limit, offset);
 		List<TOCLayer> layerLists = new ArrayList<TOCLayer>();
+		boolean isAdmin = Utils.isAdmin(request);
+		
 		for (MetaLayer metaLayer : metaLayers) {
+			
+			if(!isAdmin && LayerStatus.PENDING.equals(metaLayer.getLayerStatus()))
+				continue;
+			
 			Long authorId = metaLayer.getUploaderUserId();
 
 			UserIbp userIbp = userServiceApi.getUserIbp(authorId + "");
@@ -422,6 +429,13 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		return DOWNLOAD_BASE_LOCATION + File.separator + hashKey + File.separator + layerName + ".zip";
 	}
 
+	@Override
+	public MetaLayer makeLayerActive(String layerName) {
+		MetaLayer metaLayer = findByLayerTableName(layerName);
+		metaLayer.setLayerStatus(LayerStatus.ACTIVE);
+		return update(metaLayer);
+	}
+	
 	@Override
 	public MetaLayer removeLayer(String layerName) {
 		// TODO : Remove the copied files from the file system. (Need to take a call on

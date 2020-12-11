@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.strandls.naksha.pojo.MetaLayer;
+import com.strandls.naksha.pojo.enumtype.LayerStatus;
 import com.strandls.naksha.pojo.enumtype.LayerType;
 import com.strandls.user.pojo.UserIbp;
 
@@ -33,6 +34,7 @@ public class TOCLayer {
 
 	private List<List<Double>> bbox;
 	private String thumbnail;
+	private LayerStatus layerStatus;
 
 	public TOCLayer() {
 		super();
@@ -41,7 +43,7 @@ public class TOCLayer {
 	public TOCLayer(Long id, String name, String title, String description, LayerType layerType, String pdfLink,
 			String url, UserIbp author, String attribution, List<String> tags, String license, Long pageId,
 			String createdBy, Timestamp createdDate, String modifiedBy, Timestamp modifiedDate, Boolean isDownloadable,
-			List<List<Double>> bbox, String thumbnail) {
+			List<List<Double>> bbox, String thumbnail, LayerStatus layerStatus) {
 		super();
 		this.id = id;
 		this.name = name;
@@ -62,6 +64,7 @@ public class TOCLayer {
 		this.isDownloadable = isDownloadable;
 		this.bbox = bbox;
 		this.thumbnail = thumbnail;
+		this.layerStatus = layerStatus;
 	}
 
 	public TOCLayer(MetaLayer metaLayer, UserIbp userIbp, Boolean isDownloadable, List<List<Double>> bbox, String thumbnail) {
@@ -90,6 +93,7 @@ public class TOCLayer {
 		this.isDownloadable = isDownloadable;
 		this.bbox = bbox;
 		this.thumbnail = thumbnail;
+		this.layerStatus = metaLayer.getLayerStatus();
 	}
 
 	public Long getId() {
@@ -242,5 +246,13 @@ public class TOCLayer {
 
 	public void setThumbnail(String thumbnail) {
 		this.thumbnail = thumbnail;
+	}
+	
+	public LayerStatus getLayerStatus() {
+		return layerStatus;
+	}
+	
+	public void setLayerStatus(LayerStatus layerStatus) {
+		this.layerStatus = layerStatus;
 	}
 }

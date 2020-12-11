@@ -48,4 +48,6 @@ public interface MetaLayerService {
 
 	public List<TOCLayer> getTOCList(HttpServletRequest request, Integer limit, Integer offset) throws ApiException, com.vividsolutions.jts.io.ParseException, URISyntaxException;
 
+	public MetaLayer makeLayerActive(String layer);
+
 }

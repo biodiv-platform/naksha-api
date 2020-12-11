@@ -31,4 +31,6 @@ public interface LayerController {
 
 	public Response removeLayer(HttpServletRequest request, String layer);
 
+	public Response makeLayerActive(HttpServletRequest request, String layer);
+
 }

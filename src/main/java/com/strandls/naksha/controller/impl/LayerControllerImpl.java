@@ -16,6 +16,7 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -174,6 +175,26 @@ public class LayerControllerImpl implements LayerController {
 		try {
 			ObservationLocationInfo observationLocationInfo = metaLayerService.getLayerInfo(lon, lat);
 			return Response.ok().entity(observationLocationInfo).build();
+		} catch (Exception e) {
+			throw new WebApplicationException(
+					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
+		}
+	}
+	
+	@Override
+	@Path("active/{layer}")
+	@PUT
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Get layer information for the layer on click", response = LayerInfoOnClick.class, responseContainer = "List")
+	@ValidateUser
+	public Response makeLayerActive(@Context HttpServletRequest request, @PathParam("layer") String layer) {
+		try {
+			if(!Utils.isAdmin(request)) {
+				throw new WebApplicationException(
+						Response.status(Response.Status.UNAUTHORIZED).entity("Only admin can make the layer active").build());
+			}
+			MetaLayer metaLayer = metaLayerService.makeLayerActive(layer);
+			return Response.ok().entity(metaLayer).build();
 		} catch (Exception e) {
 			throw new WebApplicationException(
 					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
