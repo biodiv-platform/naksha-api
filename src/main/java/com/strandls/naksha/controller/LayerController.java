@@ -17,7 +17,7 @@ import com.strandls.naksha.pojo.request.LayerDownload;
 
 public interface LayerController {
 
-	public Response findAll(HttpServletRequest request, Integer limit, Integer offset);
+	public Response findAll(HttpServletRequest request, Integer limit, Integer offset, Boolean showOnlyPending);
 
 	public Response upload(HttpServletRequest request, final FormDataMultiPart multiPart);
 
@@ -30,5 +30,7 @@ public interface LayerController {
 	public Response getLayerInfoOnClick(String layer);
 
 	public Response removeLayer(HttpServletRequest request, String layer);
+
+	public Response makeLayerActive(HttpServletRequest request, String layer);
 
 }

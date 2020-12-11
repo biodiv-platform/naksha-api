@@ -141,6 +141,8 @@ public class Utils {
 	}
 
 	public static boolean isAdmin(HttpServletRequest request) {
+		if(request == null) return false;
+		
 		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 		if(profile == null) return false;
 		

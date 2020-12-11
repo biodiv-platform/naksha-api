@@ -16,6 +16,7 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -66,9 +67,10 @@ public class LayerControllerImpl implements LayerController {
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "Get meta data of all the layers", response = TOCLayer.class, responseContainer = "List")
 	public Response findAll(@Context HttpServletRequest request, @DefaultValue("-1") @QueryParam("limit") Integer limit,
-			@DefaultValue("-1") @QueryParam("offset") Integer offset) {
+			@DefaultValue("-1") @QueryParam("offset") Integer offset,
+			@DefaultValue("false") @QueryParam("showOnlyPending") Boolean showOnlyPending) {
 		try {
-			List<TOCLayer> layerList = metaLayerService.getTOCList(request, limit, offset);
+			List<TOCLayer> layerList = metaLayerService.getTOCList(request, limit, offset, showOnlyPending);
 			return Response.ok().entity(layerList).build();
 		} catch (Exception e) {
 			throw new WebApplicationException(
@@ -87,7 +89,7 @@ public class LayerControllerImpl implements LayerController {
 			String titleColumn = metaLayer.getTitleColumn();
 			List<String> summaryColumn = new ArrayList<>();
 			for (String column : metaLayer.getSummaryColumns().split(",")) {
-				if(column == null || "".equals(column))
+				if (column == null || "".equals(column))
 					continue;
 				summaryColumn.add(column);
 			}
@@ -146,21 +148,24 @@ public class LayerControllerImpl implements LayerController {
 	public Response download(@PathParam("hashKey") String hashKey, @PathParam("layerName") String layerName)
 			throws FileNotFoundException {
 		String fileLocation = metaLayerService.getFileLocation(hashKey, layerName);
-		
-		File file = new File(fileLocation);
-	    if (!file.exists()) {
-	        return javax.ws.rs.core.Response.status(404).build();
-	    } else {
-	        ContentDisposition contentDisposition = ContentDisposition.type("attachment").fileName(file.getName()).creationDate(new Date()).build();
-	        return javax.ws.rs.core.Response.ok( (StreamingOutput) output -> {
-	            try {
-	                InputStream input = new FileInputStream( file );
-	                IOUtils.copy(input, output);
-	                output.flush();
-	            } catch ( Exception e ) { e.printStackTrace(); }
-	        } ).header( "Content-Disposition", contentDisposition ).build();
 
-	    }
+		File file = new File(fileLocation);
+		if (!file.exists()) {
+			return javax.ws.rs.core.Response.status(404).build();
+		} else {
+			ContentDisposition contentDisposition = ContentDisposition.type("attachment").fileName(file.getName())
+					.creationDate(new Date()).build();
+			return javax.ws.rs.core.Response.ok((StreamingOutput) output -> {
+				try {
+					InputStream input = new FileInputStream(file);
+					IOUtils.copy(input, output);
+					output.flush();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}).header("Content-Disposition", contentDisposition).build();
+
+		}
 	}
 
 	@Override
@@ -179,7 +184,27 @@ public class LayerControllerImpl implements LayerController {
 					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
 		}
 	}
-	
+
+	@Override
+	@Path("active/{layer}")
+	@PUT
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Get layer information for the layer on click", response = LayerInfoOnClick.class, responseContainer = "List")
+	@ValidateUser
+	public Response makeLayerActive(@Context HttpServletRequest request, @PathParam("layer") String layer) {
+		try {
+			if (!Utils.isAdmin(request)) {
+				throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
+						.entity("Only admin can make the layer active").build());
+			}
+			MetaLayer metaLayer = metaLayerService.makeLayerActive(layer);
+			return Response.ok().entity(metaLayer).build();
+		} catch (Exception e) {
+			throw new WebApplicationException(
+					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
+		}
+	}
+
 	@Override
 	@Path("{layer}")
 	@DELETE
@@ -188,9 +213,9 @@ public class LayerControllerImpl implements LayerController {
 	@ValidateUser
 	public Response removeLayer(@Context HttpServletRequest request, @PathParam("layer") String layer) {
 		try {
-			if(!Utils.isAdmin(request)) {
-				throw new WebApplicationException(
-						Response.status(Response.Status.UNAUTHORIZED).entity("Only admin can delete the layer").build());
+			if (!Utils.isAdmin(request)) {
+				throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
+						.entity("Only admin can delete the layer").build());
 			}
 			MetaLayer metaLayer = metaLayerService.removeLayer(layer);
 			return Response.ok().entity(metaLayer).build();

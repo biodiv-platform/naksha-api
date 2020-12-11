@@ -48,6 +48,7 @@ import com.strandls.naksha.service.GeoserverStyleService;
 import com.strandls.naksha.service.MailService;
 import com.strandls.naksha.service.MetaLayerService;
 import com.strandls.naksha.utils.MetaLayerUtil;
+import com.strandls.naksha.utils.Utils;
 import com.strandls.user.ApiException;
 import com.strandls.user.controller.UserServiceApi;
 import com.strandls.user.pojo.UserIbp;
@@ -59,7 +60,7 @@ import it.geosolutions.geoserver.rest.decoder.RESTLayer;
 import net.minidev.json.JSONArray;
 
 public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements MetaLayerService {
-	
+
 	private final Logger logger = LoggerFactory.getLogger(MetaLayerServiceImpl.class);
 
 	@Inject
@@ -79,7 +80,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 	@Inject
 	private GeometryFactory geoFactory;
-	
+
 	@Inject
 	private MailService mailService;
 
@@ -97,20 +98,27 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	}
 
 	@Override
-	public List<TOCLayer> getTOCList(HttpServletRequest request, Integer limit, Integer offset)
+	public List<TOCLayer> getTOCList(HttpServletRequest request, Integer limit, Integer offset, boolean showOnlyPending)
 			throws ApiException, com.vividsolutions.jts.io.ParseException, URISyntaxException {
 
 		CommonProfile userProfile = AuthUtil.getProfileFromRequest(request);
 
 		List<MetaLayer> metaLayers = findAll(request, limit, offset);
 		List<TOCLayer> layerLists = new ArrayList<TOCLayer>();
+		boolean isAdmin = Utils.isAdmin(request);
+
 		for (MetaLayer metaLayer : metaLayers) {
+
+			if ((!isAdmin && LayerStatus.PENDING.equals(metaLayer.getLayerStatus()))
+					|| (showOnlyPending && !LayerStatus.PENDING.equals(metaLayer.getLayerStatus())))
+				continue;
+
 			Long authorId = metaLayer.getUploaderUserId();
 
 			UserIbp userIbp = userServiceApi.getUserIbp(authorId + "");
 
 			Boolean isDownloadable = checkDownLoadAccess(userProfile, metaLayer);
-				
+
 			List<List<Double>> bbox = getBoundingBox(metaLayer);
 			String thumbnail = getThumbnail(metaLayer, bbox);
 			TOCLayer tocLayer = new TOCLayer(metaLayer, userIbp, isDownloadable, bbox, thumbnail);
@@ -322,9 +330,9 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	}
 
 	private boolean checkDownLoadAccess(CommonProfile profile, MetaLayer metaLayer) {
-		if(profile == null) 
+		if (profile == null)
 			return false;
-		
+
 		JSONArray roles = (JSONArray) profile.getAttribute("roles");
 		if (roles.contains("ROLE_ADMIN"))
 			return true;
@@ -393,7 +401,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		logger.debug("{} / {} / {}", uri, hashKey, layerName);
 
 		String url = uri + "/" + hashKey + "/" + layerName;
-		
+
 		mailService.sendMail(authorId, url, "naksha");
 		// TODO : send mail notification for download url
 		// return directory.getAbsolutePath();
@@ -420,6 +428,13 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	@Override
 	public String getFileLocation(String hashKey, String layerName) {
 		return DOWNLOAD_BASE_LOCATION + File.separator + hashKey + File.separator + layerName + ".zip";
+	}
+
+	@Override
+	public MetaLayer makeLayerActive(String layerName) {
+		MetaLayer metaLayer = findByLayerTableName(layerName);
+		metaLayer.setLayerStatus(LayerStatus.ACTIVE);
+		return update(metaLayer);
 	}
 
 	@Override
