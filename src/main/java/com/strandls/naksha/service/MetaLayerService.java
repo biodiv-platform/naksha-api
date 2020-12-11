@@ -46,7 +46,7 @@ public interface MetaLayerService {
 
 	public ObservationLocationInfo getLayerInfo(String lon, String lat);
 
-	public List<TOCLayer> getTOCList(HttpServletRequest request, Integer limit, Integer offset) throws ApiException, com.vividsolutions.jts.io.ParseException, URISyntaxException;
+	public List<TOCLayer> getTOCList(HttpServletRequest request, Integer limit, Integer offset, boolean showOnlyPending) throws ApiException, com.vividsolutions.jts.io.ParseException, URISyntaxException;
 
 	public MetaLayer makeLayerActive(String layer);
 

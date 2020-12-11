@@ -17,7 +17,7 @@ import com.strandls.naksha.pojo.request.LayerDownload;
 
 public interface LayerController {
 
-	public Response findAll(HttpServletRequest request, Integer limit, Integer offset);
+	public Response findAll(HttpServletRequest request, Integer limit, Integer offset, Boolean showOnlyPending);
 
 	public Response upload(HttpServletRequest request, final FormDataMultiPart multiPart);
 
