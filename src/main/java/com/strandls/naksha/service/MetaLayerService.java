@@ -50,4 +50,6 @@ public interface MetaLayerService {
 
 	public MetaLayer makeLayerActive(String layer);
 
+	public MetaLayer makeLayerPending(String layerName);
+
 }

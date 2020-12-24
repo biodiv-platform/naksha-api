@@ -33,4 +33,6 @@ public interface LayerController {
 
 	public Response makeLayerActive(HttpServletRequest request, String layer);
 
+	public Response makeLayerPending(HttpServletRequest request, String layer);
+
 }

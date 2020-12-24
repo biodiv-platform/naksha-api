@@ -436,6 +436,13 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		metaLayer.setLayerStatus(LayerStatus.ACTIVE);
 		return update(metaLayer);
 	}
+	
+	@Override
+	public MetaLayer makeLayerPending(String layerName) {
+		MetaLayer metaLayer = findByLayerTableName(layerName);
+		metaLayer.setLayerStatus(LayerStatus.PENDING);
+		return update(metaLayer);
+	}
 
 	@Override
 	public MetaLayer removeLayer(String layerName) {
