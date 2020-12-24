@@ -189,7 +189,7 @@ public class LayerControllerImpl implements LayerController {
 	@Path("active/{layer}")
 	@PUT
 	@Produces(MediaType.APPLICATION_JSON)
-	@ApiOperation(value = "Get layer information for the layer on click", response = LayerInfoOnClick.class, responseContainer = "List")
+	@ApiOperation(value = "Make the layer active", response = MetaLayer.class)
 	@ValidateUser
 	public Response makeLayerActive(@Context HttpServletRequest request, @PathParam("layer") String layer) {
 		try {
@@ -198,6 +198,26 @@ public class LayerControllerImpl implements LayerController {
 						.entity("Only admin can make the layer active").build());
 			}
 			MetaLayer metaLayer = metaLayerService.makeLayerActive(layer);
+			return Response.ok().entity(metaLayer).build();
+		} catch (Exception e) {
+			throw new WebApplicationException(
+					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
+		}
+	}
+	
+	@Override
+	@Path("pending/{layer}")
+	@PUT
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Make the layer pending", response = MetaLayer.class)
+	@ValidateUser
+	public Response makeLayerPending(@Context HttpServletRequest request, @PathParam("layer") String layer) {
+		try {
+			if (!Utils.isAdmin(request)) {
+				throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
+						.entity("Only admin can make the layer pending").build());
+			}
+			MetaLayer metaLayer = metaLayerService.makeLayerPending(layer);
 			return Response.ok().entity(metaLayer).build();
 		} catch (Exception e) {
 			throw new WebApplicationException(
