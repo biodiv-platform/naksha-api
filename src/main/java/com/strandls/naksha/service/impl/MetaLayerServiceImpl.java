@@ -436,7 +436,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		metaLayer.setLayerStatus(LayerStatus.ACTIVE);
 		return update(metaLayer);
 	}
-	
+
 	@Override
 	public MetaLayer makeLayerPending(String layerName) {
 		MetaLayer metaLayer = findByLayerTableName(layerName);
@@ -459,25 +459,40 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 	@Override
 	public ObservationLocationInfo getLayerInfo(String lon, String lat) {
+		try {
+			String soil = getAttributeValueAtLatlon("descriptio", INDIA_SOIL, lon, lat);
+			String temp = getAttributeValueAtLatlon("temp_c", INDIA_TEMPERATURE, lon, lat);
+			String rainfall = getAttributeValueAtLatlon("rain_range", INDIA_RAINFALLZONE, lon, lat);
+			String tahsil = getAttributeValueAtLatlon("tahsil", INDIA_TAHSIL, lon, lat);
+			String forestType = getAttributeValueAtLatlon("type_desc", INDIA_FOREST_TYPE, lon, lat);
 
-		String soil = getAttributeValueAtLatlon("descriptio", INDIA_SOIL, lon, lat);
-		String temp = getAttributeValueAtLatlon("temp_c", INDIA_TEMPERATURE, lon, lat);
-		String rainfall = getAttributeValueAtLatlon("rain_range", INDIA_RAINFALLZONE, lon, lat);
-		String tahsil = getAttributeValueAtLatlon("tahsil", INDIA_TAHSIL, lon, lat);
-		String forestType = getAttributeValueAtLatlon("type_desc", INDIA_FOREST_TYPE, lon, lat);
+			if (soil == null && temp == null && rainfall == null && tahsil == null && forestType == null)
+				return null;
 
-		return new ObservationLocationInfo(soil, temp, rainfall, tahsil, forestType);
+			return new ObservationLocationInfo(soil, temp, rainfall, tahsil, forestType);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+
 	}
 
 	private String getAttributeValueAtLatlon(String attribute, String layerName, String lon, String lat) {
 
-		String queryStr = "SELECT " + attribute + " from " + layerName + " where st_contains" + "(" + layerName + "."
-				+ MetaLayerService.GEOMETRY_COLUMN_NAME + ", ST_GeomFromText('POINT(" + lon + " " + lat + ")',0))";
-		List<Object> result = metaLayerDao.executeQueryForSingleResult(queryStr);
+		try {
+			String queryStr = "SELECT " + attribute + " from " + layerName + " where st_contains" + "(" + layerName
+					+ "." + MetaLayerService.GEOMETRY_COLUMN_NAME + ", ST_GeomFromText('POINT(" + lon + " " + lat
+					+ ")',0))";
+			List<Object> result = metaLayerDao.executeQueryForSingleResult(queryStr);
 
-		if (result.isEmpty())
-			return null;
+			if (result.isEmpty())
+				return null;
 
-		return result.get(0).toString();
+			return result.get(0).toString();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+
 	}
 }
