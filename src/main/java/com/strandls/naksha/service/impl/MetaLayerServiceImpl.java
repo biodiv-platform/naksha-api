@@ -19,6 +19,7 @@ import javax.inject.Inject;
 import javax.naming.directory.InvalidAttributesException;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.message.BasicNameValuePair;
@@ -436,7 +437,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		metaLayer.setLayerStatus(LayerStatus.ACTIVE);
 		return update(metaLayer);
 	}
-	
+
 	@Override
 	public MetaLayer makeLayerPending(String layerName) {
 		MetaLayer metaLayer = findByLayerTableName(layerName);
@@ -446,38 +447,91 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 	@Override
 	public MetaLayer removeLayer(String layerName) {
-		// TODO : Remove the copied files from the file system. (Need to take a call on
-		// this)
-		// TODO : Delete table from the database
-		// TODO : Mark the entry in the metalayer as inactive.
-		// TODO : remove-publish layer from the geoserver
+
 		MetaLayer metaLayer = findByLayerTableName(layerName);
 		metaLayer.setLayerStatus(LayerStatus.INACTIVE);
 		update(metaLayer);
 		return metaLayer;
 	}
+	
+	@Override
+	public MetaLayer deleteLayer(String layerName) {
+		MetaLayer metaLayer = findByLayerTableName(layerName);
+		return deleteLayer(metaLayer);
+	}
+	
+	@Override
+	public List<MetaLayer> cleanupInactiveLayers() {
+		List<MetaLayer> layers = metaLayerDao.getAllInactiveLayer();
+		
+		List<MetaLayer> deletedLayers = new ArrayList<MetaLayer>();
+		for(MetaLayer metaLayer : layers) {
+			deletedLayers.add(deleteLayer(metaLayer));
+		}
+		
+		return deletedLayers;
+	}
+	
+	public MetaLayer deleteLayer(MetaLayer metaLayer) {
+		String layerName = metaLayer.getLayerTableName();
+		// Remove the copied files from the file system. (Need to take a call on this)
+		String dirPath = metaLayer.getDirPath();
+		dirPath = dirPath.substring(0, dirPath.lastIndexOf("/"));
+		try {
+			FileUtils.deleteDirectory(new File(dirPath));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		//remove-published layer from the geoserver
+		geoserverService.removeLayer(WORKSPACE, layerName);
+		
+		//remove the  style from the geoserver
+		geoserverStyleService.unpublishAllStyles(layerName, WORKSPACE);
+		
+		//Drop table from the database
+		metaLayerDao.dropTable(layerName);
+		
+		//Delete the entry in the metalayer.
+		return metaLayerDao.delete(metaLayer);
+	}
 
 	@Override
 	public ObservationLocationInfo getLayerInfo(String lon, String lat) {
+		try {
+			String soil = getAttributeValueAtLatlon("descriptio", INDIA_SOIL, lon, lat);
+			String temp = getAttributeValueAtLatlon("temp_c", INDIA_TEMPERATURE, lon, lat);
+			String rainfall = getAttributeValueAtLatlon("rain_range", INDIA_RAINFALLZONE, lon, lat);
+			String tahsil = getAttributeValueAtLatlon("tahsil", INDIA_TAHSIL, lon, lat);
+			String forestType = getAttributeValueAtLatlon("type_desc", INDIA_FOREST_TYPE, lon, lat);
 
-		String soil = getAttributeValueAtLatlon("descriptio", INDIA_SOIL, lon, lat);
-		String temp = getAttributeValueAtLatlon("temp_c", INDIA_TEMPERATURE, lon, lat);
-		String rainfall = getAttributeValueAtLatlon("rain_range", INDIA_RAINFALLZONE, lon, lat);
-		String tahsil = getAttributeValueAtLatlon("tahsil", INDIA_TAHSIL, lon, lat);
-		String forestType = getAttributeValueAtLatlon("type_desc", INDIA_FOREST_TYPE, lon, lat);
+			if (soil == null && temp == null && rainfall == null && tahsil == null && forestType == null)
+				return null;
 
-		return new ObservationLocationInfo(soil, temp, rainfall, tahsil, forestType);
+			return new ObservationLocationInfo(soil, temp, rainfall, tahsil, forestType);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+
 	}
 
 	private String getAttributeValueAtLatlon(String attribute, String layerName, String lon, String lat) {
 
-		String queryStr = "SELECT " + attribute + " from " + layerName + " where st_contains" + "(" + layerName + "."
-				+ MetaLayerService.GEOMETRY_COLUMN_NAME + ", ST_GeomFromText('POINT(" + lon + " " + lat + ")',0))";
-		List<Object> result = metaLayerDao.executeQueryForSingleResult(queryStr);
+		try {
+			String queryStr = "SELECT " + attribute + " from " + layerName + " where st_contains" + "(" + layerName
+					+ "." + MetaLayerService.GEOMETRY_COLUMN_NAME + ", ST_GeomFromText('POINT(" + lon + " " + lat
+					+ ")',0))";
+			List<Object> result = metaLayerDao.executeQueryForSingleResult(queryStr);
 
-		if (result.isEmpty())
-			return null;
+			if (result.isEmpty())
+				return null;
 
-		return result.get(0).toString();
+			return result.get(0).toString();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return null;
+
 	}
 }

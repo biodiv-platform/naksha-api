@@ -35,4 +35,8 @@ public interface LayerController {
 
 	public Response makeLayerPending(HttpServletRequest request, String layer);
 
+	public Response deleteLayer(HttpServletRequest request, String layer);
+
+	public Response cleanupInactiveLayer(HttpServletRequest request);
+
 }

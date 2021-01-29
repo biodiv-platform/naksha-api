@@ -33,6 +33,8 @@ import com.strandls.naksha.style.json.StyledLayer;
 import com.strandls.naksha.style.json.StyledSource;
 import com.strandls.naksha.utils.MetaLayerUtil;
 
+import it.geosolutions.geoserver.rest.manager.GeoServerRESTStyleManager;
+
 public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 
 	@Inject
@@ -219,6 +221,17 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 		return layers;
 	}
 
+	@Override
+	public void unpublishAllStyles(String layerName, String workspace) {
+		List<GeoserverLayerStyles> styles = fetchAllStyles(layerName);
+		GeoServerRESTStyleManager styleManager = geoserverService.getManager().getStyleManager();
+		for(GeoserverLayerStyles geoserverLayerStyles : styles) {
+			String styleName = geoserverLayerStyles.getStyleName();
+			styleName = layerName + "_" + styleName;
+			styleManager.removeStyleInWorkspace(workspace, styleName);
+		}
+	}
+	
 	@Override
 	public List<String> publishAllStyles(String layerName, String workspace) throws IOException {
 		List<Object[]> columnNameTypes = geoserverStyleDao.getColumnTypes(layerName);

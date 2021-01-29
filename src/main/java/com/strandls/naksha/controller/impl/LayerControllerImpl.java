@@ -244,4 +244,45 @@ public class LayerControllerImpl implements LayerController {
 					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
 		}
 	}
+	
+	@Override
+	@Path("deep/{layer}")
+	@DELETE
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Delete the layer completely with file and table as well", response = LayerInfoOnClick.class, responseContainer = "List")
+	@ValidateUser
+	public Response deleteLayer(@Context HttpServletRequest request, @PathParam("layer") String layer) {
+		try {
+			if (!Utils.isAdmin(request)) {
+				throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
+						.entity("Only admin can delete the layer").build());
+			}
+			 MetaLayer metaLayer = metaLayerService.deleteLayer(layer);
+			return Response.ok().entity(metaLayer).build();
+		} catch (Exception e) {
+			throw new WebApplicationException(
+					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
+		}
+	}
+	
+	@Override
+	@Path("cleanup")
+	@DELETE
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Delete all the inactive layer completely with file and table as well", response = LayerInfoOnClick.class, responseContainer = "List")
+	@ValidateUser
+	public Response cleanupInactiveLayer(@Context HttpServletRequest request) {
+		try {
+			if (!Utils.isAdmin(request)) {
+				throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
+						.entity("Only admin can delete the layer").build());
+			}
+			 List<MetaLayer> metaLayer = metaLayerService.cleanupInactiveLayers();
+			return Response.ok().entity(metaLayer).build();
+		} catch (Exception e) {
+			throw new WebApplicationException(
+					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
+		}
+	}
+	
 }
