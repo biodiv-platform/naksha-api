@@ -14,6 +14,8 @@ public interface GeoserverStyleService {
 
 	public List<String> publishAllStyles(String layerTableName, String workspace) throws IOException;
 
+	public void unpublishAllStyles(String layerName, String workspace);
+	
 	List<GeoserverLayerStyles> fetchAllStyles(String id);
 
 }

@@ -8,6 +8,8 @@ import javax.persistence.NoResultException;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 
 import com.strandls.naksha.pojo.MetaLayer;
@@ -33,6 +35,24 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 			session.close();
 		}
 		return entity;
+	}
+	
+	public List<MetaLayer> getAllInactiveLayer() {
+		String queryStr = "" + "from " + daoType.getSimpleName() + " t " + "where t.layerStatus = :value order by id";
+		Session session = sessionFactory.openSession();
+		org.hibernate.query.Query<MetaLayer> query = session.createQuery(queryStr, MetaLayer.class);
+		query.setParameter("value", LayerStatus.INACTIVE);
+
+		try {
+			List<MetaLayer> resultList = new ArrayList<>();
+			resultList = query.getResultList();
+			return resultList;
+		} catch (NoResultException e) {
+			e.printStackTrace();
+			throw e;
+		} finally {
+			session.close();
+		}
 	}
 
 	@Override
@@ -84,5 +104,14 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 		}
 		session.close();
 		return bboxWkt;
+	}
+	
+	public void dropTable(String layerName) {
+		Session session = sessionFactory.openSession();
+		Transaction tx = session.beginTransaction();
+		Query query = session.createNativeQuery("drop table " + layerName);
+		query.executeUpdate();
+		tx.commit();
+		session.close();
 	}
 }

@@ -51,5 +51,8 @@ public interface MetaLayerService {
 	public MetaLayer makeLayerActive(String layer);
 
 	public MetaLayer makeLayerPending(String layerName);
-
+	
+	public MetaLayer deleteLayer(String layerName);
+	
+	public List<MetaLayer> cleanupInactiveLayers();
 }
