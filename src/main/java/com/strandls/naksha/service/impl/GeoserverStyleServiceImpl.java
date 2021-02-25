@@ -146,7 +146,10 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 			for (Object object : values) {
 				String color = getRandColor();
 				List<Object> stop = new ArrayList<Object>();
-				stop.add(object);
+				if(object == null)
+					stop.add("No Data");
+				else
+					stop.add(object);
 				stop.add("#" + color);
 				stops.add(stop);
 			}
