@@ -237,7 +237,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		metaLayer = save(metaLayer);
 		result.put("Meta layer table entry", metaLayer.getId());
 
-		String layerTableName = "lyr_" + metaLayer.getId() + "_" + layerName;
+		String layerTableName = "lyr_" + metaLayer.getId() + "_" + layerName.trim().replaceAll("\\s+", "_");
 		metaLayer.setLayerTableName(layerTableName);
 		update(metaLayer);
 
@@ -245,9 +245,15 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			uploadGeoTiff(layerTableName, ogrInputFileLocation, result);
 			return result;
 		}
-
-		createDBTable(layerTableName, ogrInputFileLocation, layerColumnDescription, layerFileDescription, result);
-
+		try {
+			createDBTable(layerTableName, ogrInputFileLocation, layerColumnDescription, layerFileDescription, result);
+		} catch(Exception e) {
+			// Roll back 
+			MetaLayerUtil.deleteFiles(dirPath);
+			metaLayerDao.delete(metaLayer);
+			throw new IOException("Table creation failed");
+		}
+		
 		List<String> keywords = new ArrayList<String>();
 		keywords.add(layerTableName);
 
@@ -255,6 +261,10 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		boolean isPublished = geoserverService.publishLayer(WORKSPACE, DATASTORE, layerTableName, null, layerTableName,
 				keywords, styles);
 		if (!isPublished) {
+			// roll back
+			MetaLayerUtil.deleteFiles(dirPath);
+			metaLayerDao.delete(metaLayer);
+			metaLayerDao.dropTable(layerTableName);
 			throw new IOException("Geoserver publication of layer failed");
 		}
 
@@ -474,14 +484,10 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	
 	public MetaLayer deleteLayer(MetaLayer metaLayer) {
 		String layerName = metaLayer.getLayerTableName();
+
 		// Remove the copied files from the file system. (Need to take a call on this)
 		String dirPath = metaLayer.getDirPath();
-		dirPath = dirPath.substring(0, dirPath.lastIndexOf("/"));
-		try {
-			FileUtils.deleteDirectory(new File(dirPath));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		MetaLayerUtil.deleteFiles(dirPath);
 		
 		//remove-published layer from the geoserver
 		geoserverService.removeLayer(WORKSPACE, layerName);
@@ -492,7 +498,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		//Drop table from the database
 		metaLayerDao.dropTable(layerName);
 		
-		//Delete the entry in the metalayer.
+		//Delete the entry in the 	.
 		return metaLayerDao.delete(metaLayer);
 	}
 
