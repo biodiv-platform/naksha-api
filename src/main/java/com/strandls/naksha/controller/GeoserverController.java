@@ -1,5 +1,6 @@
 package com.strandls.naksha.controller;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
 
 public interface GeoserverController {
@@ -15,4 +16,8 @@ public interface GeoserverController {
 	public Response fetchLegend(String layer, String style);
 
 	public Response fetchTiles(String layer, String z, String x, String y);
+
+	public Response publishAllStyles(HttpServletRequest request, String layerTableName, String workspace);
+
+	public Response publishAllStyles(HttpServletRequest request, String workspace);
 }

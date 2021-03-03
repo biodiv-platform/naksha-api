@@ -171,12 +171,22 @@ public class MetaLayerUtil {
 		String fileName = formdata.getContentDisposition().getFileName();
 		fileName += ".";
 		String layerName = fileName.split("\\.")[0].toLowerCase();
+		layerName = layerName.trim().replaceAll("\\s+", "_");
 
 		String filePath = tmpDirPath + File.separator + layerName + "." + type;
 
 		File file = new File(filePath);
 		FileUtils.copyInputStreamToFile(inputStream, file);
 		return filePath;
+	}
+	
+	public static void deleteFiles(String dirPath) {
+		dirPath = dirPath.substring(0, dirPath.lastIndexOf("/"));
+		try {
+			FileUtils.deleteDirectory(new File(dirPath));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**

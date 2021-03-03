@@ -14,6 +14,7 @@ import org.json.simple.parser.ParseException;
 import com.strandls.naksha.NakshaConfig;
 import com.strandls.naksha.pojo.MetaLayer;
 import com.strandls.naksha.pojo.request.LayerDownload;
+import com.strandls.naksha.pojo.request.MetaLayerEdit;
 import com.strandls.naksha.pojo.response.ObservationLocationInfo;
 import com.strandls.naksha.pojo.response.TOCLayer;
 import com.strandls.user.ApiException;
@@ -55,4 +56,6 @@ public interface MetaLayerService {
 	public MetaLayer deleteLayer(String layerName);
 	
 	public List<MetaLayer> cleanupInactiveLayers();
+
+	public MetaLayer updateMataLayer(HttpServletRequest request, MetaLayerEdit metaLayerEdit) throws IOException;
 }

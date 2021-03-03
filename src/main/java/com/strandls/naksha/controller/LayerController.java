@@ -8,6 +8,7 @@ import javax.ws.rs.core.Response;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 
 import com.strandls.naksha.pojo.request.LayerDownload;
+import com.strandls.naksha.pojo.request.MetaLayerEdit;
 
 /**
  * 
@@ -38,5 +39,7 @@ public interface LayerController {
 	public Response deleteLayer(HttpServletRequest request, String layer);
 
 	public Response cleanupInactiveLayer(HttpServletRequest request);
+
+	public Response updateMetaLayerData(HttpServletRequest request, MetaLayerEdit metaLayerEdit);
 
 }

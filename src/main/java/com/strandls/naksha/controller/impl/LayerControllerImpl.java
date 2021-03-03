@@ -37,6 +37,7 @@ import com.strandls.naksha.controller.LayerController;
 import com.strandls.naksha.pojo.MetaLayer;
 import com.strandls.naksha.pojo.request.LayerDownload;
 import com.strandls.naksha.pojo.request.MetaData;
+import com.strandls.naksha.pojo.request.MetaLayerEdit;
 import com.strandls.naksha.pojo.response.GeoserverLayerStyles;
 import com.strandls.naksha.pojo.response.LayerInfoOnClick;
 import com.strandls.naksha.pojo.response.ObservationLocationInfo;
@@ -114,6 +115,26 @@ public class LayerControllerImpl implements LayerController {
 	public Response upload(@Context HttpServletRequest request, final FormDataMultiPart multiPart) {
 		try {
 			Map<String, Object> result = metaLayerService.uploadLayer(request, multiPart);
+			return Response.ok().entity(result).build();
+		} catch (Exception e) {
+			throw new WebApplicationException(
+					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
+		}
+	}
+
+	@Override
+	@Path("edit")
+	@PUT
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Upload Layer", notes = "Returns succuess failure", response = MetaData.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "file not present", response = String.class),
+			@ApiResponse(code = 500, message = "ERROR", response = String.class) })
+	@ValidateUser
+	public Response updateMetaLayerData(@Context HttpServletRequest request,
+			@ApiParam("mataLayerEdit") MetaLayerEdit metaLayerEdit) {
+		try {
+			MetaLayer result = metaLayerService.updateMataLayer(request, metaLayerEdit);
 			return Response.ok().entity(result).build();
 		} catch (Exception e) {
 			throw new WebApplicationException(
@@ -204,7 +225,7 @@ public class LayerControllerImpl implements LayerController {
 					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
 		}
 	}
-	
+
 	@Override
 	@Path("pending/{layer}")
 	@PUT
@@ -244,7 +265,7 @@ public class LayerControllerImpl implements LayerController {
 					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
 		}
 	}
-	
+
 	@Override
 	@Path("deep/{layer}")
 	@DELETE
@@ -257,14 +278,14 @@ public class LayerControllerImpl implements LayerController {
 				throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
 						.entity("Only admin can delete the layer").build());
 			}
-			 MetaLayer metaLayer = metaLayerService.deleteLayer(layer);
+			MetaLayer metaLayer = metaLayerService.deleteLayer(layer);
 			return Response.ok().entity(metaLayer).build();
 		} catch (Exception e) {
 			throw new WebApplicationException(
 					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
 		}
 	}
-	
+
 	@Override
 	@Path("cleanup")
 	@DELETE
@@ -277,12 +298,12 @@ public class LayerControllerImpl implements LayerController {
 				throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
 						.entity("Only admin can delete the layer").build());
 			}
-			 List<MetaLayer> metaLayer = metaLayerService.cleanupInactiveLayers();
+			List<MetaLayer> metaLayer = metaLayerService.cleanupInactiveLayers();
 			return Response.ok().entity(metaLayer).build();
 		} catch (Exception e) {
 			throw new WebApplicationException(
 					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
 		}
 	}
-	
+
 }

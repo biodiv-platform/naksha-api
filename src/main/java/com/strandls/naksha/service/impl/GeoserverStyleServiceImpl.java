@@ -65,6 +65,8 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 	private static final String CHARACTER = "character";
 
 	private static final int VERSION = 8;
+	
+	private static final double OPACITY = 0.8;
 
 	private static String geoserverDataDirectory = "";
 
@@ -198,14 +200,14 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 		switch (layerType) {
 		case MULTIPOLYGON:
 			String fillOutlineColor = "#aaaaaa";
-			Double fillOpacity = 0.5;
+			Double fillOpacity = OPACITY;
 			paint = new FillLayerPaint(fillOutlineColor, fillOpacity, styleColor);
 			geoType = GEO_TYPE_FILL;
 			break;
 		case POINT:
 		case MULTIPOINT:
 			Double circleRadius = 5.0;
-			Double circleOpacity = 0.5;
+			Double circleOpacity = OPACITY;
 			paint = new CircleLayerPaint(circleRadius, circleOpacity, styleColor);
 			geoType = GEO_TYPE_CIRCLE;
 			break;
@@ -233,6 +235,17 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 			styleName = layerName + "_" + styleName;
 			styleManager.removeStyleInWorkspace(workspace, styleName);
 		}
+	}
+	
+	@Override
+	public List<String> publishAllStyles(String workspace) throws IOException {
+		List<MetaLayer> metaLayers = metaLayerService.findAll(null, -1, -1);
+		List<String> stylesUpdated = new ArrayList<String>();
+		for(MetaLayer metaLayer : metaLayers) {
+			List<String> styles = publishAllStyles(metaLayer.getLayerTableName(), workspace);
+			stylesUpdated.addAll(styles);
+		}
+		return stylesUpdated;
 	}
 	
 	@Override

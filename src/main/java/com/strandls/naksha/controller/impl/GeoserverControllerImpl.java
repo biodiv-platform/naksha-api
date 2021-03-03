@@ -5,13 +5,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -19,6 +22,7 @@ import javax.ws.rs.core.Response.Status;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 
+import com.strandls.authentication_utility.filter.ValidateUser;
 import com.strandls.naksha.ApiConstants;
 import com.strandls.naksha.controller.GeoserverController;
 import com.strandls.naksha.pojo.MetaLayer;
@@ -42,7 +46,7 @@ public class GeoserverControllerImpl implements GeoserverController {
 
 	@Inject
 	private GeoserverStyleService geoserverStyleService;
-	
+
 	@Inject
 	private MetaLayerService metaLayerService;
 
@@ -88,6 +92,49 @@ public class GeoserverControllerImpl implements GeoserverController {
 	}
 
 	@Override
+	@PUT
+	@ValidateUser
+	@Path(ApiConstants.LAYERS + "/all" + ApiConstants.STYLES)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Reload All Styles for the layer", notes = "This method will override the style if already exist", response = GeoserverLayerStyles.class, responseContainer = "List")
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Details not found", response = String.class) })
+	public Response publishAllStyles(@Context HttpServletRequest request, @QueryParam("workspace") String workspace) {
+		try {
+			if (!Utils.isAdmin(request)) {
+				throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
+						.entity("Only admin can update the styles").build());
+			}
+			List<String> styles = geoserverStyleService.publishAllStyles(workspace);
+			return Response.status(Status.OK).entity(styles).build();
+		} catch (Exception e) {
+			throw new WebApplicationException(
+					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
+		}
+	}
+
+	@Override
+	@PUT
+	@ValidateUser
+	@Path(ApiConstants.LAYERS + "/{layerTableName}" + ApiConstants.STYLES)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Reload All Styles for the layer", notes = "This method will override the style if already exist", response = GeoserverLayerStyles.class, responseContainer = "List")
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Details not found", response = String.class) })
+	public Response publishAllStyles(@Context HttpServletRequest request,
+			@PathParam("layerTableName") String layerTableName, @QueryParam("workspace") String workspace) {
+		try {
+			if (!Utils.isAdmin(request)) {
+				throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
+						.entity("Only admin can update the styles").build());
+			}
+			List<String> styles = geoserverStyleService.publishAllStyles(layerTableName, workspace);
+			return Response.status(Status.OK).entity(styles).build();
+		} catch (Exception e) {
+			throw new WebApplicationException(
+					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
+		}
+	}
+
+	@Override
 	@GET
 	@Path("/workspaces/{workspaces}" + ApiConstants.STYLES + "/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
@@ -110,25 +157,27 @@ public class GeoserverControllerImpl implements GeoserverController {
 	@Produces("image/gif")
 	@ApiOperation(value = "Fetch Thumbnails", notes = "Return Thumbnails", response = ByteArrayInputStream.class)
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "Thumbnail not found", response = String.class) })
-	public Response fetchThumbnail(@PathParam("id") String id, @DefaultValue("biodiv") @PathParam("workspace") String wspace,
-			@QueryParam("bbox") String para, @DefaultValue("200") @QueryParam("width") String width, @DefaultValue("200") @QueryParam("height") String height,
-			 @DefaultValue("EPSG:4326") @QueryParam("srs") String srs) {
+	public Response fetchThumbnail(@PathParam("id") String id,
+			@DefaultValue("biodiv") @PathParam("workspace") String wspace, @QueryParam("bbox") String para,
+			@DefaultValue("200") @QueryParam("width") String width,
+			@DefaultValue("200") @QueryParam("height") String height,
+			@DefaultValue("EPSG:4326") @QueryParam("srs") String srs) {
 		try {
 			MetaLayer metaLayer = metaLayerService.findByLayerTableName(id);
 			String colorBy = metaLayer.getColorBy();
-			
+
 			String style = id + "_";
-			if(colorBy == null || "".equals(colorBy) || "NA".equals(colorBy)) {
+			if (colorBy == null || "".equals(colorBy) || "NA".equals(colorBy)) {
 				String summaryColumns = metaLayer.getSummaryColumns();
-				if(summaryColumns == null || "".equals(summaryColumns))
+				if (summaryColumns == null || "".equals(summaryColumns))
 					style = "";
 				else {
 					String column = metaLayer.getSummaryColumns().split(",")[0];
 					style += column;
 				}
-			} else 
+			} else
 				style += colorBy;
-			
+
 			ArrayList<NameValuePair> params = new ArrayList<NameValuePair>();
 			params.add(new BasicNameValuePair("request", "GetMap"));
 			params.add(new BasicNameValuePair("layers", id));
