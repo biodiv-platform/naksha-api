@@ -19,7 +19,6 @@ import javax.inject.Inject;
 import javax.naming.directory.InvalidAttributesException;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.message.BasicNameValuePair;
@@ -41,6 +40,7 @@ import com.strandls.naksha.pojo.enumtype.LayerStatus;
 import com.strandls.naksha.pojo.request.LayerDownload;
 import com.strandls.naksha.pojo.request.LayerFileDescription;
 import com.strandls.naksha.pojo.request.MetaData;
+import com.strandls.naksha.pojo.request.MetaLayerEdit;
 import com.strandls.naksha.pojo.response.ObservationLocationInfo;
 import com.strandls.naksha.pojo.response.TOCLayer;
 import com.strandls.naksha.service.AbstractService;
@@ -247,13 +247,13 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		}
 		try {
 			createDBTable(layerTableName, ogrInputFileLocation, layerColumnDescription, layerFileDescription, result);
-		} catch(Exception e) {
-			// Roll back 
+		} catch (Exception e) {
+			// Roll back
 			MetaLayerUtil.deleteFiles(dirPath);
 			metaLayerDao.delete(metaLayer);
 			throw new IOException("Table creation failed");
 		}
-		
+
 		List<String> keywords = new ArrayList<String>();
 		keywords.add(layerTableName);
 
@@ -442,6 +442,17 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	}
 
 	@Override
+	public MetaLayer updateMataLayer(HttpServletRequest request, MetaLayerEdit metaLayerEdit) throws IOException {
+		MetaLayer metaLayer = findById(metaLayerEdit.getId());
+		if (Utils.isAdmin(request) || Utils.isOwner(metaLayer.getUploaderUserId(), request)) {
+			metaLayer = metaLayerEdit.update(metaLayerEdit, metaLayer);
+			return update(metaLayer);
+		} else {
+			throw new IOException("User is unauthorized to edit the layer");
+		}
+	}
+
+	@Override
 	public MetaLayer makeLayerActive(String layerName) {
 		MetaLayer metaLayer = findByLayerTableName(layerName);
 		metaLayer.setLayerStatus(LayerStatus.ACTIVE);
@@ -463,42 +474,42 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		update(metaLayer);
 		return metaLayer;
 	}
-	
+
 	@Override
 	public MetaLayer deleteLayer(String layerName) {
 		MetaLayer metaLayer = findByLayerTableName(layerName);
 		return deleteLayer(metaLayer);
 	}
-	
+
 	@Override
 	public List<MetaLayer> cleanupInactiveLayers() {
 		List<MetaLayer> layers = metaLayerDao.getAllInactiveLayer();
-		
+
 		List<MetaLayer> deletedLayers = new ArrayList<MetaLayer>();
-		for(MetaLayer metaLayer : layers) {
+		for (MetaLayer metaLayer : layers) {
 			deletedLayers.add(deleteLayer(metaLayer));
 		}
-		
+
 		return deletedLayers;
 	}
-	
+
 	public MetaLayer deleteLayer(MetaLayer metaLayer) {
 		String layerName = metaLayer.getLayerTableName();
 
 		// Remove the copied files from the file system. (Need to take a call on this)
 		String dirPath = metaLayer.getDirPath();
 		MetaLayerUtil.deleteFiles(dirPath);
-		
-		//remove-published layer from the geoserver
+
+		// remove-published layer from the geoserver
 		geoserverService.removeLayer(WORKSPACE, layerName);
-		
-		//remove the  style from the geoserver
+
+		// remove the style from the geoserver
 		geoserverStyleService.unpublishAllStyles(layerName, WORKSPACE);
-		
-		//Drop table from the database
+
+		// Drop table from the database
 		metaLayerDao.dropTable(layerName);
-		
-		//Delete the entry in the 	.
+
+		// Delete the entry in the .
 		return metaLayerDao.delete(metaLayer);
 	}
 

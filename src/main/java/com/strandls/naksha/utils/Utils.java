@@ -152,4 +152,13 @@ public class Utils {
 		
 		return false;
 	}
+
+	public static boolean isOwner(Long uploaderUserId, HttpServletRequest request) {
+		if(request == null) return false;
+		
+		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+		if(profile == null) return false;
+		
+		return uploaderUserId == Long.parseLong(profile.getId());
+	}
 }
