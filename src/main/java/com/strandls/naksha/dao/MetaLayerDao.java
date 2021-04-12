@@ -36,7 +36,7 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 		}
 		return entity;
 	}
-	
+
 	public List<MetaLayer> getAllInactiveLayer() {
 		String queryStr = "" + "from " + daoType.getSimpleName() + " t " + "where t.layerStatus = :value order by id";
 		Session session = sessionFactory.openSession();
@@ -105,7 +105,7 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 		session.close();
 		return bboxWkt;
 	}
-	
+
 	public void dropTable(String layerName) {
 		Session session = sessionFactory.openSession();
 		Transaction tx = session.beginTransaction();
@@ -113,5 +113,19 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 		query.executeUpdate();
 		tx.commit();
 		session.close();
+	}
+
+	public List<Object[]> executeQueryForLocationInfo(String queryStr) {
+		Session session = sessionFactory.openSession();
+		Query query = session.createNativeQuery(queryStr);
+		List<Object[]> entity;
+		try {
+			entity = (List<Object[]>) query.getResultList();
+		} catch (NoResultException e) {
+			e.printStackTrace();
+			throw e;
+		}
+		session.close();
+		return entity;
 	}
 }
