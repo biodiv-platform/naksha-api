@@ -18,4 +18,5 @@ public class ApiConstants {
 	public static final String LAYERINFO = "/layerinfo";
 	public static final String OBSERVATION = "/observation";
 	public static final String PERMISSION = "/permission";
+	public static final String LOCATIONINFO="/locationInfo";
 }

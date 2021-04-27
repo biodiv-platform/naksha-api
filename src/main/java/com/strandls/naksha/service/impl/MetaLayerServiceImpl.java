@@ -41,6 +41,7 @@ import com.strandls.naksha.pojo.request.LayerDownload;
 import com.strandls.naksha.pojo.request.LayerFileDescription;
 import com.strandls.naksha.pojo.request.MetaData;
 import com.strandls.naksha.pojo.request.MetaLayerEdit;
+import com.strandls.naksha.pojo.response.LocationInfo;
 import com.strandls.naksha.pojo.response.ObservationLocationInfo;
 import com.strandls.naksha.pojo.response.TOCLayer;
 import com.strandls.naksha.service.AbstractService;
@@ -550,5 +551,23 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		}
 		return null;
 
+	}
+
+	public LocationInfo getLocationInfo(String lat, String lon) {
+		String queryStr = "SELECT state,district,tahsil from " + INDIA_TAHSIL + " where st_contains" + "("
+				+ INDIA_TAHSIL + "." + MetaLayerService.GEOMETRY_COLUMN_NAME + ", ST_GeomFromText('POINT(" + lon + " "
+				+ lat + ")',0))";
+
+		List<Object[]> result = metaLayerDao.executeQueryForLocationInfo(queryStr);
+		LocationInfo locationResponse = new LocationInfo();
+
+		if (result.size() > 0) {
+			Object[] values = result.get(0);
+			locationResponse.setState(values[0].toString());
+			locationResponse.setDistrict(values[1].toString());
+			locationResponse.setTahsil(values[2].toString());
+		}
+
+		return locationResponse;
 	}
 }

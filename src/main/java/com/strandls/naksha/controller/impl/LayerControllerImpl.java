@@ -40,6 +40,7 @@ import com.strandls.naksha.pojo.request.MetaData;
 import com.strandls.naksha.pojo.request.MetaLayerEdit;
 import com.strandls.naksha.pojo.response.GeoserverLayerStyles;
 import com.strandls.naksha.pojo.response.LayerInfoOnClick;
+import com.strandls.naksha.pojo.response.LocationInfo;
 import com.strandls.naksha.pojo.response.ObservationLocationInfo;
 import com.strandls.naksha.pojo.response.TOCLayer;
 import com.strandls.naksha.service.GeoserverStyleService;
@@ -61,6 +62,22 @@ public class LayerControllerImpl implements LayerController {
 
 	@Inject
 	private GeoserverStyleService geoserverStyleService;
+	
+	@Override
+	@GET
+	@Path(ApiConstants.LOCATIONINFO)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Get state,district and tahsil for lat lon", response = LocationInfo.class)
+	public Response fetchLocationInfo(@QueryParam("lat") String lat, @QueryParam("lon") String lon) {
+		try {
+			LocationInfo result = metaLayerService.getLocationInfo(lat, lon);
+			return Response.ok().entity(result).build();
+		} catch (Exception e) {
+			throw new WebApplicationException(
+					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
+		}
+	}
 
 	@Override
 	@Path("all")
