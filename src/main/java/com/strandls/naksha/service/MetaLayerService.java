@@ -15,12 +15,13 @@ import com.strandls.naksha.NakshaConfig;
 import com.strandls.naksha.pojo.MetaLayer;
 import com.strandls.naksha.pojo.request.LayerDownload;
 import com.strandls.naksha.pojo.request.MetaLayerEdit;
+import com.strandls.naksha.pojo.response.LocationInfo;
 import com.strandls.naksha.pojo.response.ObservationLocationInfo;
 import com.strandls.naksha.pojo.response.TOCLayer;
 import com.strandls.user.ApiException;
 
 public interface MetaLayerService {
-	
+
 	public static final String INDIA_TAHSIL = NakshaConfig.getString("layer.india.tahsil.name");
 	public static final String INDIA_SOIL = NakshaConfig.getString("layer.india.soil.name");
 	public static final String INDIA_FOREST_TYPE = NakshaConfig.getString("layer.india.foresttype.name");
@@ -32,7 +33,7 @@ public interface MetaLayerService {
 	public static final String DATASTORE = NakshaConfig.getString("datastore");
 
 	public MetaLayer findByLayerTableName(String layerName);
-	
+
 	public List<MetaLayer> findAll(HttpServletRequest request, Integer limit, Integer offset);
 
 	public Map<String, Object> uploadLayer(HttpServletRequest request, FormDataMultiPart multiPart)
@@ -40,22 +41,25 @@ public interface MetaLayerService {
 
 	public Map<String, String> prepareDownloadLayer(HttpServletRequest request, LayerDownload layerDownload)
 			throws InvalidAttributesException, InterruptedException, IOException;
-	
+
 	public MetaLayer removeLayer(String layerName);
 
 	public String getFileLocation(String hashKey, String layerName);
 
 	public ObservationLocationInfo getLayerInfo(String lon, String lat);
 
-	public List<TOCLayer> getTOCList(HttpServletRequest request, Integer limit, Integer offset, boolean showOnlyPending) throws ApiException, com.vividsolutions.jts.io.ParseException, URISyntaxException;
+	public List<TOCLayer> getTOCList(HttpServletRequest request, Integer limit, Integer offset, boolean showOnlyPending)
+			throws ApiException, com.vividsolutions.jts.io.ParseException, URISyntaxException;
 
 	public MetaLayer makeLayerActive(String layer);
 
 	public MetaLayer makeLayerPending(String layerName);
-	
+
 	public MetaLayer deleteLayer(String layerName);
-	
+
 	public List<MetaLayer> cleanupInactiveLayers();
 
 	public MetaLayer updateMataLayer(HttpServletRequest request, MetaLayerEdit metaLayerEdit) throws IOException;
+
+	public LocationInfo getLocationInfo(String lat, String lon);
 }
