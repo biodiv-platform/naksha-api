@@ -29,6 +29,11 @@
 		<srcDir>src/main/webapp</srcDir>
 		<base-path>/naksha-api/api</base-path>
 		<location>com.strandls.naksha</location>
+		
+		<!-- Sonar Cloud -->
+		<sonar.projectKey>strandls_biodiv-observation</sonar.projectKey>
+		<sonar.organization>strandls</sonar.organization>
+		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
 	</properties>
 
 	<distributionManagement>
