@@ -12,7 +12,7 @@ public abstract class AbstractService<T> {
 	private AbstractDao<T, Long> dao;
 	private final Logger logger = LoggerFactory.getLogger(AbstractService.class);
 
-	public AbstractService(AbstractDao<T, Long> dao) {
+	protected AbstractService(AbstractDao<T, Long> dao) {
 		logger.info("\nAbstractService constructor");
 		this.dao = dao;
 	}

@@ -47,7 +47,7 @@ public class Utils {
 	public static Document convertStringToDocument(String xmlStr) {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, ""); // Compliant
-		factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, ""); 
+		factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
 		DocumentBuilder builder;
 		try {
 			builder = factory.newDocumentBuilder();
@@ -141,24 +141,26 @@ public class Utils {
 	}
 
 	public static boolean isAdmin(HttpServletRequest request) {
-		if(request == null) return false;
-		
+		if (request == null)
+			return false;
+
 		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
-		if(profile == null) return false;
-		
+		if (profile == null)
+			return false;
+
 		JSONArray roles = (JSONArray) profile.getAttribute("roles");
-		if (roles.contains("ROLE_ADMIN") )
-			return true;
-		
-		return false;
+
+		return roles.contains("ROLE_ADMIN");
 	}
 
 	public static boolean isOwner(Long uploaderUserId, HttpServletRequest request) {
-		if(request == null) return false;
-		
+		if (request == null)
+			return false;
+
 		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
-		if(profile == null) return false;
-		
+		if (profile == null)
+			return false;
+
 		return uploaderUserId == Long.parseLong(profile.getId());
 	}
 }

@@ -60,12 +60,13 @@ public class GeoserverStyleDao {
 		return executeQuery(queryStr);
 	}
 	
+	@SuppressWarnings("rawtypes")
 	private List<Object[]> executeQuery(String queryStr) {
 		Session session = sessionFactory.openSession();
 		Query query = session.createNativeQuery(queryStr);
 		List<Object[]> entity;
 		try {
-			entity = (List<Object[]>) query.getResultList();
+			entity = query.getResultList();
 		} catch(NoResultException e) {
 			e.printStackTrace();
 			throw e;

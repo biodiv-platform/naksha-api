@@ -40,41 +40,6 @@ public class MetaData {
 		super();
 	}
 
-	public MetaData(String layerName, String layerDescription, LayerType layerType, String geoColumn, Double minScale,
-			Double maxScale, String pdfLink, String url, String attribution, String tags,
-			String license, String summaryColumns, DownloadAccess downloadAccess, EditAccess editAccess, String colorBy,
-			String titleColumn, String sizeBy, String mediaColumns, Long pageId, String italicsColumns,
-			String createdBy, Timestamp createdDate, String modifiedBy, Timestamp modifiedDate,
-			LayerFileDescription layerFileDescription, Map<String, String> layerColumnDescription) {
-		super();
-		this.layerName = layerName;
-		this.layerDescription = layerDescription;
-		this.layerType = layerType;
-		this.geoColumn = geoColumn;
-		this.minScale = minScale;
-		this.maxScale = maxScale;
-		this.pdfLink = pdfLink;
-		this.url = url;
-		this.attribution = attribution;
-		this.tags = tags;
-		this.license = license;
-		this.summaryColumns = summaryColumns;
-		this.downloadAccess = downloadAccess;
-		this.editAccess = editAccess;
-		this.colorBy = colorBy;
-		this.titleColumn = titleColumn;
-		this.sizeBy = sizeBy;
-		this.mediaColumns = mediaColumns;
-		this.pageId = pageId;
-		this.italicsColumns = italicsColumns;
-		this.createdBy = createdBy;
-		this.createdDate = createdDate;
-		this.modifiedBy = modifiedBy;
-		this.modifiedDate = modifiedDate;
-		this.layerFileDescription = layerFileDescription;
-		this.layerColumnDescription = layerColumnDescription;
-	}
-
 	public String getLayerName() {
 		return layerName;
 	}

@@ -60,28 +60,6 @@ public class MetaLayerEdit {
 		return metaLayer;
 	}
 
-	public MetaLayerEdit(Long id, String layerName, String layerDescription, LayerType layerType, String attribution,
-			String tags, String license, String summaryColumns, DownloadAccess downloadAccess, EditAccess editAccess,
-			String colorBy, String titleColumn, String modifiedBy, Timestamp modifiedDate,
-			Map<String, String> layerColumnDescription) {
-		super();
-		this.id = id;
-		this.layerName = layerName;
-		this.layerDescription = layerDescription;
-		this.layerType = layerType;
-		this.attribution = attribution;
-		this.tags = tags;
-		this.license = license;
-		this.summaryColumns = summaryColumns;
-		this.downloadAccess = downloadAccess;
-		this.editAccess = editAccess;
-		this.colorBy = colorBy;
-		this.titleColumn = titleColumn;
-		this.modifiedBy = modifiedBy;
-		this.modifiedDate = modifiedDate;
-		this.layerColumnDescription = layerColumnDescription;
-	}
-
 	public Long getId() {
 		return id;
 	}

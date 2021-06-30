@@ -3,7 +3,6 @@ package com.strandls.naksha.controller;
 import java.io.FileNotFoundException;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;

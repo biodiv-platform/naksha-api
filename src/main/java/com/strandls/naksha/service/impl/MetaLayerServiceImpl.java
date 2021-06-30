@@ -252,6 +252,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			// Roll back
 			MetaLayerUtil.deleteFiles(dirPath);
 			metaLayerDao.delete(metaLayer);
+			Thread.currentThread().interrupt();
 			throw new IOException("Table creation failed");
 		}
 
@@ -415,8 +416,6 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		String url = uri + "/" + hashKey + "/" + layerName;
 
 		mailService.sendMail(authorId, url, "naksha");
-		// TODO : send mail notification for download url
-		// return directory.getAbsolutePath();
 	}
 
 	public void zipFolder(String zipFileLocation, File fileDirectory) throws IOException {
@@ -561,7 +560,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		List<Object[]> result = metaLayerDao.executeQueryForLocationInfo(queryStr);
 		LocationInfo locationResponse = new LocationInfo();
 
-		if (result.size() > 0) {
+		if (result.isEmpty()) {
 			Object[] values = result.get(0);
 			locationResponse.setState(values[0].toString());
 			locationResponse.setDistrict(values[1].toString());

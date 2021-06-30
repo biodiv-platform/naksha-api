@@ -9,7 +9,6 @@ import javax.persistence.NoResultException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
-import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 
 import com.strandls.naksha.pojo.MetaLayer;
@@ -76,12 +75,13 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 		}
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public List<Object> executeQueryForSingleResult(String queryStr) {
 		Session session = sessionFactory.openSession();
 		Query query = session.createNativeQuery(queryStr);
 		List<Object> entity;
 		try {
-			entity = (List<Object>) query.getResultList();
+			entity = query.getResultList();
 		} catch (NoResultException e) {
 			e.printStackTrace();
 			throw e;
@@ -91,6 +91,7 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 		return entity;
 	}
 
+	@SuppressWarnings("rawtypes")
 	public String getBoundingBox(String layerTableName) {
 		Session session = sessionFactory.openSession();
 		String queryStr = "select ST_ASTEXT(ST_Extent(wkb_geometry)) BBOX from " + layerTableName;
@@ -106,6 +107,7 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 		return bboxWkt;
 	}
 
+	@SuppressWarnings({ "rawtypes" })
 	public void dropTable(String layerName) {
 		Session session = sessionFactory.openSession();
 		Transaction tx = session.beginTransaction();
@@ -115,12 +117,13 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 		session.close();
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public List<Object[]> executeQueryForLocationInfo(String queryStr) {
 		Session session = sessionFactory.openSession();
 		Query query = session.createNativeQuery(queryStr);
 		List<Object[]> entity;
 		try {
-			entity = (List<Object[]>) query.getResultList();
+			entity = query.getResultList();
 		} catch (NoResultException e) {
 			e.printStackTrace();
 			throw e;
