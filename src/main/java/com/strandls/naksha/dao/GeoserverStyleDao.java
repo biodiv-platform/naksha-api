@@ -13,6 +13,8 @@ public class GeoserverStyleDao {
 
 	@Inject
 	private SessionFactory sessionFactory;
+	
+	private static final String TABLE_NAME = "tableName";
 
 	@Inject
 	public GeoserverStyleDao() {
@@ -24,7 +26,7 @@ public class GeoserverStyleDao {
 		Session session = sessionFactory.openSession();
 		String queryStr = "select column_name, data_type from information_schema.columns where table_name =:tableName";
 		Query<Object[]> query = session.createNativeQuery(queryStr);
-		query.setParameter("tableName", tableName);
+		query.setParameter(TABLE_NAME, tableName);
 		List<Object[]> entity = query.getResultList();
 		session.close();
 		return entity;
@@ -40,7 +42,7 @@ public class GeoserverStyleDao {
 				+ "right outer join information_schema.columns c on (pgd.objsubid=c.ordinal_position and  c.table_schema=st.schemaname and c.table_name=st.relname) "
 				+ "where table_schema = 'public' and table_name = :tableName and pgd.description is not null";
 		Query<Object[]> query = session.createNativeQuery(queryStr);
-		query.setParameter("tableName", tableName);
+		query.setParameter(TABLE_NAME, tableName);
 		List<Object[]> entity = query.getResultList();
 		session.close();
 		return entity;
@@ -52,7 +54,7 @@ public class GeoserverStyleDao {
 		String queryStr = "select data_type from information_schema.columns where table_name = :tableName and column_name = :columnName";
 		Session session = sessionFactory.openSession();
 		Query<Object> query = session.createNativeQuery(queryStr);
-		query.setParameter("tableName", tableName);
+		query.setParameter(TABLE_NAME, tableName);
 		query.setParameter("columnName", columnName);
 		String entity;
 		try {
