@@ -536,11 +536,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	private String getAttributeValueAtLatlon(String attribute, String layerName, String lon, String lat) {
 
 		try {
-			String queryStr = "SELECT " + attribute + " from " + layerName + " where st_contains" + "(" + layerName
-					+ "." + MetaLayerService.GEOMETRY_COLUMN_NAME + ", ST_GeomFromText('POINT(" + lon + " " + lat
-					+ ")',0))";
-			List<Object> result = metaLayerDao.executeQueryForSingleResult(queryStr);
-
+			List<Object> result = metaLayerDao.executeQueryForSingleResult(attribute, layerName, lon, lat);
 			if (result.isEmpty())
 				return null;
 
@@ -553,11 +549,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	}
 
 	public LocationInfo getLocationInfo(String lat, String lon) {
-		String queryStr = "SELECT state,district,tahsil from " + INDIA_TAHSIL + " where st_contains" + "("
-				+ INDIA_TAHSIL + "." + MetaLayerService.GEOMETRY_COLUMN_NAME + ", ST_GeomFromText('POINT(" + lon + " "
-				+ lat + ")',0))";
-
-		List<Object[]> result = metaLayerDao.executeQueryForLocationInfo(queryStr);
+		List<Object[]> result = metaLayerDao.executeQueryForLocationInfo(lat, lon);
 		LocationInfo locationResponse = new LocationInfo();
 
 		if (result.isEmpty()) {

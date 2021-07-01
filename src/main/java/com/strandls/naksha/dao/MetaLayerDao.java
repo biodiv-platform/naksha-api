@@ -13,6 +13,7 @@ import org.hibernate.query.Query;
 
 import com.strandls.naksha.pojo.MetaLayer;
 import com.strandls.naksha.pojo.enumtype.LayerStatus;
+import com.strandls.naksha.service.MetaLayerService;
 
 public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 
@@ -76,7 +77,9 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public List<Object> executeQueryForSingleResult(String queryStr) {
+	public List<Object> executeQueryForSingleResult(String attribute, String layerName, String lon, String lat) {
+		String queryStr = "SELECT " + attribute + " from " + layerName + " where st_contains" + "(" + layerName + "."
+				+ MetaLayerService.GEOMETRY_COLUMN_NAME + ", ST_GeomFromText('POINT(" + lon + " " + lat + ")',0))";
 		Session session = sessionFactory.openSession();
 		Query query = session.createNativeQuery(queryStr);
 		List<Object> entity;
@@ -118,9 +121,15 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public List<Object[]> executeQueryForLocationInfo(String queryStr) {
+	public List<Object[]> executeQueryForLocationInfo(String lat, String lon) {
+		String queryStr = "SELECT state,district,tahsil from " + MetaLayerService.INDIA_TAHSIL + " where st_contains"
+				+ "(" + MetaLayerService.INDIA_TAHSIL + "." + MetaLayerService.GEOMETRY_COLUMN_NAME
+				+ ", ST_GeomFromText('POINT(" + lon + " " + lat + ")',0))";
+
 		Session session = sessionFactory.openSession();
 		Query query = session.createNativeQuery(queryStr);
+		query.setParameter("lon", lon);
+		query.setParameter("lat", lat);
 		List<Object[]> entity;
 		try {
 			entity = query.getResultList();
