@@ -93,7 +93,7 @@ public class NakshaServeletContextListener extends GuiceServletContextListener {
 				GeometryFactory geofactory = new GeometryFactory(new PrecisionModel(), 4326);
 				bind(GeometryFactory.class).toInstance(geofactory);
 
-				Map<String, String> props = new HashMap<String, String>();
+				Map<String, String> props = new HashMap<>();
 				props.put("javax.ws.rs.Application", ApplicationConfig.class.getName());
 				props.put("jersey.config.server.wadl.disableWadl", "true");
 
@@ -107,7 +107,7 @@ public class NakshaServeletContextListener extends GuiceServletContextListener {
 			throws URISyntaxException, IOException, ClassNotFoundException {
 
 		List<String> classNames = getClassNamesFromPackage(packageName);
-		List<Class<?>> classes = new ArrayList<Class<?>>();
+		List<Class<?>> classes = new ArrayList<>();
 		for (String className : classNames) {
 			Class<?> cls = Class.forName(className);
 			Annotation[] annotations = cls.getAnnotations();
@@ -127,7 +127,7 @@ public class NakshaServeletContextListener extends GuiceServletContextListener {
 			throws URISyntaxException, IOException {
 
 		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-		ArrayList<String> names = new ArrayList<String>();
+		ArrayList<String> names = new ArrayList<>();
 		URL packageURL = classLoader.getResource(packageName);
 
 		URI uri = new URI(packageURL.toString());

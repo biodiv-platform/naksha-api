@@ -50,7 +50,7 @@ public class TOCLayer {
 		this.url = metaLayer.getUrl();
 		this.author = userIbp;
 		this.attribution = metaLayer.getAttribution();
-		this.tags = new ArrayList<String>();
+		this.tags = new ArrayList<>();
 		for(String tag : metaLayer.getTags().split(",")) {
 			if(tag == null || "".equals(tag))
 				continue;

@@ -71,7 +71,7 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 	private static String geoserverDataDirectory = "";
 
 	static {
-		ALLOWED_TYPE = new HashSet<String>();
+		ALLOWED_TYPE = new HashSet<>();
 		ALLOWED_TYPE.add("bigint");
 		ALLOWED_TYPE.add("integer");
 		ALLOWED_TYPE.add("smallint");
@@ -91,7 +91,7 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 		MetaLayer metaLayer = metaLayerService.findByLayerTableName(id);
 		String colorByColumn = metaLayer.getColorBy();
 		List<Object[]> columnNames = getColumnName(id);
-		List<GeoserverLayerStyles> styles = new ArrayList<GeoserverLayerStyles>();
+		List<GeoserverLayerStyles> styles = new ArrayList<>();
 		for (Object[] row : columnNames) {
 			String styleName = row[0].toString();
 			String styleTitle = row[1].toString();
@@ -131,10 +131,10 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 	}
 
 	private Map<String, StyledSource> getSource(String layerName) {
-		Map<String, StyledSource> sources = new HashMap<String, StyledSource>();
+		Map<String, StyledSource> sources = new HashMap<>();
 		String type = "vector";
 		String scheme = "tms";
-		List<String> tiles = new ArrayList<String>();
+		List<String> tiles = new ArrayList<>();
 		tiles.add("/geoserver/gwc/service/tms/1.0.0/biodiv:" + layerName + "@EPSG%3A900913@pbf/{z}/{x}/{y}.pbf");
 		StyledSource styledSource = new StyledSource(type, scheme, tiles);
 		sources.put(layerName, styledSource);
@@ -142,12 +142,12 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 	}
 
 	private List<List<Object>> getStops(String layerName, String columnName, String columnType) {
-		List<List<Object>> stops = new ArrayList<List<Object>>();
+		List<List<Object>> stops = new ArrayList<>();
 		if (columnType.startsWith(CHARACTER) || columnType.equalsIgnoreCase("text")) {
 			List<Object[]> values = geoserverStyleDao.getDistinctValues(layerName, columnName);
 			for (Object object : values) {
 				String color = getRandColor();
-				List<Object> stop = new ArrayList<Object>();
+				List<Object> stop = new ArrayList<>();
 				if(object == null)
 					stop.add("No Data");
 				else
@@ -163,7 +163,7 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 			Double size = (max - min) / binSize;
 			for (int i = 0; i < binSize; i++) {
 				String color = COLOR_SCHEME[i];
-				List<Object> stop = new ArrayList<Object>();
+				List<Object> stop = new ArrayList<>();
 				if (i == binSize - 1)
 					stop.add(Math.ceil(max));
 				else
@@ -192,7 +192,7 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 	private List<StyledLayer> getStyledLayers(String layerName, LayerType layerType, String columnName,
 			String styleType, List<List<Object>> stops) {
 		JsonStyle jsonStyle = new JsonStyle();
-		List<StyledLayer> layers = new ArrayList<StyledLayer>();
+		List<StyledLayer> layers = new ArrayList<>();
 		StyleColor styleColor = new StyleColor(columnName, styleType, stops);
 		StylePaint paint;
 		String geoType = "";
@@ -217,7 +217,7 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 			geoType = GEO_TYPE_LINE;
 			break;
 		default:
-			return new ArrayList<StyledLayer>();
+			return new ArrayList<>();
 		}
 
 		StyledLayer styledLayer = new StyledLayer(layerName, geoType, layerName, layerName, paint);
@@ -240,7 +240,7 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 	@Override
 	public List<String> publishAllStyles(String workspace) throws IOException {
 		List<MetaLayer> metaLayers = metaLayerService.findAll(null, -1, -1);
-		List<String> stylesUpdated = new ArrayList<String>();
+		List<String> stylesUpdated = new ArrayList<>();
 		for(MetaLayer metaLayer : metaLayers) {
 			List<String> styles = publishAllStyles(metaLayer.getLayerTableName(), workspace);
 			stylesUpdated.addAll(styles);
@@ -251,7 +251,7 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 	@Override
 	public List<String> publishAllStyles(String layerName, String workspace) throws IOException {
 		List<Object[]> columnNameTypes = geoserverStyleDao.getColumnTypes(layerName);
-		List<String> styles = new ArrayList<String>();
+		List<String> styles = new ArrayList<>();
 		for (Object[] columnNameType : columnNameTypes) {
 			String columnName = columnNameType[0].toString();
 			String columnType = columnNameType[1].toString();

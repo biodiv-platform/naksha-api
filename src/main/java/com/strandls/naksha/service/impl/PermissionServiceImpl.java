@@ -33,7 +33,7 @@ public class PermissionServiceImpl extends AbstractService<NakshaPermission> imp
 		BigInteger resourceId = jsonObject.getBigInteger("resourceId");
 		String type = "biodiv";
 
-		Map<String, String> permissionMatrix = new HashMap<String, String>();
+		Map<String, String> permissionMatrix = new HashMap<>();
 
 		userIdArray.forEach(userId -> permissionArray.forEach(permission -> {
 			NakshaPermission nakshaPermission = new NakshaPermission();

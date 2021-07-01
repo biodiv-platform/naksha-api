@@ -106,7 +106,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		CommonProfile userProfile = AuthUtil.getProfileFromRequest(request);
 
 		List<MetaLayer> metaLayers = findAll(request, limit, offset);
-		List<TOCLayer> layerLists = new ArrayList<TOCLayer>();
+		List<TOCLayer> layerLists = new ArrayList<>();
 		boolean isAdmin = Utils.isAdmin(request);
 
 		for (MetaLayer metaLayer : metaLayers) {
@@ -138,7 +138,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		URIBuilder builder = new URIBuilder(uri);
 
-		ArrayList<NameValuePair> params = new ArrayList<NameValuePair>();
+		ArrayList<NameValuePair> params = new ArrayList<>();
 		params.add(new BasicNameValuePair("layers", metaLayer.getLayerTableName()));
 		params.add(new BasicNameValuePair("bbox", bboxValue));
 		params.add(new BasicNameValuePair("request", "GetMap"));
@@ -163,10 +163,10 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		Double bottom = envelop.getCoordinates()[2].x;
 		Double right = envelop.getCoordinates()[2].y;
 
-		List<List<Double>> boundingBox = new ArrayList<List<Double>>();
+		List<List<Double>> boundingBox = new ArrayList<>();
 
-		List<Double> topLeft = new ArrayList<Double>();
-		List<Double> bottomRight = new ArrayList<Double>();
+		List<Double> topLeft = new ArrayList<>();
+		List<Double> bottomRight = new ArrayList<>();
 
 		topLeft.add(top);
 		topLeft.add(left);
@@ -201,7 +201,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	@Override
 	public Map<String, Object> uploadLayer(HttpServletRequest request, FormDataMultiPart multiPart)
 			throws IOException, ParseException, InvalidAttributesException, InterruptedException {
-		Map<String, Object> result = new HashMap<String, Object>();
+		Map<String, Object> result = new HashMap<>();
 
 		String jsonString = MetaLayerUtil.getMetadataAsJson(multiPart).toJSONString();
 		MetaData metaData = objectMapper.readValue(jsonString, MetaData.class);
@@ -256,7 +256,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			throw new IOException("Table creation failed");
 		}
 
-		List<String> keywords = new ArrayList<String>();
+		List<String> keywords = new ArrayList<>();
 		keywords.add(layerTableName);
 
 		List<String> styles = geoserverStyleService.publishAllStyles(layerTableName, WORKSPACE);
@@ -308,7 +308,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	public Map<String, String> prepareDownloadLayer(HttpServletRequest request, LayerDownload layerDownload)
 			throws InvalidAttributesException, InterruptedException, IOException {
 
-		Map<String, String> retValue = new HashMap<String, String>();
+		Map<String, String> retValue = new HashMap<>();
 
 		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 
@@ -485,7 +485,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	public List<MetaLayer> cleanupInactiveLayers() {
 		List<MetaLayer> layers = metaLayerDao.getAllInactiveLayer();
 
-		List<MetaLayer> deletedLayers = new ArrayList<MetaLayer>();
+		List<MetaLayer> deletedLayers = new ArrayList<>();
 		for (MetaLayer metaLayer : layers) {
 			deletedLayers.add(deleteLayer(metaLayer));
 		}

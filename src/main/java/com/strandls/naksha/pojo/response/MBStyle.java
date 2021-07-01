@@ -13,7 +13,7 @@ public class MBStyle {
 	
 	public MBStyle(String name, String fileName, String format) {
 		super();
-		style = new HashMap<String, String>();
+		style = new HashMap<>();
 		style.put("name", name);
 		style.put("filename", fileName);
 		style.put("format", format);
