@@ -2,6 +2,7 @@ package com.strandls.naksha.pojo;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
 
 import javax.naming.directory.InvalidAttributesException;
@@ -109,7 +110,7 @@ public class OGR2OGR {
 
 	public Process execute(String command) {
 		ProcessBuilder pb = new ProcessBuilder();
-		pb.command("bash", "-c", command);
+		pb.command(Arrays.asList("bash", "-c", command));
 		try {
 			return pb.start();
 		} catch (IOException e) {
@@ -144,7 +145,7 @@ public class OGR2OGR {
 		}
 
 		ProcessBuilder pb = new ProcessBuilder();
-		pb.command("bash", "-c", comments.toString());
+		pb.command(Arrays.asList("bash", "-c", comments.toString()));
 
 		try {
 			return pb.start();
