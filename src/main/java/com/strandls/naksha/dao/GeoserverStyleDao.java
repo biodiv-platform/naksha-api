@@ -3,7 +3,6 @@ package com.strandls.naksha.dao;
 import java.util.List;
 
 import javax.inject.Inject;
-import javax.persistence.NoResultException;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -56,13 +55,7 @@ public class GeoserverStyleDao {
 		Query<Object> query = session.createNativeQuery(queryStr);
 		query.setParameter(TABLE_NAME, tableName);
 		query.setParameter("columnName", columnName);
-		String entity;
-		try {
-			entity = (String) query.getSingleResult();
-		} catch (NoResultException e) {
-			e.printStackTrace();
-			throw e;
-		}
+		String entity = (String) query.getSingleResult();
 		session.close();
 		return entity;
 	}

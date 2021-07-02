@@ -12,6 +12,9 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import javax.inject.Inject;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strandls.naksha.NakshaConfig;
@@ -36,6 +39,8 @@ import com.strandls.naksha.utils.MetaLayerUtil;
 import it.geosolutions.geoserver.rest.manager.GeoServerRESTStyleManager;
 
 public class GeoserverStyleServiceImpl implements GeoserverStyleService {
+	
+	private final Logger logger = LoggerFactory.getLogger(GeoserverStyleServiceImpl.class);
 
 	@Inject
 	private GeoserverStyleDao geoserverStyleDao;
@@ -292,7 +297,7 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 					null);
 
 		} catch (JsonProcessingException e) {
-			e.printStackTrace();
+			logger.error(e.getMessage());
 		}
 		return bytes;
 	}

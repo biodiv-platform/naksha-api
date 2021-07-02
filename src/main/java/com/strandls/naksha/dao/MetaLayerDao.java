@@ -28,9 +28,6 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 		MetaLayer entity = null;
 		try {
 			entity = session.get(MetaLayer.class, id);
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw e;
 		} finally {
 			session.close();
 		}
@@ -56,7 +53,7 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 	}
 
 	public MetaLayer findByLayerTableName(String layerTableName) {
-		String queryStr = "from " + daoType.getSimpleName() + " t where layerTableName = :layerTableName";
+		String queryStr = "from MetaLayer t where layerTableName = :layerTableName";
 		Session session = sessionFactory.openSession();
 		Query<MetaLayer> query = session.createQuery(queryStr, MetaLayer.class);
 		query.setParameter("layerTableName", layerTableName);
@@ -66,7 +63,7 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 	}
 
 	public List<MetaLayer> getAllInactiveLayer() {
-		String queryStr = "from " + daoType.getSimpleName() + " t " + "where t.layerStatus = :value order by id";
+		String queryStr = "from MetaLayer t where t.layerStatus = :value order by id";
 		Session session = sessionFactory.openSession();
 		Query<MetaLayer> query = session.createQuery(queryStr, MetaLayer.class);
 		query.setParameter("value", LayerStatus.INACTIVE);
@@ -75,9 +72,6 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 			List<MetaLayer> resultList = new ArrayList<>();
 			resultList = query.getResultList();
 			return resultList;
-		} catch (NoResultException e) {
-			e.printStackTrace();
-			throw e;
 		} finally {
 			session.close();
 		}
@@ -85,7 +79,7 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 
 	@Override
 	public List<MetaLayer> findAll(int limit, int offset) {
-		String queryStr = "" + "from " + daoType.getSimpleName() + " t " + "where t.layerStatus != :value order by id";
+		String queryStr = "from MetaLayer t where t.layerStatus != :value order by id";
 		Session session = sessionFactory.openSession();
 		Query<MetaLayer> query = session.createQuery(queryStr, MetaLayer.class);
 		query.setParameter("value", LayerStatus.INACTIVE);
@@ -96,9 +90,6 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 				query = query.setFirstResult(offset).setMaxResults(limit);
 			resultList = query.getResultList();
 			return resultList;
-		} catch (NoResultException e) {
-			e.printStackTrace();
-			throw e;
 		} finally {
 			session.close();
 		}
@@ -115,9 +106,6 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 		List<Object> entity;
 		try {
 			entity = query.getResultList();
-		} catch (NoResultException e) {
-			e.printStackTrace();
-			throw e;
 		} finally {
 			session.close();
 		}
@@ -132,11 +120,9 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 		String bboxWkt;
 		try {
 			bboxWkt = (String) query.getSingleResult();
-		} catch (NoResultException e) {
-			e.printStackTrace();
-			throw e;
+		} finally {
+			session.close();
 		}
-		session.close();
 		return bboxWkt;
 	}
 
@@ -163,11 +149,9 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 		List<Object[]> entity;
 		try {
 			entity = query.getResultList();
-		} catch (NoResultException e) {
-			e.printStackTrace();
-			throw e;
+		} finally {
+			session.close();
 		}
-		session.close();
 		return entity;
 	}
 

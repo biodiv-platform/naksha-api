@@ -199,7 +199,8 @@ public class LayerControllerImpl implements LayerController {
 					IOUtils.copy(input, output);
 					output.flush();
 				} catch (Exception e) {
-					e.printStackTrace();
+					throw new WebApplicationException(
+							Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
 				}
 			}).header("Content-Disposition", contentDisposition).build();
 

@@ -2,6 +2,7 @@ package com.strandls.naksha.dao;
 
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.Criteria;
@@ -78,31 +79,26 @@ public abstract class AbstractDao<T, K extends Serializable> {
 	@SuppressWarnings({ "unchecked", "deprecation" })
 	public List<T> findAll() {
 		Session session = sessionFactory.openSession();
-		List<T> entities = null;
 		try {
 			Criteria criteria = session.createCriteria(daoType);
-			entities = criteria.setResultTransformer(CriteriaSpecification.DISTINCT_ROOT_ENTITY).list();
+			return criteria.setResultTransformer(CriteriaSpecification.DISTINCT_ROOT_ENTITY).list();
 		} catch (Exception e) {
-			e.printStackTrace();
+			return new ArrayList<>();
 		} finally {
 			session.close();
 		}
-		return entities;
 	}
 
 	@SuppressWarnings({ "unchecked", "deprecation" })
 	public List<T> findAll(int limit, int offset) {
-		
 		Session session = sessionFactory.openSession();
-		List<T> entities = null;
 		try {
 			Criteria criteria = session.createCriteria(daoType).setResultTransformer(CriteriaSpecification.DISTINCT_ROOT_ENTITY);
 			return criteria.setFirstResult(offset).setMaxResults(limit).list();
 		} catch (Exception e) {
-			e.printStackTrace();
+			return new ArrayList<>();
 		} finally {
 			session.close();
 		}
-		return entities;
 	}
 }

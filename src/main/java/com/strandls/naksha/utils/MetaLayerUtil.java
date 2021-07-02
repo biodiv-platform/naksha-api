@@ -19,12 +19,16 @@ import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.strandls.naksha.NakshaConfig;
 import com.strandls.naksha.pojo.request.LayerFileDescription;
 
 public class MetaLayerUtil {
 
+	private static final Logger logger = LoggerFactory.getLogger(MetaLayerUtil.class);
+	
 	private MetaLayerUtil() {
 	}
 
@@ -184,7 +188,7 @@ public class MetaLayerUtil {
 		try {
 			FileUtils.deleteDirectory(new File(dirPath));
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error(e.getMessage());
 		}
 	}
 

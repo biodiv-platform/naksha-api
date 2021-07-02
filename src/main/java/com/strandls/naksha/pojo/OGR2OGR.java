@@ -6,6 +6,9 @@ import java.util.Map;
 
 import javax.naming.directory.InvalidAttributesException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.strandls.naksha.NakshaConfig;
 
 public class OGR2OGR {
@@ -25,6 +28,9 @@ public class OGR2OGR {
 	private String dbName;
 	private String password;
 	private String port;
+	
+	private final Logger logger = LoggerFactory.getLogger(OGR2OGR.class);
+	
 
 	// Require to promote the data higher level.
 	private String nlt;
@@ -107,9 +113,9 @@ public class OGR2OGR {
 		try {
 			return pb.start();
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error(e.getMessage());
+			return null;
 		}
-		return null;
 	}
 
 	public Process execute() {
@@ -143,8 +149,8 @@ public class OGR2OGR {
 		try {
 			return pb.start();
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error(e.getMessage());
+			return null;
 		}
-		return null;
 	}
 }
