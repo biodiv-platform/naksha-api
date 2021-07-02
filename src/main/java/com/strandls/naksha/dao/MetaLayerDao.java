@@ -78,8 +78,10 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public List<Object> executeQueryForSingleResult(String attribute, String layerName, String lon, String lat) {
+		Double x = Double.parseDouble(lon);
+		Double y = Double.parseDouble(lat);
 		String queryStr = "SELECT " + attribute + " from " + layerName + " where st_contains" + "(" + layerName + "."
-				+ MetaLayerService.GEOMETRY_COLUMN_NAME + ", ST_GeomFromText('POINT(" + lon + " " + lat + ")',0))";
+				+ MetaLayerService.GEOMETRY_COLUMN_NAME + ", ST_GeomFromText('POINT(" + x + " " + y + ")',0))";
 		Session session = sessionFactory.openSession();
 		Query query = session.createNativeQuery(queryStr);
 		List<Object> entity;
@@ -128,8 +130,6 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 
 		Session session = sessionFactory.openSession();
 		Query query = session.createNativeQuery(queryStr);
-		query.setParameter("lon", lon);
-		query.setParameter("lat", lat);
 		List<Object[]> entity;
 		try {
 			entity = query.getResultList();
