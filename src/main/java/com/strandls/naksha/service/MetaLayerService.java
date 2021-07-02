@@ -62,4 +62,6 @@ public interface MetaLayerService {
 	public MetaLayer updateMataLayer(HttpServletRequest request, MetaLayerEdit metaLayerEdit) throws IOException;
 
 	public LocationInfo getLocationInfo(String lat, String lon);
+
+	public String isTableAvailable(String layerName);
 }

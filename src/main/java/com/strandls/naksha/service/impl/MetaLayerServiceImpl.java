@@ -98,6 +98,11 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	public MetaLayer findByLayerTableName(String layerName) {
 		return metaLayerDao.findByLayerTableName(layerName);
 	}
+	
+	@Override
+	public String isTableAvailable(String layerName) {
+		return metaLayerDao.isTableAvailable(layerName);
+	}
 
 	@Override
 	public List<TOCLayer> getTOCList(HttpServletRequest request, Integer limit, Integer offset, boolean showOnlyPending)

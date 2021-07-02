@@ -36,6 +36,24 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 		}
 		return entity;
 	}
+	
+	@SuppressWarnings("unchecked")
+	public String isTableAvailable(String layerTableName) {
+		String queryStr = "select table_name from information_schema.tables where "
+				+ "table_name = :layerTableName";
+		
+		Session session = sessionFactory.openSession();		
+		try {
+			Query<String> query = session.createNativeQuery(queryStr);
+			query.setParameter("layerTableName", layerTableName);
+			return query.getSingleResult();
+		} catch (NoResultException e) {
+			return null;
+		} finally {
+			session.close();
+		}		
+
+	}
 
 	public MetaLayer findByLayerTableName(String layerTableName) {
 		String queryStr = "from " + daoType.getSimpleName() + " t where layerTableName = :layerTableName";
@@ -152,5 +170,6 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 		session.close();
 		return entity;
 	}
+
 
 }

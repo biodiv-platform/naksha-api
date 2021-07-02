@@ -20,7 +20,7 @@ public class GeoserverStyleDao {
 	public GeoserverStyleDao() {
 		// default constructor
 	}
-
+	
 	@SuppressWarnings("unchecked")
 	public List<Object[]> getColumnTypes(String tableName) {
 		Session session = sessionFactory.openSession();

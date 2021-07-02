@@ -250,7 +250,12 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 	
 	@Override
 	public List<String> publishAllStyles(String layerName, String workspace) throws IOException {
-		List<Object[]> columnNameTypes = geoserverStyleDao.getColumnTypes(layerName);
+		
+		String layerTableName = metaLayerService.isTableAvailable(layerName);
+		if(layerTableName == null)
+			throw new IOException("Could not find the table name");
+		
+		List<Object[]> columnNameTypes = geoserverStyleDao.getColumnTypes(layerTableName);
 		List<String> styles = new ArrayList<>();
 		for (Object[] columnNameType : columnNameTypes) {
 			String columnName = columnNameType[0].toString();
@@ -260,9 +265,9 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 					|| (!columnType.startsWith(CHARACTER) && !ALLOWED_TYPE.contains(columnType)))
 				continue;
 
-			String styleName = layerName + "_" + columnName;
+			String styleName = layerTableName + "_" + columnName;
 
-			JsonStyle jsonStyle = generateJsonStyle(layerName, columnName);
+			JsonStyle jsonStyle = generateJsonStyle(layerTableName, columnName);
 			publishStyleOnGeoserver(styleName, workspace);
 			copyMBStyleToGeoserver(jsonStyle, styleName + ".json", workspace);
 
