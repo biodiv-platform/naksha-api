@@ -2,10 +2,7 @@ package com.strandls.naksha.dao;
 
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
-import java.util.ArrayList;
 import java.util.List;
-
-import javax.persistence.NoResultException;
 
 import org.hibernate.Criteria;
 import org.hibernate.Session;
@@ -19,6 +16,7 @@ public abstract class AbstractDao<T, K extends Serializable> {
 
 	protected Class<? extends T> daoType;
 
+	@SuppressWarnings("unchecked")
 	protected AbstractDao(SessionFactory sessionFactory) {
 		daoType = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
 		this.sessionFactory = sessionFactory;
@@ -77,7 +75,7 @@ public abstract class AbstractDao<T, K extends Serializable> {
 
 	public abstract T findById(K id);
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "deprecation" })
 	public List<T> findAll() {
 		Session session = sessionFactory.openSession();
 		List<T> entities = null;
@@ -92,7 +90,7 @@ public abstract class AbstractDao<T, K extends Serializable> {
 		return entities;
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "deprecation" })
 	public List<T> findAll(int limit, int offset) {
 		
 		Session session = sessionFactory.openSession();
@@ -106,47 +104,5 @@ public abstract class AbstractDao<T, K extends Serializable> {
 			session.close();
 		}
 		return entities;
-	}
-
-	public T findByPropertyWithCondition(String property, String value, String condition) {
-		String queryStr = "" + "from " + daoType.getSimpleName() + " t " + "where t." + property + " " + condition
-				+ " :value";
-		Session session = sessionFactory.openSession();
-		org.hibernate.query.Query<T> query = session.createQuery(queryStr);
-		query.setParameter("value", value);
-
-		T entity = null;
-		try {
-			entity = query.getSingleResult();
-		} catch (NoResultException e) {
-			e.printStackTrace();
-			throw e;
-		} finally {
-			session.close();
-		}
-		return entity;
-
-	}
-
-	public List<T> getByPropertyWithCondtion(String property, Object value, String condition, int limit, int offset) {
-		String queryStr = "" + "from " + daoType.getSimpleName() + " t " + "where t." + property + " " + condition
-				+ " :value" + " order by id";
-		Session session = sessionFactory.openSession();
-		org.hibernate.query.Query<T> query = session.createQuery(queryStr);
-		query.setParameter("value", value);
-
-		List<T> resultList = new ArrayList<>();
-		try {
-			if (limit > 0 && offset >= 0)
-				query = query.setFirstResult(offset).setMaxResults(limit);
-			resultList = query.getResultList();
-
-		} catch (NoResultException e) {
-			e.printStackTrace();
-			throw e;
-		} finally {
-			session.close();
-		}
-		return resultList;
 	}
 }

@@ -96,7 +96,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 	@Override
 	public MetaLayer findByLayerTableName(String layerName) {
-		return findByPropertyWithCondtion("layerTableName", layerName, "=");
+		return metaLayerDao.findByLayerTableName(layerName);
 	}
 
 	@Override

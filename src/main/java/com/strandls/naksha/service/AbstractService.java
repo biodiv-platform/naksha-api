@@ -44,12 +44,4 @@ public abstract class AbstractService<T> {
 	public List<T> findAll(int limit, int offset) {
 		return  this.dao.findAll(limit, offset);
 	}
-
-	public T findByPropertyWithCondtion(String property, String value, String condition) {
-		return dao.findByPropertyWithCondition(property, value, condition);
-	}
-
-	public List<T> getByPropertyWithCondtion(String property, Object value, String condition, int limit, int offset) {
-		return dao.getByPropertyWithCondtion(property, value, condition, limit, offset);
-	}
 }

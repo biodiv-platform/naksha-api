@@ -37,10 +37,20 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 		return entity;
 	}
 
-	public List<MetaLayer> getAllInactiveLayer() {
-		String queryStr = "" + "from " + daoType.getSimpleName() + " t " + "where t.layerStatus = :value order by id";
+	public MetaLayer findByLayerTableName(String layerTableName) {
+		String queryStr = "from " + daoType.getSimpleName() + " t where layerTableName = :layerTableName";
 		Session session = sessionFactory.openSession();
-		org.hibernate.query.Query<MetaLayer> query = session.createQuery(queryStr, MetaLayer.class);
+		Query<MetaLayer> query = session.createQuery(queryStr, MetaLayer.class);
+		query.setParameter("layerTableName", layerTableName);
+		MetaLayer resultList = query.getSingleResult();
+		session.close();
+		return resultList;
+	}
+
+	public List<MetaLayer> getAllInactiveLayer() {
+		String queryStr = "from " + daoType.getSimpleName() + " t " + "where t.layerStatus = :value order by id";
+		Session session = sessionFactory.openSession();
+		Query<MetaLayer> query = session.createQuery(queryStr, MetaLayer.class);
 		query.setParameter("value", LayerStatus.INACTIVE);
 
 		try {
@@ -59,7 +69,7 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 	public List<MetaLayer> findAll(int limit, int offset) {
 		String queryStr = "" + "from " + daoType.getSimpleName() + " t " + "where t.layerStatus != :value order by id";
 		Session session = sessionFactory.openSession();
-		org.hibernate.query.Query<MetaLayer> query = session.createQuery(queryStr, MetaLayer.class);
+		Query<MetaLayer> query = session.createQuery(queryStr, MetaLayer.class);
 		query.setParameter("value", LayerStatus.INACTIVE);
 
 		try {
@@ -124,9 +134,11 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public List<Object[]> executeQueryForLocationInfo(String lat, String lon) {
+		Double x = Double.parseDouble(lon);
+		Double y = Double.parseDouble(lat);
 		String queryStr = "SELECT state,district,tahsil from " + MetaLayerService.INDIA_TAHSIL + " where st_contains"
 				+ "(" + MetaLayerService.INDIA_TAHSIL + "." + MetaLayerService.GEOMETRY_COLUMN_NAME
-				+ ", ST_GeomFromText('POINT(" + lon + " " + lat + ")',0))";
+				+ ", ST_GeomFromText('POINT(" + x + " " + y + ")',0))";
 
 		Session session = sessionFactory.openSession();
 		Query query = session.createNativeQuery(queryStr);
@@ -140,4 +152,5 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 		session.close();
 		return entity;
 	}
+
 }
