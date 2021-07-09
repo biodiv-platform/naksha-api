@@ -181,14 +181,14 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 	}
 
 	private String getRandColor() {
-		int rndr = ThreadLocalRandom.current().nextInt(150, 400 + 1);
+		int rndr = ThreadLocalRandom.current().nextInt(150, 400 + 1);//NOSONAR
 
 		double r = Math.floor(rndr * GOLDEN_RATIO_CONJUGATE);
 
-		int rndg = ThreadLocalRandom.current().nextInt(150, 400 + 1);
+		int rndg = ThreadLocalRandom.current().nextInt(150, 400 + 1);//NOSONAR
 		double g = Math.floor(rndg * GOLDEN_RATIO_CONJUGATE);
 
-		int rndb = ThreadLocalRandom.current().nextInt(150, 400 + 1);
+		int rndb = ThreadLocalRandom.current().nextInt(150, 400 + 1);//NOSONAR
 		double b = Math.floor(rndb * GOLDEN_RATIO_CONJUGATE);
 
 		return String.format("%x%x%x", (int) r, (int) g, (int) b);
