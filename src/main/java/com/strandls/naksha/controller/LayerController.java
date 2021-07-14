@@ -17,6 +17,8 @@ import com.strandls.naksha.pojo.request.MetaLayerEdit;
 
 public interface LayerController {
 
+	public Response getLayerCount(HttpServletRequest request);
+
 	public Response findAll(HttpServletRequest request, Integer limit, Integer offset, Boolean showOnlyPending);
 
 	public Response upload(HttpServletRequest request, final FormDataMultiPart multiPart);
@@ -43,5 +45,6 @@ public interface LayerController {
 	public Response updateMetaLayerData(HttpServletRequest request, MetaLayerEdit metaLayerEdit);
 
 	public Response fetchLocationInfo(String lat, String lon);
+
 
 }

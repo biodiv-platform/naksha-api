@@ -1,5 +1,7 @@
 package com.strandls.naksha.dao;
 
+import static org.hibernate.type.StandardBasicTypes.LONG;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,6 +22,20 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 	@Inject
 	protected MetaLayerDao(SessionFactory sessionFactory) {
 		super(sessionFactory);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public Long getLayerCount() {
+		String queryString = "select count(*) from \"Meta_Layer_Table\" t where t.layer_status != :layerStatus";
+				
+		Session session = sessionFactory.openSession();
+		Query<Long> countQuery = session.createNativeQuery(queryString).addScalar("count", LONG);
+
+		countQuery.setParameter("layerStatus", LayerStatus.INACTIVE.name());
+
+		Long count = countQuery.getSingleResult();
+		session.close();
+		return count;
 	}
 
 	@Override
@@ -154,6 +170,4 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 		}
 		return entity;
 	}
-
-
 }

@@ -93,6 +93,11 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	public MetaLayerServiceImpl(MetaLayerDao dao) {
 		super(dao);
 	}
+	
+	@Override
+	public Long getLayerCount(HttpServletRequest request) {
+		return metaLayerDao.getLayerCount();
+	}
 
 	@Override
 	public MetaLayer findByLayerTableName(String layerName) {

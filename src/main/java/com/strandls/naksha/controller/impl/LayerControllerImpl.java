@@ -96,6 +96,21 @@ public class LayerControllerImpl implements LayerController {
 	}
 
 	@Override
+	@Path("count")
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Get meta data of all the layers", response = TOCLayer.class, responseContainer = "List")
+	public Response getLayerCount(@Context HttpServletRequest request) {
+		try {
+			Long layerCount = metaLayerService.getLayerCount(request);
+			return Response.ok().entity(layerCount).build();
+		} catch (Exception e) {
+			throw new WebApplicationException(
+					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
+		}
+	}
+	
+	@Override
 	@Path("onClick/{layer}")
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
