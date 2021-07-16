@@ -546,6 +546,9 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	private String getAttributeValueAtLatlon(String attribute, String layerName, String lon, String lat) {
 
 		try {
+			layerName = metaLayerDao.isTableAvailable(layerName);
+			if(layerName == null)
+				return "";
 			List<Object> result = metaLayerDao.executeQueryForSingleResult(attribute, layerName, lon, lat);
 			if (result.isEmpty())
 				return null;
