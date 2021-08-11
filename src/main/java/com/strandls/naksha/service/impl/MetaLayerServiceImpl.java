@@ -423,9 +423,9 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		mailService.sendMail(authorId, url, "naksha");
 		userServiceApi = headers.addUserHeaders(userServiceApi, requestToken);
 		DownloadLogData data = new DownloadLogData();
-		data.setFilePath(zipFileLocation);
-		data.setFileType("SHP");
-		data.setFilterUrl(url);
+		data.setFilePath(url);
+		data.setFileType("ZIP");
+		data.setFilterUrl(uri);
 		data.setStatus("success");
 		data.setSourcetype("LayerInformation");
 		try {
