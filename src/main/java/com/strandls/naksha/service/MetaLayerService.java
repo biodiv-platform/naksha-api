@@ -34,6 +34,8 @@ public interface MetaLayerService {
 
 	public MetaLayer findByLayerTableName(String layerName);
 
+	public Long getLayerCount(HttpServletRequest request);
+
 	public List<MetaLayer> findAll(HttpServletRequest request, Integer limit, Integer offset);
 
 	public Map<String, Object> uploadLayer(HttpServletRequest request, FormDataMultiPart multiPart)
@@ -62,4 +64,7 @@ public interface MetaLayerService {
 	public MetaLayer updateMataLayer(HttpServletRequest request, MetaLayerEdit metaLayerEdit) throws IOException;
 
 	public LocationInfo getLocationInfo(String lat, String lon);
+
+	public String isTableAvailable(String layerName);
+
 }

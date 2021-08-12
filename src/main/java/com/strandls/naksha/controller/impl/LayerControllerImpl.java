@@ -2,7 +2,6 @@ package com.strandls.naksha.controller.impl;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
@@ -97,6 +96,21 @@ public class LayerControllerImpl implements LayerController {
 	}
 
 	@Override
+	@Path("count")
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Get meta data of all the layers", response = TOCLayer.class, responseContainer = "List")
+	public Response getLayerCount(@Context HttpServletRequest request) {
+		try {
+			Long layerCount = metaLayerService.getLayerCount(request);
+			return Response.ok().entity(layerCount).build();
+		} catch (Exception e) {
+			throw new WebApplicationException(
+					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
+		}
+	}
+	
+	@Override
 	@Path("onClick/{layer}")
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
@@ -134,6 +148,7 @@ public class LayerControllerImpl implements LayerController {
 			Map<String, Object> result = metaLayerService.uploadLayer(request, multiPart);
 			return Response.ok().entity(result).build();
 		} catch (Exception e) {
+			Thread.currentThread().interrupt();
 			throw new WebApplicationException(
 					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
 		}
@@ -167,11 +182,12 @@ public class LayerControllerImpl implements LayerController {
 	@ApiOperation(value = "prepate shape file", notes = "Return the shape file location", response = Map.class)
 	@ValidateUser
 	public Response prepareDownload(@Context HttpServletRequest request,
-			@ApiParam("layerDownload") LayerDownload layerDownload) throws FileNotFoundException {
+			@ApiParam("layerDownload") LayerDownload layerDownload){
 		try {
 			Map<String, String> retValue = metaLayerService.prepareDownloadLayer(request, layerDownload);
 			return Response.ok().entity(retValue).build();
 		} catch (Exception e) {
+			Thread.currentThread().interrupt();
 			throw new WebApplicationException(
 					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
 		}
@@ -183,8 +199,7 @@ public class LayerControllerImpl implements LayerController {
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces("application/zip")
 	@ApiOperation(value = "Download the shp file", notes = "Return the shp file", response = StreamingOutput.class)
-	public Response download(@PathParam("hashKey") String hashKey, @PathParam("layerName") String layerName)
-			throws FileNotFoundException {
+	public Response download(@PathParam("hashKey") String hashKey, @PathParam("layerName") String layerName) {
 		String fileLocation = metaLayerService.getFileLocation(hashKey, layerName);
 
 		File file = new File(fileLocation);
@@ -199,7 +214,8 @@ public class LayerControllerImpl implements LayerController {
 					IOUtils.copy(input, output);
 					output.flush();
 				} catch (Exception e) {
-					e.printStackTrace();
+					throw new WebApplicationException(
+							Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
 				}
 			}).header("Content-Disposition", contentDisposition).build();
 
@@ -293,7 +309,7 @@ public class LayerControllerImpl implements LayerController {
 		try {
 			if (!Utils.isAdmin(request)) {
 				throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
-						.entity("Only admin can delete the layer").build());
+						.entity("Only admin can do deep clean up").build());
 			}
 			MetaLayer metaLayer = metaLayerService.deleteLayer(layer);
 			return Response.ok().entity(metaLayer).build();
@@ -313,7 +329,7 @@ public class LayerControllerImpl implements LayerController {
 		try {
 			if (!Utils.isAdmin(request)) {
 				throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
-						.entity("Only admin can delete the layer").build());
+						.entity("Only admin can do complete clean up").build());
 			}
 			List<MetaLayer> metaLayer = metaLayerService.cleanupInactiveLayers();
 			return Response.ok().entity(metaLayer).build();

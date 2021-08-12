@@ -130,7 +130,7 @@ public class GeoserverServiceImpl implements GeoserverService {
 
 			String userPass = userName + ":" + password;
 			byte[] encoding = Base64.getEncoder().encode(userPass.getBytes(StandardCharsets.UTF_8.name()));
-			request.setHeader("Authorization", "Basic " + new String(encoding));
+			request.setHeader("Authorization", "Basic " + new String(encoding)); // NOSONAR
 
 			httpclient = HttpClients.createDefault();
 
@@ -179,7 +179,7 @@ public class GeoserverServiceImpl implements GeoserverService {
 
 			String userPass = userName + ":" + password;
 			byte[] encoding = Base64.getEncoder().encode(userPass.getBytes(StandardCharsets.UTF_8));
-			request.setHeader("Authorization", "Basic " + new String(encoding));
+			request.setHeader("Authorization", "Basic " + new String(encoding)); // NOSONAR
 
 			httpclient = HttpClients.createDefault();
 			response = httpclient.execute(request, context);

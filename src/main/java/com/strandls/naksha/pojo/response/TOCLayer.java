@@ -40,33 +40,6 @@ public class TOCLayer {
 		super();
 	}
 
-	public TOCLayer(Long id, String name, String title, String description, LayerType layerType, String pdfLink,
-			String url, UserIbp author, String attribution, List<String> tags, String license, Long pageId,
-			String createdBy, Timestamp createdDate, String modifiedBy, Timestamp modifiedDate, Boolean isDownloadable,
-			List<List<Double>> bbox, String thumbnail, LayerStatus layerStatus) {
-		super();
-		this.id = id;
-		this.name = name;
-		this.title = title;
-		this.description = description;
-		this.layerType = layerType;
-		this.pdfLink = pdfLink;
-		this.url = url;
-		this.author = author;
-		this.attribution = attribution;
-		this.tags = tags;
-		this.license = license;
-		this.pageId = pageId;
-		this.createdBy = createdBy;
-		this.createdDate = createdDate;
-		this.modifiedBy = modifiedBy;
-		this.modifiedDate = modifiedDate;
-		this.isDownloadable = isDownloadable;
-		this.bbox = bbox;
-		this.thumbnail = thumbnail;
-		this.layerStatus = layerStatus;
-	}
-
 	public TOCLayer(MetaLayer metaLayer, UserIbp userIbp, Boolean isDownloadable, List<List<Double>> bbox, String thumbnail) {
 		this.id = metaLayer.getId();
 		this.name = metaLayer.getLayerTableName();
@@ -77,7 +50,7 @@ public class TOCLayer {
 		this.url = metaLayer.getUrl();
 		this.author = userIbp;
 		this.attribution = metaLayer.getAttribution();
-		this.tags = new ArrayList<String>();
+		this.tags = new ArrayList<>();
 		for(String tag : metaLayer.getTags().split(",")) {
 			if(tag == null || "".equals(tag))
 				continue;

@@ -55,7 +55,7 @@ public class ObservationControllerImpl implements ObservationController {
 			String layer = NakshaConfig.getString("observation.geoserver.layer");
 			String uri = workspace + "/wms";
 
-			List<NameValuePair> params = new ArrayList<NameValuePair>();
+			List<NameValuePair> params = new ArrayList<>();
 			params.add(new BasicNameValuePair("service", "WMS"));
 			params.add(new BasicNameValuePair("version", "1.1.0"));
 			params.add(new BasicNameValuePair("request", "GetMap"));
@@ -114,7 +114,7 @@ public class ObservationControllerImpl implements ObservationController {
 			String geoField = NakshaConfig.getString("observation.es.geoField");
 			String uri = workspace + "/wms";
 
-			List<NameValuePair> params = new ArrayList<NameValuePair>();
+			List<NameValuePair> params = new ArrayList<>();
 			params.add(new BasicNameValuePair("service", "WMS"));
 			params.add(new BasicNameValuePair("version", "1.1.0"));
 			params.add(new BasicNameValuePair("request", "GetMap"));

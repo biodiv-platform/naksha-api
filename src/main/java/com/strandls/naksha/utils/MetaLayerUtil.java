@@ -19,14 +19,19 @@ import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.strandls.naksha.NakshaConfig;
 import com.strandls.naksha.pojo.request.LayerFileDescription;
 
 public class MetaLayerUtil {
 
-	private MetaLayerUtil() {}
+	private static final Logger logger = LoggerFactory.getLogger(MetaLayerUtil.class);
 	
+	private MetaLayerUtil() {
+	}
+
 	public static final String TEMP_DIR_PATH = "tmpDir.path";
 	public static final String TEMP_DIR_GEOSERVER_PATH = "tmpDirGeoserverPath";
 	private static final String DIR_PATH = "dirPath";
@@ -36,20 +41,23 @@ public class MetaLayerUtil {
 	private static final String[] OPTIONAL_EXTENSIONS = { "prj", "sbn", "sbx", "fbn", "fbx", "ain", "aih", "ixs", "mxs",
 			"atx", "shp.xml", "cpg", "qix" };
 
-	public static String createVRTFileContent(String layerName, String csvFilePath,
-			String geometryType, String layerSRS, String encoding, String x, String y, String field) {
+	private static String createVRTFileContent(String layerName, String csvFilePath,
+			LayerFileDescription layerFileDescription) {
 
 		String vrtFileContent = "<OGRVRTDataSource>" + "\n";
 		vrtFileContent += "\t" + "<OGRVRTLayer name=\"" + layerName + "\">" + "\n";
 		vrtFileContent += "\t" + "<SrcDataSource>" + csvFilePath + "</SrcDataSource>" + "\n";
-		vrtFileContent += "\t" + "<GeometryType>" + geometryType + "</GeometryType>" + "\n";
-		vrtFileContent += "\t" + "<LayerSRS>" + layerSRS + "</LayerSRS>" + "\n";
+		vrtFileContent += "\t" + "<GeometryType>" + layerFileDescription.getGeoColumnType() + "</GeometryType>" + "\n";
+		vrtFileContent += "\t" + "<LayerSRS>" + layerFileDescription.getLayerSRS() + "</LayerSRS>" + "\n";
 
+		String encoding = layerFileDescription.getEncoding();
 		if ("PointFromColumns".equals(encoding)) {
-			vrtFileContent += "\t" + "<GeometryField encoding=\"" + encoding + "\" x=\"" + x + "\" y=\"" + y + "\"/>"
-					+ "\n";
+			vrtFileContent += "\t" + "<GeometryField encoding=\"" + encoding + "\" x=\""
+					+ layerFileDescription.getLonColumnName() + "\" y=\"" + layerFileDescription.getLatColumnName()
+					+ "\"/>" + "\n";
 		} else if ("WKT".equals(encoding) || "WKB".equals(encoding)) {
-			vrtFileContent += "\t" + "<GeometryField encoding=\"" + encoding + "\" field=\"" + field + "\"/>" + "\n";
+			vrtFileContent += "\t" + "<GeometryField encoding=\"" + encoding + "\" field=\""
+					+ layerFileDescription.getField() + "\"/>" + "\n";
 		}
 		vrtFileContent += "\t" + "</OGRVRTLayer>" + "\n";
 		vrtFileContent += "</OGRVRTDataSource>";
@@ -64,7 +72,8 @@ public class MetaLayerUtil {
 	 * @return location of the copied file
 	 * @throws IOException
 	 */
-	public static Map<String, String> copyCSVFile(FormDataMultiPart multiPart, LayerFileDescription layerFileDescription) throws IOException {
+	public static Map<String, String> copyCSVFile(FormDataMultiPart multiPart,
+			LayerFileDescription layerFileDescription) throws IOException {
 
 		Map<String, String> result = new HashMap<>();
 		String dataPath = NakshaConfig.getString(TEMP_DIR_PATH) + File.separator + System.currentTimeMillis();
@@ -76,16 +85,9 @@ public class MetaLayerUtil {
 				.toLowerCase();
 
 		result.put("csv", location);
-		
-		String encoding = layerFileDescription.getEncoding();
-		String latColumnName = layerFileDescription.getLatColumnName();
-		String lonColumnName = layerFileDescription.getLonColumnName();
-		String field = layerFileDescription.getField();
-		String geoColumnType = layerFileDescription.getGeoColumnType();
-		String layerSRS = layerFileDescription.getLayerSRS();
-		
-		String  vrtFileContent = createVRTFileContent(layerName, location, geoColumnType, layerSRS, encoding, lonColumnName, latColumnName, field);
-		
+
+		String vrtFileContent = createVRTFileContent(layerName, location, layerFileDescription);
+
 		String vrtFilePath = createVRTFile(tmpDirPath, layerName, vrtFileContent);
 		result.put("vrt", vrtFilePath);
 
@@ -96,11 +98,11 @@ public class MetaLayerUtil {
 	private static String createVRTFile(String tmpDirPath, String layerName, String vrtFileContent) throws IOException {
 		File vrtFile = new File(tmpDirPath + File.separator + layerName + ".vrt");
 		if (!vrtFile.exists() && !vrtFile.createNewFile()) {
-				throw new IOException("Failed to create file");
+			throw new IOException("Failed to create file");
 		}
 		try (FileOutputStream fos = new FileOutputStream(vrtFile)) {
 			byte[] bytes = vrtFileContent.getBytes();
-			fos.write(bytes);		
+			fos.write(bytes);
 		}
 		return vrtFile.getAbsolutePath();
 	}
@@ -131,12 +133,13 @@ public class MetaLayerUtil {
 		result.put(DIR_PATH, tmpDirPath);
 		return result;
 	}
-	
-	public static Map<String, String> copyGeneralFile(FormDataMultiPart multiPart, String type, boolean optional) throws IOException {
+
+	public static Map<String, String> copyGeneralFile(FormDataMultiPart multiPart, String type, boolean optional)
+			throws IOException {
 		String dataPath = NakshaConfig.getString(TEMP_DIR_PATH) + File.separator + System.currentTimeMillis();
 		String tmpDirPath = dataPath + File.separator + FINAL;
-		String fileLocation =  copyFile(multiPart, type, tmpDirPath, optional);
-		
+		String fileLocation = copyFile(multiPart, type, tmpDirPath, optional);
+
 		Map<String, String> result = new HashMap<>();
 		result.put(type, fileLocation);
 		result.put(FINAL, tmpDirPath);
@@ -179,13 +182,13 @@ public class MetaLayerUtil {
 		FileUtils.copyInputStreamToFile(inputStream, file);
 		return filePath;
 	}
-	
+
 	public static void deleteFiles(String dirPath) {
 		dirPath = dirPath.substring(0, dirPath.lastIndexOf("/"));
 		try {
 			FileUtils.deleteDirectory(new File(dirPath));
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error(e.getMessage());
 		}
 	}
 
@@ -198,8 +201,7 @@ public class MetaLayerUtil {
 	 * @throws IOException
 	 * @throws ParseException
 	 */
-	public static JSONObject getMetadataAsJson(FormDataMultiPart multiPart)
-			throws IOException, ParseException {
+	public static JSONObject getMetadataAsJson(FormDataMultiPart multiPart) throws IOException, ParseException {
 		FormDataBodyPart formdata = multiPart.getField("metadata");
 		if (formdata == null) {
 			throw new WebApplicationException(

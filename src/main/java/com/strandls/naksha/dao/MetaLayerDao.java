@@ -1,5 +1,7 @@
 package com.strandls.naksha.dao;
 
+import static org.hibernate.type.StandardBasicTypes.LONG;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,17 +11,31 @@ import javax.persistence.NoResultException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
-import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 
 import com.strandls.naksha.pojo.MetaLayer;
 import com.strandls.naksha.pojo.enumtype.LayerStatus;
+import com.strandls.naksha.service.MetaLayerService;
 
 public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 
 	@Inject
 	protected MetaLayerDao(SessionFactory sessionFactory) {
 		super(sessionFactory);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public Long getLayerCount() {
+		String queryString = "select count(*) from \"Meta_Layer_Table\" t where t.layer_status != :layerStatus";
+				
+		Session session = sessionFactory.openSession();
+		Query<Long> countQuery = session.createNativeQuery(queryString).addScalar("count", LONG);
+
+		countQuery.setParameter("layerStatus", LayerStatus.INACTIVE.name());
+
+		Long count = countQuery.getSingleResult();
+		session.close();
+		return count;
 	}
 
 	@Override
@@ -28,28 +44,50 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 		MetaLayer entity = null;
 		try {
 			entity = session.get(MetaLayer.class, id);
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw e;
 		} finally {
 			session.close();
 		}
 		return entity;
 	}
+	
+	@SuppressWarnings("unchecked")
+	public String isTableAvailable(String layerTableName) {
+		String queryStr = "select table_name from information_schema.tables where "
+				+ "table_name = :layerTableName";
+		
+		Session session = sessionFactory.openSession();		
+		try {
+			Query<String> query = session.createNativeQuery(queryStr);
+			query.setParameter("layerTableName", layerTableName);
+			return query.getSingleResult();
+		} catch (NoResultException e) {
+			return null;
+		} finally {
+			session.close();
+		}		
+
+	}
+
+	public MetaLayer findByLayerTableName(String layerTableName) {
+		String queryStr = "from MetaLayer t where layerTableName = :layerTableName";
+		Session session = sessionFactory.openSession();
+		Query<MetaLayer> query = session.createQuery(queryStr, MetaLayer.class);
+		query.setParameter("layerTableName", layerTableName);
+		MetaLayer resultList = query.getSingleResult();
+		session.close();
+		return resultList;
+	}
 
 	public List<MetaLayer> getAllInactiveLayer() {
-		String queryStr = "" + "from " + daoType.getSimpleName() + " t " + "where t.layerStatus = :value order by id";
+		String queryStr = "from MetaLayer t where t.layerStatus = :value order by id";
 		Session session = sessionFactory.openSession();
-		org.hibernate.query.Query<MetaLayer> query = session.createQuery(queryStr, MetaLayer.class);
+		Query<MetaLayer> query = session.createQuery(queryStr, MetaLayer.class);
 		query.setParameter("value", LayerStatus.INACTIVE);
 
 		try {
 			List<MetaLayer> resultList = new ArrayList<>();
 			resultList = query.getResultList();
 			return resultList;
-		} catch (NoResultException e) {
-			e.printStackTrace();
-			throw e;
 		} finally {
 			session.close();
 		}
@@ -57,9 +95,9 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 
 	@Override
 	public List<MetaLayer> findAll(int limit, int offset) {
-		String queryStr = "" + "from " + daoType.getSimpleName() + " t " + "where t.layerStatus != :value order by id";
+		String queryStr = "from MetaLayer t where t.layerStatus != :value order by id";
 		Session session = sessionFactory.openSession();
-		org.hibernate.query.Query<MetaLayer> query = session.createQuery(queryStr, MetaLayer.class);
+		Query<MetaLayer> query = session.createQuery(queryStr, MetaLayer.class);
 		query.setParameter("value", LayerStatus.INACTIVE);
 
 		try {
@@ -68,29 +106,29 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 				query = query.setFirstResult(offset).setMaxResults(limit);
 			resultList = query.getResultList();
 			return resultList;
-		} catch (NoResultException e) {
-			e.printStackTrace();
-			throw e;
 		} finally {
 			session.close();
 		}
 	}
 
-	public List<Object> executeQueryForSingleResult(String queryStr) {
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public List<Object> executeQueryForSingleResult(String attribute, String layerName, String lon, String lat) {
+		Double x = Double.parseDouble(lon);
+		Double y = Double.parseDouble(lat);
+		String queryStr = "SELECT " + attribute + " from " + layerName + " where st_contains" + "(" + layerName + "."
+				+ MetaLayerService.GEOMETRY_COLUMN_NAME + ", ST_GeomFromText('POINT(" + x + " " + y + ")',0))";
 		Session session = sessionFactory.openSession();
 		Query query = session.createNativeQuery(queryStr);
 		List<Object> entity;
 		try {
-			entity = (List<Object>) query.getResultList();
-		} catch (NoResultException e) {
-			e.printStackTrace();
-			throw e;
+			entity = query.getResultList();
 		} finally {
 			session.close();
 		}
 		return entity;
 	}
 
+	@SuppressWarnings("rawtypes")
 	public String getBoundingBox(String layerTableName) {
 		Session session = sessionFactory.openSession();
 		String queryStr = "select ST_ASTEXT(ST_Extent(wkb_geometry)) BBOX from " + layerTableName;
@@ -98,14 +136,13 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 		String bboxWkt;
 		try {
 			bboxWkt = (String) query.getSingleResult();
-		} catch (NoResultException e) {
-			e.printStackTrace();
-			throw e;
+		} finally {
+			session.close();
 		}
-		session.close();
 		return bboxWkt;
 	}
 
+	@SuppressWarnings({ "rawtypes" })
 	public void dropTable(String layerName) {
 		Session session = sessionFactory.openSession();
 		Transaction tx = session.beginTransaction();
@@ -115,17 +152,22 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 		session.close();
 	}
 
-	public List<Object[]> executeQueryForLocationInfo(String queryStr) {
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public List<Object[]> executeQueryForLocationInfo(String lat, String lon) {
+		Double x = Double.parseDouble(lon);
+		Double y = Double.parseDouble(lat);
+		String queryStr = "SELECT state,district,tahsil from " + MetaLayerService.INDIA_TAHSIL + " where st_contains"
+				+ "(" + MetaLayerService.INDIA_TAHSIL + "." + MetaLayerService.GEOMETRY_COLUMN_NAME
+				+ ", ST_GeomFromText('POINT(" + x + " " + y + ")',0))";
+
 		Session session = sessionFactory.openSession();
 		Query query = session.createNativeQuery(queryStr);
 		List<Object[]> entity;
 		try {
-			entity = (List<Object[]>) query.getResultList();
-		} catch (NoResultException e) {
-			e.printStackTrace();
-			throw e;
+			entity = query.getResultList();
+		} finally {
+			session.close();
 		}
-		session.close();
 		return entity;
 	}
 }
