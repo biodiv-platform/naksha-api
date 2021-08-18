@@ -18,6 +18,7 @@ import java.util.zip.ZipOutputStream;
 import javax.inject.Inject;
 import javax.naming.directory.InvalidAttributesException;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.HttpHeaders;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
@@ -31,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.naksha.ApiConstants;
+import com.strandls.naksha.Headers;
 import com.strandls.naksha.NakshaConfig;
 import com.strandls.naksha.dao.MetaLayerDao;
 import com.strandls.naksha.pojo.MetaLayer;
@@ -53,6 +55,7 @@ import com.strandls.naksha.utils.MetaLayerUtil;
 import com.strandls.naksha.utils.Utils;
 import com.strandls.user.ApiException;
 import com.strandls.user.controller.UserServiceApi;
+import com.strandls.user.pojo.DownloadLogData;
 import com.strandls.user.pojo.UserIbp;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -86,6 +89,8 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	@Inject
 	private MailService mailService;
 
+	@Inject
+	private Headers headers;
 	public static final String DOWNLOAD_BASE_LOCATION = NakshaConfig.getString(MetaLayerUtil.TEMP_DIR_PATH)
 			+ File.separator + "temp_zip";
 
@@ -334,11 +339,12 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		String uri = request.getRequestURI();
 		String hashKey = UUID.randomUUID().toString();
+		String authToken = request.getHeader(HttpHeaders.AUTHORIZATION);
 
 		ExecutorService service = Executors.newFixedThreadPool(10);
 		service.execute(() -> {
 			try {
-				runDownloadLayer(profile.getId(), uri, hashKey, layerDownload);
+				runDownloadLayer(profile.getId(), uri, hashKey, authToken, layerDownload);
 			} catch (InvalidAttributesException | InterruptedException | IOException e) {
 				logger.error(e.getMessage());
 				Thread.currentThread().interrupt();
@@ -372,8 +378,8 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 				|| metaLayer.getUploaderUserId().equals(Long.parseLong(profile.getId()));
 	}
 
-	public void runDownloadLayer(String authorId, String uri, String hashKey, LayerDownload layerDownload)
-			throws InvalidAttributesException, InterruptedException, IOException {
+	public void runDownloadLayer(String authorId, String uri, String hashKey, String requestToken,
+			LayerDownload layerDownload) throws InvalidAttributesException, InterruptedException, IOException {
 
 		String layerName = layerDownload.getLayerName();
 
@@ -431,6 +437,20 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		String url = uri + "/" + hashKey + "/" + layerName;
 
 		mailService.sendMail(authorId, url, "naksha");
+		userServiceApi = headers.addUserHeaders(userServiceApi, requestToken);
+		DownloadLogData data = new DownloadLogData();
+		data.setFilePath(url);
+		data.setFileType("ZIP");
+		data.setFilterUrl(uri);
+		data.setStatus("success");
+		data.setSourcetype("LayerInformation");
+		try {
+			userServiceApi.logDocumentDownload(data);
+		} catch (ApiException e) {
+			logger.error(e.getMessage());
+		}
+		// TODO : send mail notification for download url
+		// return directory.getAbsolutePath();
 	}
 
 	public void zipFolder(String zipFileLocation, File fileDirectory) throws IOException {

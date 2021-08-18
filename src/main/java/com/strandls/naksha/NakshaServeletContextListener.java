@@ -39,6 +39,7 @@ import com.strandls.mail_utility.producer.RabbitMQProducer;
 import com.strandls.naksha.controller.ControllerModule;
 import com.strandls.naksha.dao.DaoModule;
 import com.strandls.naksha.service.ServiceModule;
+import com.strandls.user.controller.UserServiceApi;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.PrecisionModel;
 
@@ -91,6 +92,8 @@ public class NakshaServeletContextListener extends GuiceServletContextListener {
 				bind(SessionFactory.class).toInstance(sessionFactory);
 				GeometryFactory geofactory = new GeometryFactory(new PrecisionModel(), 4326);
 				bind(GeometryFactory.class).toInstance(geofactory);
+				bind(Headers.class).in(Scopes.SINGLETON);
+				bind(UserServiceApi.class).in(Scopes.SINGLETON);
 
 				Map<String, String> props = new HashMap<>();
 				props.put("javax.ws.rs.Application", ApplicationConfig.class.getName());
