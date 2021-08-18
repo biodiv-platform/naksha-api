@@ -93,7 +93,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	public MetaLayerServiceImpl(MetaLayerDao dao) {
 		super(dao);
 	}
-	
+
 	@Override
 	public Long getLayerCount(HttpServletRequest request) {
 		return metaLayerDao.getLayerCount();
@@ -103,7 +103,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	public MetaLayer findByLayerTableName(String layerName) {
 		return metaLayerDao.findByLayerTableName(layerName);
 	}
-	
+
 	@Override
 	public String isTableAvailable(String layerName) {
 		return metaLayerDao.isTableAvailable(layerName);
@@ -248,7 +248,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		metaLayer = save(metaLayer);
 		result.put("Meta layer table entry", metaLayer.getId());
 
-		String layerTableName = "lyr_" + metaLayer.getId() + "_" + layerName.trim().replaceAll("\\s+", "_");
+		String layerTableName = "lyr_" + metaLayer.getId() + "_" + MetaLayerUtil.refineLayerName(layerName);
 		metaLayer.setLayerTableName(layerTableName);
 		update(metaLayer);
 
@@ -268,10 +268,15 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		List<String> keywords = new ArrayList<>();
 		keywords.add(layerTableName);
-
-		List<String> styles = geoserverStyleService.publishAllStyles(layerTableName, WORKSPACE);
-		boolean isPublished = geoserverService.publishLayer(WORKSPACE, DATASTORE, layerTableName, null, layerTableName,
-				keywords, styles);
+		
+		boolean isPublished;
+		try {
+			List<String> styles = geoserverStyleService.publishAllStyles(layerTableName, WORKSPACE);
+			isPublished = geoserverService.publishLayer(WORKSPACE, DATASTORE, layerTableName, null, layerTableName,
+					keywords, styles);
+		} catch (Exception e) {
+			isPublished = false;
+		}
 		if (!isPublished) {
 			// roll back
 			MetaLayerUtil.deleteFiles(dirPath);
@@ -547,7 +552,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		try {
 			layerName = metaLayerDao.isTableAvailable(layerName);
-			if(layerName == null)
+			if (layerName == null)
 				return "";
 			List<Object> result = metaLayerDao.executeQueryForSingleResult(attribute, layerName, lon, lat);
 			if (result.isEmpty())

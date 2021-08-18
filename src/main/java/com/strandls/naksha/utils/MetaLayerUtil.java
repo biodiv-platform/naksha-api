@@ -174,13 +174,24 @@ public class MetaLayerUtil {
 		String fileName = formdata.getContentDisposition().getFileName();
 		fileName += ".";
 		String layerName = fileName.split("\\.")[0].toLowerCase();
-		layerName = layerName.trim().replaceAll("\\s+", "_");
+		
+		layerName = refineLayerName(layerName);
 
 		String filePath = tmpDirPath + File.separator + layerName + "." + type;
 
 		File file = new File(filePath);
 		FileUtils.copyInputStreamToFile(inputStream, file);
 		return filePath;
+	}
+	
+	public static String refineLayerName(String layerName) {
+		// Remove all the space character
+		layerName = layerName.trim().replaceAll("\\s+", "_");
+		
+		// Keep only the character and number in the string (along with the underscore)
+		layerName = layerName.replaceAll("[^a-zA-Z0-9_]", "");
+		
+		return layerName;
 	}
 
 	public static void deleteFiles(String dirPath) {

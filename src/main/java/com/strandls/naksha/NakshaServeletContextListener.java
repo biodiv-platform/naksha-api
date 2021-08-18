@@ -82,7 +82,7 @@ public class NakshaServeletContextListener extends GuiceServletContextListener {
 					logger.error(e.getMessage());
 				}
 				
-				bind(Channel.class).toInstance(channel);
+				bind(Channel.class).toInstance(channel); 
 				RabbitMQProducer producer = new RabbitMQProducer(channel);
 				
 				ObjectMapper objectMapper = new ObjectMapper();
