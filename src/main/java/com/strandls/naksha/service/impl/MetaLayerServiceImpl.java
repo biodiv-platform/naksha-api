@@ -91,8 +91,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 	@Inject
 	private Headers headers;
-	public static final String DOWNLOAD_BASE_LOCATION = NakshaConfig.getString(MetaLayerUtil.TEMP_DIR_PATH)
-			+ File.separator + "temp_zip";
+	public static final String DOWNLOAD_BASE_LOCATION = NakshaConfig.getString(MetaLayerUtil.TEMP_DIR_PATH);
 
 	@Inject
 	public MetaLayerServiceImpl(MetaLayerDao dao) {
@@ -434,7 +433,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		mailService.sendMail(authorId, url, "naksha");
 		userServiceApi = headers.addUserHeaders(userServiceApi, requestToken);
 		DownloadLogData data = new DownloadLogData();
-		data.setFilePath(url);
+		data.setFilePath(zipFileLocation.replace("/app/data/biodiv/", "/"));
 		data.setFileType("ZIP");
 		data.setFilterUrl(uri);
 		data.setStatus("success");
@@ -444,8 +443,6 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		} catch (ApiException e) {
 			logger.error(e.getMessage());
 		}
-		// TODO : send mail notification for download url
-		// return directory.getAbsolutePath();
 	}
 
 	public void zipFolder(String zipFileLocation, File fileDirectory) throws IOException {
