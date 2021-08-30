@@ -440,10 +440,11 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		userServiceApi = headers.addUserHeaders(userServiceApi, requestToken);
 		DownloadLogData data = new DownloadLogData();
 		data.setFilePath(url);
-		data.setFileType("ZIP");
+		data.setFileType("SHP");
 		data.setFilterUrl(uri);
 		data.setStatus("success");
-		data.setSourcetype("LayerInformation");
+		data.setSourcetype("Map");
+		data.setNotes(layerName);
 		try {
 			userServiceApi.logDocumentDownload(data);
 		} catch (ApiException e) {
