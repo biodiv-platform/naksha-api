@@ -39,6 +39,7 @@ import com.strandls.mail_utility.producer.RabbitMQProducer;
 import com.strandls.naksha.controller.ControllerModule;
 import com.strandls.naksha.dao.DaoModule;
 import com.strandls.naksha.service.ServiceModule;
+import com.strandls.user.controller.UserServiceApi;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.PrecisionModel;
 
@@ -68,7 +69,6 @@ public class NakshaServeletContextListener extends GuiceServletContextListener {
 						configuration.addAnnotatedClass(cls);
 					}
 				} catch (ClassNotFoundException | IOException | URISyntaxException e) {
-					e.printStackTrace();
 					logger.error(e.getMessage());
 				}
 				
@@ -83,7 +83,7 @@ public class NakshaServeletContextListener extends GuiceServletContextListener {
 					logger.error(e.getMessage());
 				}
 				
-				bind(Channel.class).toInstance(channel);
+				bind(Channel.class).toInstance(channel); 
 				RabbitMQProducer producer = new RabbitMQProducer(channel);
 				
 				ObjectMapper objectMapper = new ObjectMapper();
@@ -92,8 +92,10 @@ public class NakshaServeletContextListener extends GuiceServletContextListener {
 				bind(SessionFactory.class).toInstance(sessionFactory);
 				GeometryFactory geofactory = new GeometryFactory(new PrecisionModel(), 4326);
 				bind(GeometryFactory.class).toInstance(geofactory);
+				bind(Headers.class).in(Scopes.SINGLETON);
+				bind(UserServiceApi.class).in(Scopes.SINGLETON);
 
-				Map<String, String> props = new HashMap<String, String>();
+				Map<String, String> props = new HashMap<>();
 				props.put("javax.ws.rs.Application", ApplicationConfig.class.getName());
 				props.put("jersey.config.server.wadl.disableWadl", "true");
 
@@ -107,7 +109,7 @@ public class NakshaServeletContextListener extends GuiceServletContextListener {
 			throws URISyntaxException, IOException, ClassNotFoundException {
 
 		List<String> classNames = getClassNamesFromPackage(packageName);
-		List<Class<?>> classes = new ArrayList<Class<?>>();
+		List<Class<?>> classes = new ArrayList<>();
 		for (String className : classNames) {
 			Class<?> cls = Class.forName(className);
 			Annotation[] annotations = cls.getAnnotations();
@@ -127,7 +129,7 @@ public class NakshaServeletContextListener extends GuiceServletContextListener {
 			throws URISyntaxException, IOException {
 
 		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-		ArrayList<String> names = new ArrayList<String>();
+		ArrayList<String> names = new ArrayList<>();
 		URL packageURL = classLoader.getResource(packageName);
 
 		URI uri = new URI(packageURL.toString());

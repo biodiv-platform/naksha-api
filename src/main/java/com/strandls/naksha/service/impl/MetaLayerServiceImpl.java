@@ -18,6 +18,7 @@ import java.util.zip.ZipOutputStream;
 import javax.inject.Inject;
 import javax.naming.directory.InvalidAttributesException;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.HttpHeaders;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
@@ -31,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.naksha.ApiConstants;
+import com.strandls.naksha.Headers;
 import com.strandls.naksha.NakshaConfig;
 import com.strandls.naksha.dao.MetaLayerDao;
 import com.strandls.naksha.pojo.MetaLayer;
@@ -53,6 +55,7 @@ import com.strandls.naksha.utils.MetaLayerUtil;
 import com.strandls.naksha.utils.Utils;
 import com.strandls.user.ApiException;
 import com.strandls.user.controller.UserServiceApi;
+import com.strandls.user.pojo.DownloadLogData;
 import com.strandls.user.pojo.UserIbp;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -86,6 +89,8 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	@Inject
 	private MailService mailService;
 
+	@Inject
+	private Headers headers;
 	public static final String DOWNLOAD_BASE_LOCATION = NakshaConfig.getString(MetaLayerUtil.TEMP_DIR_PATH)
 			+ File.separator + "temp_zip";
 
@@ -95,8 +100,18 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	}
 
 	@Override
+	public Long getLayerCount(HttpServletRequest request) {
+		return metaLayerDao.getLayerCount();
+	}
+
+	@Override
 	public MetaLayer findByLayerTableName(String layerName) {
-		return findByPropertyWithCondtion("layerTableName", layerName, "=");
+		return metaLayerDao.findByLayerTableName(layerName);
+	}
+
+	@Override
+	public String isTableAvailable(String layerName) {
+		return metaLayerDao.isTableAvailable(layerName);
 	}
 
 	@Override
@@ -106,7 +121,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		CommonProfile userProfile = AuthUtil.getProfileFromRequest(request);
 
 		List<MetaLayer> metaLayers = findAll(request, limit, offset);
-		List<TOCLayer> layerLists = new ArrayList<TOCLayer>();
+		List<TOCLayer> layerLists = new ArrayList<>();
 		boolean isAdmin = Utils.isAdmin(request);
 
 		for (MetaLayer metaLayer : metaLayers) {
@@ -138,7 +153,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		URIBuilder builder = new URIBuilder(uri);
 
-		ArrayList<NameValuePair> params = new ArrayList<NameValuePair>();
+		ArrayList<NameValuePair> params = new ArrayList<>();
 		params.add(new BasicNameValuePair("layers", metaLayer.getLayerTableName()));
 		params.add(new BasicNameValuePair("bbox", bboxValue));
 		params.add(new BasicNameValuePair("request", "GetMap"));
@@ -163,10 +178,10 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		Double bottom = envelop.getCoordinates()[2].x;
 		Double right = envelop.getCoordinates()[2].y;
 
-		List<List<Double>> boundingBox = new ArrayList<List<Double>>();
+		List<List<Double>> boundingBox = new ArrayList<>();
 
-		List<Double> topLeft = new ArrayList<Double>();
-		List<Double> bottomRight = new ArrayList<Double>();
+		List<Double> topLeft = new ArrayList<>();
+		List<Double> bottomRight = new ArrayList<>();
 
 		topLeft.add(top);
 		topLeft.add(left);
@@ -201,7 +216,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	@Override
 	public Map<String, Object> uploadLayer(HttpServletRequest request, FormDataMultiPart multiPart)
 			throws IOException, ParseException, InvalidAttributesException, InterruptedException {
-		Map<String, Object> result = new HashMap<String, Object>();
+		Map<String, Object> result = new HashMap<>();
 
 		String jsonString = MetaLayerUtil.getMetadataAsJson(multiPart).toJSONString();
 		MetaData metaData = objectMapper.readValue(jsonString, MetaData.class);
@@ -238,7 +253,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		metaLayer = save(metaLayer);
 		result.put("Meta layer table entry", metaLayer.getId());
 
-		String layerTableName = "lyr_" + metaLayer.getId() + "_" + layerName.trim().replaceAll("\\s+", "_");
+		String layerTableName = "lyr_" + metaLayer.getId() + "_" + MetaLayerUtil.refineLayerName(layerName);
 		metaLayer.setLayerTableName(layerTableName);
 		update(metaLayer);
 
@@ -252,15 +267,21 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			// Roll back
 			MetaLayerUtil.deleteFiles(dirPath);
 			metaLayerDao.delete(metaLayer);
+			Thread.currentThread().interrupt();
 			throw new IOException("Table creation failed");
 		}
 
-		List<String> keywords = new ArrayList<String>();
+		List<String> keywords = new ArrayList<>();
 		keywords.add(layerTableName);
-
-		List<String> styles = geoserverStyleService.publishAllStyles(layerTableName, WORKSPACE);
-		boolean isPublished = geoserverService.publishLayer(WORKSPACE, DATASTORE, layerTableName, null, layerTableName,
-				keywords, styles);
+		
+		boolean isPublished;
+		try {
+			List<String> styles = geoserverStyleService.publishAllStyles(layerTableName, WORKSPACE);
+			isPublished = geoserverService.publishLayer(WORKSPACE, DATASTORE, layerTableName, null, layerTableName,
+					keywords, styles);
+		} catch (Exception e) {
+			isPublished = false;
+		}
 		if (!isPublished) {
 			// roll back
 			MetaLayerUtil.deleteFiles(dirPath);
@@ -307,7 +328,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	public Map<String, String> prepareDownloadLayer(HttpServletRequest request, LayerDownload layerDownload)
 			throws InvalidAttributesException, InterruptedException, IOException {
 
-		Map<String, String> retValue = new HashMap<String, String>();
+		Map<String, String> retValue = new HashMap<>();
 
 		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
 
@@ -318,11 +339,12 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		String uri = request.getRequestURI();
 		String hashKey = UUID.randomUUID().toString();
+		String authToken = request.getHeader(HttpHeaders.AUTHORIZATION);
 
 		ExecutorService service = Executors.newFixedThreadPool(10);
 		service.execute(() -> {
 			try {
-				runDownloadLayer(profile.getId(), uri, hashKey, layerDownload);
+				runDownloadLayer(profile.getId(), uri, hashKey, authToken, layerDownload);
 			} catch (InvalidAttributesException | InterruptedException | IOException e) {
 				logger.error(e.getMessage());
 				Thread.currentThread().interrupt();
@@ -356,8 +378,8 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 				|| metaLayer.getUploaderUserId().equals(Long.parseLong(profile.getId()));
 	}
 
-	public void runDownloadLayer(String authorId, String uri, String hashKey, LayerDownload layerDownload)
-			throws InvalidAttributesException, InterruptedException, IOException {
+	public void runDownloadLayer(String authorId, String uri, String hashKey, String requestToken,
+			LayerDownload layerDownload) throws InvalidAttributesException, InterruptedException, IOException {
 
 		String layerName = layerDownload.getLayerName();
 
@@ -415,6 +437,19 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		String url = uri + "/" + hashKey + "/" + layerName;
 
 		mailService.sendMail(authorId, url, "naksha");
+		userServiceApi = headers.addUserHeaders(userServiceApi, requestToken);
+		DownloadLogData data = new DownloadLogData();
+		data.setFilePath(url);
+		data.setFileType("SHP");
+		data.setFilterUrl(uri);
+		data.setStatus("success");
+		data.setSourcetype("Map");
+		data.setNotes(layerName);
+		try {
+			userServiceApi.logDocumentDownload(data);
+		} catch (ApiException e) {
+			logger.error(e.getMessage());
+		}
 		// TODO : send mail notification for download url
 		// return directory.getAbsolutePath();
 	}
@@ -486,7 +521,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	public List<MetaLayer> cleanupInactiveLayers() {
 		List<MetaLayer> layers = metaLayerDao.getAllInactiveLayer();
 
-		List<MetaLayer> deletedLayers = new ArrayList<MetaLayer>();
+		List<MetaLayer> deletedLayers = new ArrayList<>();
 		for (MetaLayer metaLayer : layers) {
 			deletedLayers.add(deleteLayer(metaLayer));
 		}
@@ -537,11 +572,10 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	private String getAttributeValueAtLatlon(String attribute, String layerName, String lon, String lat) {
 
 		try {
-			String queryStr = "SELECT " + attribute + " from " + layerName + " where st_contains" + "(" + layerName
-					+ "." + MetaLayerService.GEOMETRY_COLUMN_NAME + ", ST_GeomFromText('POINT(" + lon + " " + lat
-					+ ")',0))";
-			List<Object> result = metaLayerDao.executeQueryForSingleResult(queryStr);
-
+			layerName = metaLayerDao.isTableAvailable(layerName);
+			if (layerName == null)
+				return "";
+			List<Object> result = metaLayerDao.executeQueryForSingleResult(attribute, layerName, lon, lat);
 			if (result.isEmpty())
 				return null;
 
@@ -554,14 +588,10 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	}
 
 	public LocationInfo getLocationInfo(String lat, String lon) {
-		String queryStr = "SELECT state,district,tahsil from " + INDIA_TAHSIL + " where st_contains" + "("
-				+ INDIA_TAHSIL + "." + MetaLayerService.GEOMETRY_COLUMN_NAME + ", ST_GeomFromText('POINT(" + lon + " "
-				+ lat + ")',0))";
-
-		List<Object[]> result = metaLayerDao.executeQueryForLocationInfo(queryStr);
+		List<Object[]> result = metaLayerDao.executeQueryForLocationInfo(lat, lon);
 		LocationInfo locationResponse = new LocationInfo();
 
-		if (result.size() > 0) {
+		if (result.isEmpty()) {
 			Object[] values = result.get(0);
 			locationResponse.setState(values[0].toString());
 			locationResponse.setDistrict(values[1].toString());

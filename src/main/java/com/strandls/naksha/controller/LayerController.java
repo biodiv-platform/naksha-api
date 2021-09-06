@@ -3,7 +3,6 @@ package com.strandls.naksha.controller;
 import java.io.FileNotFoundException;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
@@ -17,6 +16,8 @@ import com.strandls.naksha.pojo.request.MetaLayerEdit;
  */
 
 public interface LayerController {
+
+	public Response getLayerCount(HttpServletRequest request);
 
 	public Response findAll(HttpServletRequest request, Integer limit, Integer offset, Boolean showOnlyPending);
 
@@ -44,5 +45,6 @@ public interface LayerController {
 	public Response updateMetaLayerData(HttpServletRequest request, MetaLayerEdit metaLayerEdit);
 
 	public Response fetchLocationInfo(String lat, String lon);
+
 
 }

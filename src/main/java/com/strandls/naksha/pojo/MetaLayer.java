@@ -34,10 +34,6 @@ import io.swagger.annotations.ApiModel;
 public class MetaLayer implements Serializable {
 
 	/**
-	 * TODO : activity design for the comments
-	 */
-
-	/**
 	* 
 	*/
 	private static final long serialVersionUID = -2888813985275939359L;
@@ -192,44 +188,6 @@ public class MetaLayer implements Serializable {
 		this.createdDate = metaData.getCreatedDate();
 		this.modifiedBy = metaData.getModifiedBy();
 		this.modifiedDate = metaData.getModifiedDate();
-	}
-
-	public MetaLayer(Long id, String layerName, String layerTableName, String layerDescription, LayerType layerType,
-			LayerStatus layerStatus, String geoColumn, Double minScale, Double maxScale, String pdfLink, String url,
-			String dirPath, Long uploaderUserId, String attribution, String tags, String license, String summaryColumns,
-			DownloadAccess downloadAccess, EditAccess editAccess, String colorBy, String titleColumn, String sizeBy,
-			String mediaColumns, Long pageId, String italicsColumns, String createdBy, Timestamp createdDate,
-			String modifiedBy, Timestamp modifiedDate) {
-		super();
-		this.id = id;
-		this.layerName = layerName;
-		this.layerTableName = layerTableName;
-		this.layerDescription = layerDescription;
-		this.layerType = layerType;
-		this.layerStatus = layerStatus;
-		this.geoColumn = geoColumn;
-		this.minScale = minScale;
-		this.maxScale = maxScale;
-		this.pdfLink = pdfLink;
-		this.url = url;
-		this.dirPath = dirPath;
-		this.uploaderUserId = uploaderUserId;
-		this.attribution = attribution;
-		this.tags = tags;
-		this.license = license;
-		this.summaryColumns = summaryColumns;
-		this.downloadAccess = downloadAccess;
-		this.editAccess = editAccess;
-		this.colorBy = colorBy;
-		this.titleColumn = titleColumn;
-		this.sizeBy = sizeBy;
-		this.mediaColumns = mediaColumns;
-		this.pageId = pageId;
-		this.italicsColumns = italicsColumns;
-		this.createdBy = createdBy;
-		this.createdDate = createdDate;
-		this.modifiedBy = modifiedBy;
-		this.modifiedDate = modifiedDate;
 	}
 
 	public Long getId() {

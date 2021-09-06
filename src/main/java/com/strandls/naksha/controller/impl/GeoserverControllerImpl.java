@@ -178,7 +178,7 @@ public class GeoserverControllerImpl implements GeoserverController {
 			} else
 				style += colorBy;
 
-			ArrayList<NameValuePair> params = new ArrayList<NameValuePair>();
+			ArrayList<NameValuePair> params = new ArrayList<>();
 			params.add(new BasicNameValuePair("request", "GetMap"));
 			params.add(new BasicNameValuePair("layers", id));
 			params.add(new BasicNameValuePair("service", "WMS"));
