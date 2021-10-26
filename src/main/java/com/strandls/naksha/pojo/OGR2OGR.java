@@ -109,7 +109,7 @@ public class OGR2OGR {
 
 	public Process execute(String command) {
 		ProcessBuilder pb = new ProcessBuilder();
-		pb.command("/usr/bin/bash", "-c", command);
+		pb.command("/bin/bash", "-c", command);
 		try {
 			return pb.start();
 		} catch (IOException e) {
