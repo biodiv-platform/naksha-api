@@ -557,11 +557,15 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			String rainfall = getAttributeValueAtLatlon("rain_range", INDIA_RAINFALLZONE, lon, lat);
 			String tahsil = getAttributeValueAtLatlon("tahsil", INDIA_TAHSIL, lon, lat);
 			String forestType = getAttributeValueAtLatlon("type_desc", INDIA_FOREST_TYPE, lon, lat);
+			//pa-fields
+			String protectedAreaName = getAttributeValueAtLatlon("name", LAYER_MADAGASCAR, lon, lat);
+			String province = getAttributeValueAtLatlon("province", LAYER_MADAGASCAR, lon, lat);
+			String district = getAttributeValueAtLatlon("district", LAYER_MADAGASCAR, lon, lat);
 
 			if (soil == null && temp == null && rainfall == null && tahsil == null && forestType == null)
 				return null;
 
-			return new ObservationLocationInfo(soil, temp, rainfall, tahsil, forestType);
+			return new ObservationLocationInfo(soil, temp, rainfall, tahsil, forestType,protectedAreaName,province,district);
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
