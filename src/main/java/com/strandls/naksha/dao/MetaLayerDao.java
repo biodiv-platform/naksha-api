@@ -23,11 +23,11 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 	protected MetaLayerDao(SessionFactory sessionFactory) {
 		super(sessionFactory);
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public Long getLayerCount() {
 		String queryString = "select count(*) from \"Meta_Layer_Table\" t where t.layer_status != :layerStatus";
-				
+
 		Session session = sessionFactory.openSession();
 		Query<Long> countQuery = session.createNativeQuery(queryString).addScalar("count", LONG);
 
@@ -49,13 +49,12 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 		}
 		return entity;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public String isTableAvailable(String layerTableName) {
-		String queryStr = "select table_name from information_schema.tables where "
-				+ "table_name = :layerTableName";
-		
-		Session session = sessionFactory.openSession();		
+		String queryStr = "select table_name from information_schema.tables where " + "table_name = :layerTableName";
+
+		Session session = sessionFactory.openSession();
 		try {
 			Query<String> query = session.createNativeQuery(queryStr);
 			query.setParameter("layerTableName", layerTableName);
@@ -64,7 +63,7 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 			return null;
 		} finally {
 			session.close();
-		}		
+		}
 
 	}
 
@@ -169,5 +168,22 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 			session.close();
 		}
 		return entity;
+	}
+
+	@SuppressWarnings("unchecked")
+	public String findSRID(String layerTableName) {
+		String queryStr = "select 'EPSG:' || Find_SRID(:schema, :table, :column) as srid";
+
+		Session session = sessionFactory.openSession();
+		Query<String> query = session.createNativeQuery(queryStr);
+		query.setParameter("schema", "public");
+		query.setParameter("table", layerTableName);
+		query.setParameter("column", "wkb_geometry");
+		try {
+			String result = query.getSingleResult();
+			return "EPSG:0".equals(result) ? null : result;
+		} finally {
+			session.close();
+		}
 	}
 }
