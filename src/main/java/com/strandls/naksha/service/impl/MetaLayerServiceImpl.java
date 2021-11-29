@@ -276,8 +276,9 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		
 		boolean isPublished;
 		try {
+			String srs = metaLayerDao.findSRID(layerTableName);
 			List<String> styles = geoserverStyleService.publishAllStyles(layerTableName, WORKSPACE);
-			isPublished = geoserverService.publishLayer(WORKSPACE, DATASTORE, layerTableName, null, layerTableName,
+			isPublished = geoserverService.publishLayer(WORKSPACE, DATASTORE, layerTableName, srs, layerTableName,
 					keywords, styles);
 		} catch (Exception e) {
 			isPublished = false;

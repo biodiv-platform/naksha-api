@@ -144,7 +144,7 @@ public class OGR2OGR {
 		}
 
 		ProcessBuilder pb = new ProcessBuilder();
-		pb.command("/usr/bin/bash", "-c", comments.toString());
+		pb.command("/bin/bash", "-c", comments.toString());
 
 		try {
 			return pb.start();
