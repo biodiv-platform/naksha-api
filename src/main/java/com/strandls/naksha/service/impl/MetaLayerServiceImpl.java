@@ -445,7 +445,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		data.setFilterUrl(uri);
 		data.setStatus("success");
 		data.setSourcetype("Map");
-		data.setNotes(layerName);
+		data.setNotes(layerDownload.getLayerTitle());
 		try {
 			userServiceApi.logDocumentDownload(data);
 		} catch (ApiException e) {
