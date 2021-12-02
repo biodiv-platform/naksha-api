@@ -3,10 +3,17 @@
  */
 package com.strandls.naksha.pojo.response;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
+
 /**
  * @author Abhishek Rudra
  *
  */
+@JsonTypeInfo(use = Id.NAME, include = As.PROPERTY, property = "type", visible = true)
+@JsonSubTypes({ @JsonSubTypes.Type(value = ObservationLocationInfoPA.class, name = "ObservationLocationInfoPA") })
 public class ObservationLocationInfo {
 
 	private String soil;
@@ -14,9 +21,6 @@ public class ObservationLocationInfo {
 	private String rainfall;
 	private String tahsil;
 	private String forestType;
-	private String protectedAreaName;
-	private String province;
-	private String district;
 
 	/**
 	 * @param soil
@@ -25,17 +29,13 @@ public class ObservationLocationInfo {
 	 * @param tahsil
 	 * @param forestType
 	 */
-	public ObservationLocationInfo(String soil, String temp, String rainfall, String tahsil, String forestType,
-			String protectedAreaName, String province, String district) {
+	public ObservationLocationInfo(String soil, String temp, String rainfall, String tahsil, String forestType) {
 		super();
 		this.soil = soil;
 		this.temp = temp;
 		this.rainfall = rainfall;
 		this.tahsil = tahsil;
 		this.forestType = forestType;
-		this.protectedAreaName = protectedAreaName;
-		this.province = province;
-		this.district = district;
 	}
 
 	public String getSoil() {
@@ -76,30 +76,6 @@ public class ObservationLocationInfo {
 
 	public void setForestType(String forestType) {
 		this.forestType = forestType;
-	}
-
-	public String getProtectedAreaName() {
-		return protectedAreaName;
-	}
-
-	public void setProtectedAreaName(String protectedAreaName) {
-		this.protectedAreaName = protectedAreaName;
-	}
-
-	public String getProvince() {
-		return province;
-	}
-
-	public void setProvince(String province) {
-		this.province = province;
-	}
-
-	public String getDistrict() {
-		return district;
-	}
-
-	public void setDistrict(String district) {
-		this.district = district;
 	}
 
 }
