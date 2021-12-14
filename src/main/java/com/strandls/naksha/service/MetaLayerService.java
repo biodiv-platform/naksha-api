@@ -28,6 +28,7 @@ public interface MetaLayerService {
 	public static final String INDIA_RAINFALLZONE = NakshaConfig.getString("layer.india.rainfallzone.name");
 	public static final String INDIA_TEMPERATURE = NakshaConfig.getString("layer.india.temperature.name");
 	public static final String GEOMETRY_COLUMN_NAME = NakshaConfig.getString("layer.geometry.column.name");
+	public static final String LAYER_MADAGASCAR = NakshaConfig.getString("layer.madagascar.location.info");
 
 	public static final String WORKSPACE = NakshaConfig.getString("workspace");
 	public static final String DATASTORE = NakshaConfig.getString("datastore");

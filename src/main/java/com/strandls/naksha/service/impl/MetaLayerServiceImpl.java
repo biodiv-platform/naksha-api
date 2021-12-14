@@ -45,6 +45,7 @@ import com.strandls.naksha.pojo.request.MetaData;
 import com.strandls.naksha.pojo.request.MetaLayerEdit;
 import com.strandls.naksha.pojo.response.LocationInfo;
 import com.strandls.naksha.pojo.response.ObservationLocationInfo;
+import com.strandls.naksha.pojo.response.ObservationLocationInfoPA;
 import com.strandls.naksha.pojo.response.TOCLayer;
 import com.strandls.naksha.service.AbstractService;
 import com.strandls.naksha.service.GeoserverService;
@@ -273,7 +274,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		List<String> keywords = new ArrayList<>();
 		keywords.add(layerTableName);
-		
+
 		boolean isPublished;
 		try {
 			String srs = metaLayerDao.findSRID(layerTableName);
@@ -445,7 +446,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		data.setFilterUrl(uri);
 		data.setStatus("success");
 		data.setSourcetype("Map");
-		data.setNotes(layerName);
+		data.setNotes(layerDownload.getLayerTitle());
 		try {
 			userServiceApi.logDocumentDownload(data);
 		} catch (ApiException e) {
@@ -558,9 +559,18 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			String rainfall = getAttributeValueAtLatlon("rain_range", INDIA_RAINFALLZONE, lon, lat);
 			String tahsil = getAttributeValueAtLatlon("tahsil", INDIA_TAHSIL, lon, lat);
 			String forestType = getAttributeValueAtLatlon("type_desc", INDIA_FOREST_TYPE, lon, lat);
+			// pa-fields
+			String protectedAreaName = getAttributeValueAtLatlon("nom", LAYER_MADAGASCAR, lon, lat);
+			String province = getAttributeValueAtLatlon("province", LAYER_MADAGASCAR, lon, lat);
+			String district = getAttributeValueAtLatlon("district", LAYER_MADAGASCAR, lon, lat);
 
 			if (soil == null && temp == null && rainfall == null && tahsil == null && forestType == null)
 				return null;
+
+			if (metaLayerDao.isTableAvailable(LAYER_MADAGASCAR) != null) {
+				return new ObservationLocationInfoPA(soil, temp, rainfall, tahsil, forestType, protectedAreaName,
+						province, district);
+			}
 
 			return new ObservationLocationInfo(soil, temp, rainfall, tahsil, forestType);
 		} catch (Exception e) {
