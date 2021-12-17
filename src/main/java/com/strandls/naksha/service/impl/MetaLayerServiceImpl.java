@@ -273,7 +273,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		List<String> keywords = new ArrayList<>();
 		keywords.add(layerTableName);
-		
+
 		boolean isPublished;
 		try {
 			String srs = metaLayerDao.findSRID(layerTableName);
@@ -592,7 +592,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		List<Object[]> result = metaLayerDao.executeQueryForLocationInfo(lat, lon);
 		LocationInfo locationResponse = new LocationInfo();
 
-		if (result.isEmpty()) {
+		if (!result.isEmpty()) {
 			Object[] values = result.get(0);
 			locationResponse.setState(values[0].toString());
 			locationResponse.setDistrict(values[1].toString());
