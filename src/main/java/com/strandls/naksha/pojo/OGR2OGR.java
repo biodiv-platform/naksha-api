@@ -94,13 +94,16 @@ public class OGR2OGR {
 		case POSTGRES_TO_SHP:
 			ogrCommand = "ogr2ogr ";
 			ogrCommand += "-f \"ESRI Shapefile\" ";
-			ogrCommand += shpFile + File.separator + nln + ".shp";
+			ogrCommand += shpFile;
 			conn = "host=" + host + " user=" + user + " dbname=" + dbName + " port=" + port;
 			if (password != null)
 				conn += " password=" + password;
 			ogrCommand += " PG:\"" + conn + "\"";
 			ogrCommand += " -sql";
 			ogrCommand += " \"" + query + "\"";
+			ogrCommand += " -lco ENCODING=UTF-8";
+			if (nln != null)
+				ogrCommand += " -nln " + nln;
 			break;
 		default:
 			throw new InvalidAttributesException("Invalid format");
@@ -108,6 +111,10 @@ public class OGR2OGR {
 	}
 
 	public Process execute(String command) {
+		System.out.println("===========================================================");
+		System.out.println("======================org2org started======================");
+		System.out.println(command);
+		System.out.println("===========================================================");
 		ProcessBuilder pb = new ProcessBuilder();
 		pb.command("/bin/bash", "-c", command);
 		try {
