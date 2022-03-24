@@ -118,9 +118,13 @@ public class OGR2OGR {
 		ProcessBuilder pb = new ProcessBuilder();
 		pb.command("/bin/bash", "-c", command);
 		try {
+			System.out.println("======================org2org started======================");
 			return pb.start();
 		} catch (IOException e) {
+			System.out.println(e.getMessage());
+			e.printStackTrace();
 			logger.error(e.getMessage());
+			System.out.println("======================org2org started====================== ended");
 			return null;
 		}
 	}
