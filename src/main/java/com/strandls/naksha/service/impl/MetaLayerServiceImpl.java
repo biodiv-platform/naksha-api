@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -433,8 +434,10 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			throw new IOException("Shape file creation failed");
 		} else {
 			System.out.println("======================org2org started====================== START");
-			process.wait(20000);
+			process.waitFor(20000, TimeUnit.MILLISECONDS);
 			process.destroy();
+			System.out.println(process.getOutputStream());
+			System.out.println(process.getErrorStream());
 			System.out.println("process.waitFor()..");
 		}
 
