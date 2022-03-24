@@ -391,6 +391,9 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		File directory = new File(DOWNLOAD_BASE_LOCATION);
 		if (!directory.exists()) {
 			directory.mkdir();
+			System.out.println("Driectory created " + directory.toString());
+		} else {
+			System.out.println("Driectory exist");
 		}
 
 		String shapeFileDirectoryPath = DOWNLOAD_BASE_LOCATION + File.separator + hashKey;
@@ -420,6 +423,8 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		String query = "select " + attributeString + " from " + layerName;
 
+		System.out.println("QUERY " + query);
+		
 		shapeFileDirectoryPath = shapeFileDirectory.getAbsolutePath();
 		OGR2OGR ogr2ogr = new OGR2OGR(OGR2OGR.POSTGRES_TO_SHP, null, layerName, null, query, shapeFileDirectoryPath,
 				null);
@@ -428,6 +433,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			throw new IOException("Shape file creation failed");
 		} else {
 			process.waitFor();
+			System.out.println("process.waitFor()..");
 		}
 
 		String zipFileLocation = shapeFileDirectoryPath + ".zip";
@@ -438,6 +444,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		String url = uri + "/" + hashKey + "/" + layerName;
 
+		System.out.println("authorId : " + authorId + " url : " + url);
 		mailService.sendMail(authorId, url, "naksha");
 		userServiceApi = headers.addUserHeaders(userServiceApi, requestToken);
 		DownloadLogData data = new DownloadLogData();
@@ -448,7 +455,9 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		data.setSourcetype("Map");
 		data.setNotes(layerDownload.getLayerTitle());
 		try {
+			System.out.println("log documentation download start..");
 			userServiceApi.logDocumentDownload(data);
+			System.out.println("log documentation download end..");
 		} catch (ApiException e) {
 			logger.error(e.getMessage());
 		}
