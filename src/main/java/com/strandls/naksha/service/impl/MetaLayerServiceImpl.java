@@ -443,7 +443,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			// process.getOutputStream();
 			printErrorStream(process);
 			printInputStream(process);
-			InputHandler outHandler = new InputHandler(process.getInputStream()));
+			InputHandler outHandler = new InputHandler(process.getInputStream());
 			//InputHandler outHandler1 = new InputHandler1(process.getOutputStream());
 			//InputHandler outHandler2 = new InputHandler2(process.getErrorStream());
 			process.waitFor();
