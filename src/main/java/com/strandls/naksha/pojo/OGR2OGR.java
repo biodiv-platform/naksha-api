@@ -119,16 +119,11 @@ public class OGR2OGR {
 		System.out.println("===========================================================");
 		ProcessBuilder pb = new ProcessBuilder();
 		pb.command("/bin/bash", "-c", command);
-		pb.redirectErrorStream(true);
+		//pb.redirectErrorStream(true);
 		try {
-			
-			System.out.println("======================org2org started======================");
 			return pb.start();
 		} catch (IOException e) {
-			System.out.println(e.getMessage());
-			e.printStackTrace();
 			logger.error(e.getMessage());
-			System.out.println("======================org2org started====================== ended");
 			return null;
 		}
 	}
