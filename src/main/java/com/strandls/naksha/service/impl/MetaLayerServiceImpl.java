@@ -432,7 +432,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		if (process == null) {
 			throw new IOException("Shape file creation failed");
 		} else {
-			//InputHandler outHandler = new InputHandler(process.getInputStream());
+			InputHandler outHandler = new InputHandler(process.getInputStream());
 			process.waitFor();
 		}
 
