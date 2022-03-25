@@ -119,7 +119,7 @@ public class OGR2OGR {
 		System.out.println("===========================================================");
 		ProcessBuilder pb = new ProcessBuilder();
 		pb.command("/bin/bash", "-c", command);
-		//pb.redirectErrorStream(true);
+		pb.redirectErrorStream(false);
 		try {
 			return pb.start();
 		} catch (IOException e) {
