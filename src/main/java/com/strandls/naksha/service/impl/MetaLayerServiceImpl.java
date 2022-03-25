@@ -1,10 +1,12 @@
 package com.strandls.naksha.service.impl;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -441,6 +443,9 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			// process.getOutputStream();
 			printErrorStream(process);
 			printInputStream(process);
+			InputHandler outHandler = new InputHandler(process.getInputStream()));
+			//InputHandler outHandler1 = new InputHandler1(process.getOutputStream());
+			//InputHandler outHandler2 = new InputHandler2(process.getErrorStream());
 			process.waitFor();
 			System.out.println(process.getOutputStream());
 			System.out.println(process.getErrorStream());
@@ -476,12 +481,45 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		// return directory.getAbsolutePath();
 	}
 
+	private static class InputHandler extends Thread {
+
+	    private final InputStream is;
+
+	    private final ByteArrayOutputStream os;
+
+	    public InputHandler(InputStream input) {
+	        this.is = input;
+	        this.os = new ByteArrayOutputStream();
+	    }
+
+	    public void run() {
+	        try {
+	            int c;
+	            while ((c = is.read()) != -1) {
+	                os.write(c);
+	            }
+	        } catch (Throwable t) {
+	            throw new IllegalStateException(t);
+	        }
+	    }
+
+	    public String getOutput() {
+	        try {
+	        os.flush();
+	        } catch (Throwable t) {
+	            throw new IllegalStateException(t);
+	        }
+	        return os.toString();
+	    }
+
+	}
+	
 	public static void printInputStream(Process process ) throws IOException {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 		String line = "";
 		
 		while((line = reader.readLine()) != null) {
-			System.out.println(line);
+			System.out.println("TEST LINE " + line);
 		}
 	}
 	
@@ -490,7 +528,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		String line = "";
 		
 		while((line = reader.readLine()) != null) {
-			System.out.println(line);
+			System.out.println("TEST ERROR " + line);
 		}
 	}
 	
