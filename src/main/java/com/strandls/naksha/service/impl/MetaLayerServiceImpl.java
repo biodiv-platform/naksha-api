@@ -433,7 +433,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			process.getInputStream();
 			InputHandler outHandler = new InputHandler(process.getInputStream());
 			process.waitFor();
-			logger.info("Thread : "+ outHandler.getId());
+			outHandler.join();
 		}
 
 		String zipFileLocation = shapeFileDirectoryPath + ".zip";
