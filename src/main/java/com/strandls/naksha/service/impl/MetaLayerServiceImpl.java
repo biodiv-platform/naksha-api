@@ -433,7 +433,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			process.getInputStream();
 			InputHandler outHandler = new InputHandler(process.getInputStream());
 			process.waitFor();
-			//outHandler.join();
+			System.out.println(outHandler.getId());
 		}
 
 		String zipFileLocation = shapeFileDirectoryPath + ".zip";
@@ -480,20 +480,10 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	            while ((c = is.read()) != -1) {
 	                os.write(c);
 	            }
-	        } catch (Throwable t) {
+	        } catch (Exception t) {
 	            throw new IllegalStateException(t);
 	        }
 	    }
-
-//	    public String getOutput() {
-//	        try {
-//	        os.flush();
-//	        } catch (Throwable t) {
-//	            throw new IllegalStateException(t);
-//	        }
-//	        return os.toString();
-//	    }
-
 	}
 	
 	public void zipFolder(String zipFileLocation, File fileDirectory) throws IOException {
