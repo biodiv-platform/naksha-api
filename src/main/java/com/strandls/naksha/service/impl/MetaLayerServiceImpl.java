@@ -1,13 +1,11 @@
 package com.strandls.naksha.service.impl;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,7 +14,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -436,6 +433,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			process.getInputStream();
 			InputHandler outHandler = new InputHandler(process.getInputStream());
 			process.waitFor();
+			//outHandler.join();
 		}
 
 		String zipFileLocation = shapeFileDirectoryPath + ".zip";
@@ -475,6 +473,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	        this.os = new ByteArrayOutputStream();
 	    }
 
+	    @Override
 	    public void run() {
 	        try {
 	            int c;
@@ -486,14 +485,14 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	        }
 	    }
 
-	    public String getOutput() {
-	        try {
-	        os.flush();
-	        } catch (Throwable t) {
-	            throw new IllegalStateException(t);
-	        }
-	        return os.toString();
-	    }
+//	    public String getOutput() {
+//	        try {
+//	        os.flush();
+//	        } catch (Throwable t) {
+//	            throw new IllegalStateException(t);
+//	        }
+//	        return os.toString();
+//	    }
 
 	}
 	
