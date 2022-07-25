@@ -12,6 +12,7 @@ export ARTIFACTORY_PASSWORD=password
 export ARTIFACTORY_URL=http://venus.strandls.com/artifactory
 export MTPROP_SCHEMES=http
 export MTPROP_HOST=localhost:8080
+export ARTIFACTORY_COMPAT=1
 
 # Naksha Specific
 export MTPROP_GEOSERVER_URL="http://localhost:8080/geoserver/"
