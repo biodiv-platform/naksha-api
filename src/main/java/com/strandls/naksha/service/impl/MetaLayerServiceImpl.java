@@ -1,9 +1,11 @@
 package com.strandls.naksha.service.impl;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -427,7 +429,11 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		if (process == null) {
 			throw new IOException("Shape file creation failed");
 		} else {
+			process.getErrorStream();
+			process.getInputStream();
+			InputHandler outHandler = new InputHandler(process.getInputStream());
 			process.waitFor();
+			outHandler.join();
 		}
 
 		String zipFileLocation = shapeFileDirectoryPath + ".zip";
@@ -456,6 +462,30 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		// return directory.getAbsolutePath();
 	}
 
+	private static class InputHandler extends Thread {
+
+	    private final InputStream is;
+
+	    private final ByteArrayOutputStream os;
+
+	    public InputHandler(InputStream input) {
+	        this.is = input;
+	        this.os = new ByteArrayOutputStream();
+	    }
+
+	    @Override
+	    public void run() {
+	        try {
+	            int c;
+	            while ((c = is.read()) != -1) {
+	                os.write(c);
+	            }
+	        } catch (Exception t) {
+	            throw new IllegalStateException(t);
+	        }
+	    }
+	}
+	
 	public void zipFolder(String zipFileLocation, File fileDirectory) throws IOException {
 		FileOutputStream fos = new FileOutputStream(zipFileLocation);
 		try (ZipOutputStream zipOut = new ZipOutputStream(fos)) {

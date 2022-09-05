@@ -1,6 +1,5 @@
 package com.strandls.naksha.pojo;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
@@ -109,7 +108,7 @@ public class OGR2OGR {
 			throw new InvalidAttributesException("Invalid format");
 		}
 	}
-
+	
 	public Process execute(String command) {
 		System.out.println("===========================================================");
 		System.out.println("======================org2org started======================");
@@ -117,6 +116,7 @@ public class OGR2OGR {
 		System.out.println("===========================================================");
 		ProcessBuilder pb = new ProcessBuilder();
 		pb.command("/bin/bash", "-c", command);
+		pb.redirectErrorStream(true);
 		try {
 			return pb.start();
 		} catch (IOException e) {
