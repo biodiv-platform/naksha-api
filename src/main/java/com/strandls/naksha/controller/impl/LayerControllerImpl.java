@@ -61,7 +61,7 @@ public class LayerControllerImpl implements LayerController {
 
 	@Inject
 	private GeoserverStyleService geoserverStyleService;
-	
+
 	@Override
 	@GET
 	@Path(ApiConstants.LOCATIONINFO)
@@ -99,7 +99,7 @@ public class LayerControllerImpl implements LayerController {
 	@Path("count")
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	@ApiOperation(value = "Get meta data of all the layers", response = TOCLayer.class, responseContainer = "List")
+	@ApiOperation(value = "Get meta data of all the layers", response = String.class)
 	public Response getLayerCount(@Context HttpServletRequest request) {
 		try {
 			Long layerCount = metaLayerService.getLayerCount(request);
@@ -109,7 +109,7 @@ public class LayerControllerImpl implements LayerController {
 					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
 		}
 	}
-	
+
 	@Override
 	@Path("onClick/{layer}")
 	@GET
@@ -182,7 +182,7 @@ public class LayerControllerImpl implements LayerController {
 	@ApiOperation(value = "prepate shape file", notes = "Return the shape file location", response = Map.class)
 	@ValidateUser
 	public Response prepareDownload(@Context HttpServletRequest request,
-			@ApiParam("layerDownload") LayerDownload layerDownload){
+			@ApiParam("layerDownload") LayerDownload layerDownload) {
 		try {
 			Map<String, String> retValue = metaLayerService.prepareDownloadLayer(request, layerDownload);
 			return Response.ok().entity(retValue).build();
