@@ -155,12 +155,14 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 	public List<Object[]> executeQueryForLocationInfo(String lat, String lon) {
 		Double x = Double.parseDouble(lon);
 		Double y = Double.parseDouble(lat);
-		String queryStr = "SELECT state,district,tahsil from " + MetaLayerService.INDIA_TAHSIL + " where st_contains"
-				+ "(" + MetaLayerService.INDIA_TAHSIL + "." + MetaLayerService.GEOMETRY_COLUMN_NAME
-				+ ", ST_GeomFromText('POINT(" + x + " " + y + ")',0))";
+		String queryStr = "SELECT " + MetaLayerService.STATE_COLUMN_NAME + ", " + MetaLayerService.DISTRICT_COLUMN_NAME
+				+ ", " + MetaLayerService.TAHSIL_COLUMN_NAME + " from " + MetaLayerService.INDIA_TAHSIL
+				+ " where st_contains" + "(" + MetaLayerService.INDIA_TAHSIL + "."
+				+ MetaLayerService.GEOMETRY_COLUMN_NAME + ", ST_GeomFromText('POINT(" + x + " " + y + ")',0))";
 
 		Session session = sessionFactory.openSession();
 		Query query = session.createNativeQuery(queryStr);
+
 		List<Object[]> entity;
 		try {
 			entity = query.getResultList();
