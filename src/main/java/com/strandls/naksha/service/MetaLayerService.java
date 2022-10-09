@@ -32,6 +32,9 @@ public interface MetaLayerService {
 
 	public static final String WORKSPACE = NakshaConfig.getString("workspace");
 	public static final String DATASTORE = NakshaConfig.getString("datastore");
+	public static final String TAHSIL_COLUMN_NAME = NakshaConfig.getString("layer.india.tahsil.tahsil.column.name");
+	public static final String DISTRICT_COLUMN_NAME = NakshaConfig.getString("layer.india.tahsil.district.column.name");
+	public static final String STATE_COLUMN_NAME = NakshaConfig.getString("layer.india.tahsil.state.column.name");
 
 	public MetaLayer findByLayerTableName(String layerName);
 

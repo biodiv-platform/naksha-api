@@ -557,7 +557,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			String soil = getAttributeValueAtLatlon("descriptio", INDIA_SOIL, lon, lat);
 			String temp = getAttributeValueAtLatlon("temp_c", INDIA_TEMPERATURE, lon, lat);
 			String rainfall = getAttributeValueAtLatlon("rain_range", INDIA_RAINFALLZONE, lon, lat);
-			String tahsil = getAttributeValueAtLatlon("tahsil", INDIA_TAHSIL, lon, lat);
+			String tahsil = getAttributeValueAtLatlon(TAHSIL_COLUMN_NAME, INDIA_TAHSIL, lon, lat);
 			String forestType = getAttributeValueAtLatlon("type_desc", INDIA_FOREST_TYPE, lon, lat);
 			// pa-fields
 			String protectedAreaName = getAttributeValueAtLatlon("nom", LAYER_MADAGASCAR, lon, lat);
