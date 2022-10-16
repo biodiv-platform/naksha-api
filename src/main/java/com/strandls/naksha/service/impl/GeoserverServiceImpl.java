@@ -32,6 +32,7 @@ import com.strandls.naksha.service.GeoserverService;
 
 import it.geosolutions.geoserver.rest.GeoServerRESTManager;
 import it.geosolutions.geoserver.rest.encoder.GSLayerEncoder;
+import it.geosolutions.geoserver.rest.encoder.GSResourceEncoder.ProjectionPolicy;
 import it.geosolutions.geoserver.rest.encoder.feature.GSFeatureTypeEncoder;
 
 public class GeoserverServiceImpl implements GeoserverService {
@@ -97,9 +98,32 @@ public class GeoserverServiceImpl implements GeoserverService {
 	}
 
 	@Override
+	public boolean publishGeoTiffStyleLayer(String workspace, String styleName, File sldStyleFile)
+			throws FileNotFoundException {
+		try {
+			
+			boolean istrue = manager.getReader().existGeoserver();
+			boolean demo =  manager.getPublisher().publishStyleInWorkspace(workspace, sldStyleFile, styleName);
+return demo;
+		}catch (Exception e) {
+			throw new FileNotFoundException("Geoserver publication of layer failed");
+		}
+	}
+
+	@Override
 	public boolean publishGeoTiffLayer(String workspace, String datastore, File geoTiffFile)
 			throws FileNotFoundException {
+
 		return manager.getPublisher().publishGeoTIFF(workspace, datastore, geoTiffFile);
+	}
+
+	@Override
+	public boolean publishGeoTiffLayerWithStyle(String workspace, String datastore, String srs,
+			String styleName, File geoTiffFile) throws FileNotFoundException, IllegalArgumentException {
+		srs = srs == null ? "EPSG:4326" : srs;
+		return manager.getPublisher().publishGeoTIFF(workspace, datastore, datastore, geoTiffFile, srs,
+				ProjectionPolicy.NONE, styleName, null);
+
 	}
 
 	@Override

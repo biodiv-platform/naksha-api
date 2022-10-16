@@ -25,5 +25,12 @@ public interface GeoserverService {
 	public byte[] getRequest(String url, List<NameValuePair> params);
 
 	boolean publishGeoTiffLayer(String workspace, String datastore, File geoTiffFile) throws FileNotFoundException;
+	
+	boolean publishGeoTiffStyleLayer(String workspace, String datastore, File sldStyleFile) throws FileNotFoundException;
+
+	boolean publishGeoTiffLayerWithStyle(String workspace, String datastore, String srs, String styleName,
+			File geoTiffFile) throws FileNotFoundException, IllegalArgumentException;
+
+	
 
 }

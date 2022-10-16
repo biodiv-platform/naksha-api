@@ -38,6 +38,7 @@ public class MetaLayerUtil {
 	private static final String FINAL = "final";
 
 	private static final String[] COMPULSORY_EXTENSIONS = { "shp", "dbf", "shx" };
+	private static final String[] RASTER_COMPULSORY_EXTENSIONS = { "tif", "sld"};
 	private static final String[] OPTIONAL_EXTENSIONS = { "prj", "sbn", "sbx", "fbn", "fbx", "ain", "aih", "ixs", "mxs",
 			"atx", "shp.xml", "cpg", "qix" };
 
@@ -124,6 +125,7 @@ public class MetaLayerUtil {
 			String location = copyFile(multiPart, type, tmpDirPath, false);
 			result.put(type, location);
 		}
+		
 
 		for (String type : OPTIONAL_EXTENSIONS) {
 			String location = copyFile(multiPart, type, tmpDirPath, true);
@@ -133,6 +135,25 @@ public class MetaLayerUtil {
 		result.put(DIR_PATH, tmpDirPath);
 		return result;
 	}
+	
+	public static Map<String, String> copyRasterFiles(FormDataMultiPart multiPart) throws IOException {
+
+		Map<String, String> result = new HashMap<>();
+		String dataPath = NakshaConfig.getString(TEMP_DIR_PATH) + File.separator + System.currentTimeMillis();
+		String tmpDirPath = dataPath + File.separator + FINAL;
+		
+		for (String type :RASTER_COMPULSORY_EXTENSIONS) {
+			String location = copyFile(multiPart, type, tmpDirPath, false);
+			result.put(type, location);
+		}
+
+
+		result.put(DIR_PATH, tmpDirPath);
+		return result;
+	}
+	
+	
+	
 
 	public static Map<String, String> copyGeneralFile(FormDataMultiPart multiPart, String type, boolean optional)
 			throws IOException {

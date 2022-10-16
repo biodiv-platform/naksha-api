@@ -201,10 +201,13 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		return metaLayerDao.findAll(limit, offset);
 	}
 
-	public void uploadGeoTiff(String geoLayerName, String inputGeoTiffFileLocation, Map<String, Object> result)
-			throws IOException {
+	public void uploadGeoTiff(String geoLayerName, String inputGeoTiffFileLocation, String inputGeoTiffStyleLocation,
+			String styleName, Map<String, Object> result) throws IOException {
 		File inputGeoTiffFile = new File(inputGeoTiffFileLocation);
-		boolean isPublished = geoserverService.publishGeoTiffLayer(WORKSPACE, geoLayerName, inputGeoTiffFile);
+//		geoserverService.publishGeoTiffLayer(WORKSPACE, geoLayerName, inputGeoTiffFile);
+
+		boolean isPublished = geoserverService.publishGeoTiffLayerWithStyle(WORKSPACE, geoLayerName, null, styleName,
+				inputGeoTiffFile);
 
 		if (!isPublished) {
 			throw new IOException("Geoserver publication of layer failed");
@@ -212,6 +215,22 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		result.put("Uplaoded on geoserver", geoLayerName);
 		RESTLayer layer = geoserverService.getManager().getReader().getLayer(WORKSPACE, geoLayerName);
 		result.put("Geoserver layer url", layer.getResourceUrl());
+	}
+
+	public String uploadSLDStyle(String styleName, String inputStyleFile, Map<String, Object> result)
+			throws IOException {
+		File inputStyle = new File(inputStyleFile);
+		String resultantStyleName = null;
+		boolean isPublished = geoserverService.publishGeoTiffStyleLayer(WORKSPACE, styleName, inputStyle);
+
+		if (!isPublished) {
+			throw new IOException("Geoserver publication of layer failed");
+		}
+		resultantStyleName = WORKSPACE + ":" + styleName;
+		result.put("Uplaoded SLD on geoserver", styleName);
+		result.put("Geoserver layer file name", resultantStyleName);
+		return resultantStyleName;
+
 	}
 
 	@Override
@@ -229,6 +248,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		Map<String, String> copiedFiles;
 		String ogrInputFileLocation;
+		String ogrInputStyleFileLocation = null;
 		String layerName;
 
 		if ("shp".equals(fileType)) {
@@ -240,8 +260,9 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			ogrInputFileLocation = copiedFiles.get("vrt");
 			layerName = multiPart.getField("csv").getContentDisposition().getFileName().split("\\.")[0].toLowerCase();
 		} else if ("tif".equals(fileType)) {
-			copiedFiles = MetaLayerUtil.copyGeneralFile(multiPart, "tif", false);
+			copiedFiles = MetaLayerUtil.copyRasterFiles(multiPart);
 			ogrInputFileLocation = copiedFiles.get("tif");
+			ogrInputStyleFileLocation = copiedFiles.get("sld");
 			layerName = multiPart.getField("tif").getContentDisposition().getFileName().split("\\.")[0].toLowerCase();
 		} else {
 			throw new IllegalArgumentException("Invalid file type");
@@ -258,9 +279,19 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		metaLayer.setLayerTableName(layerTableName);
 		update(metaLayer);
 
-		if ("tif".equals(fileType)) {
-			uploadGeoTiff(layerTableName, ogrInputFileLocation, result);
-			return result;
+		if ("tif".equals(fileType) ) {
+			try {
+				String styleName = uploadSLDStyle(layerTableName,ogrInputStyleFileLocation  , result);
+				uploadGeoTiff(layerTableName, ogrInputFileLocation,ogrInputFileLocation,styleName, result);
+				return result;
+			}catch(Exception e) {
+				e.printStackTrace();
+				MetaLayerUtil.deleteFiles(dirPath);
+				metaLayerDao.delete(metaLayer);
+				Thread.currentThread().interrupt();
+				throw new IOException("Table creation failed");
+			}
+			
 		}
 		try {
 			createDBTable(layerTableName, ogrInputFileLocation, layerColumnDescription, layerFileDescription, result);
