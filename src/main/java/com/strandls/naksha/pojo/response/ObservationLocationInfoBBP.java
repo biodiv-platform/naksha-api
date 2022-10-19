@@ -4,10 +4,6 @@ public class ObservationLocationInfoBBP extends ObservationLocationInfo {
 	private String dzongkhag;
 	private String geog;
 
-	public ObservationLocationInfoBBP(String soil, String temp, String rainfall, String tahsil, String forestType) {
-		super(soil, temp, rainfall, tahsil, forestType);
-	}
-
 	public ObservationLocationInfoBBP(String soil, String temp, String rainfall, String tahsil, String forestType,
 			String dzongkhag, String geog) {
 		super(soil, temp, rainfall, tahsil, forestType);

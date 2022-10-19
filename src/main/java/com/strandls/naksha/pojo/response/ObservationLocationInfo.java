@@ -13,7 +13,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
  *
  */
 @JsonTypeInfo(use = Id.NAME, include = As.PROPERTY, property = "type", visible = true)
-@JsonSubTypes({ @JsonSubTypes.Type(value = ObservationLocationInfoPA.class, name = "ObservationLocationInfoPA") })
+@JsonSubTypes({ @JsonSubTypes.Type(value = ObservationLocationInfoPA.class, name = "ObservationLocationInfoPA"),
+		@JsonSubTypes.Type(value = ObservationLocationInfoBBP.class, name = "ObservationLocationInfoBBP") })
 public class ObservationLocationInfo {
 
 	private String soil;
