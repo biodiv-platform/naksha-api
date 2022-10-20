@@ -45,6 +45,7 @@ import com.strandls.naksha.pojo.request.MetaData;
 import com.strandls.naksha.pojo.request.MetaLayerEdit;
 import com.strandls.naksha.pojo.response.LocationInfo;
 import com.strandls.naksha.pojo.response.ObservationLocationInfo;
+import com.strandls.naksha.pojo.response.ObservationLocationInfoBBP;
 import com.strandls.naksha.pojo.response.ObservationLocationInfoPA;
 import com.strandls.naksha.pojo.response.TOCLayer;
 import com.strandls.naksha.service.AbstractService;
@@ -564,6 +565,10 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			String province = getAttributeValueAtLatlon("province", LAYER_MADAGASCAR, lon, lat);
 			String district = getAttributeValueAtLatlon("district", LAYER_MADAGASCAR, lon, lat);
 
+			// bbp fields
+			String dzongkhag = getAttributeValueAtLatlon("dzongkhag", LAYER_BBP, lon, lat);
+			String geog = getAttributeValueAtLatlon("geog", LAYER_BBP, lon, lat);
+
 			if (soil == null && temp == null && rainfall == null && tahsil == null && forestType == null)
 				return null;
 
@@ -572,7 +577,12 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 						province, district);
 			}
 
+			if (metaLayerDao.isTableAvailable(LAYER_BBP) != null) {
+				return new ObservationLocationInfoBBP(soil, temp, rainfall, tahsil, forestType, dzongkhag, geog);
+			}
+
 			return new ObservationLocationInfo(soil, temp, rainfall, tahsil, forestType);
+
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 		}
