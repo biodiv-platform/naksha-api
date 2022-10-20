@@ -234,21 +234,35 @@ public class GeoserverServiceImpl implements GeoserverService {
 
 	@Override
 	public List<List<Double>> getBBoxByLayerName(String workspace, String layerName) {
-		RESTLayer layer = manager.getReader().getLayer(workspace, layerName);
-		RESTBoundingBox bbox = manager.getReader().getFeatureType(layer).getLatLonBoundingBox();
-		List<List<Double>> boundingBox = new ArrayList<>();
-		List<Double> topLeft = new ArrayList<>();
-		List<Double> bottomRight = new ArrayList<>();
+		List<List<Double>> boundingBox = new ArrayList<List<Double>>();
+		try {
+			RESTLayer layer = manager.getReader().getLayer(workspace, layerName);
+			RESTBoundingBox bbox = null;
+			if (layer == null)
+				return null;
+			if(layer.getType() == RESTLayer.Type.RASTER) {
+				bbox = manager.getReader().getCoverage(layer).getLatLonBoundingBox();
+			}else {
+				bbox = manager.getReader().getFeatureType(layer).getLatLonBoundingBox();
 
-		topLeft.add(bbox.getMinX());
-		topLeft.add(bbox.getMaxY());
+			}
+			
+			List<Double> topLeft = new ArrayList<>();
+			List<Double> bottomRight = new ArrayList<>();
 
-		bottomRight.add(bbox.getMaxX());
-		bottomRight.add(bbox.getMinY());
+			topLeft.add(bbox.getMinX());
+			topLeft.add(bbox.getMaxY());
 
-		boundingBox.add(topLeft);
-		boundingBox.add(bottomRight);
+			bottomRight.add(bbox.getMaxX());
+			bottomRight.add(bbox.getMinY());
 
-		return boundingBox;
+			boundingBox.add(topLeft);
+			boundingBox.add(bottomRight);
+
+			return boundingBox;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 }
