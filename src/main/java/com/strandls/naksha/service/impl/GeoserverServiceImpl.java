@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
@@ -31,6 +32,8 @@ import com.strandls.naksha.NakshaConfig;
 import com.strandls.naksha.service.GeoserverService;
 
 import it.geosolutions.geoserver.rest.GeoServerRESTManager;
+import it.geosolutions.geoserver.rest.decoder.RESTBoundingBox;
+import it.geosolutions.geoserver.rest.decoder.RESTLayer;
 import it.geosolutions.geoserver.rest.encoder.GSLayerEncoder;
 import it.geosolutions.geoserver.rest.encoder.GSResourceEncoder.ProjectionPolicy;
 import it.geosolutions.geoserver.rest.encoder.feature.GSFeatureTypeEncoder;
@@ -101,11 +104,11 @@ public class GeoserverServiceImpl implements GeoserverService {
 	public boolean publishGeoTiffStyleLayer(String workspace, String styleName, File sldStyleFile)
 			throws FileNotFoundException {
 		try {
-			
+
 			boolean istrue = manager.getReader().existGeoserver();
-			boolean demo =  manager.getPublisher().publishStyleInWorkspace(workspace, sldStyleFile, styleName);
-return demo;
-		}catch (Exception e) {
+			boolean demo = manager.getPublisher().publishStyleInWorkspace(workspace, sldStyleFile, styleName);
+			return demo;
+		} catch (Exception e) {
 			throw new FileNotFoundException("Geoserver publication of layer failed");
 		}
 	}
@@ -118,8 +121,8 @@ return demo;
 	}
 
 	@Override
-	public boolean publishGeoTiffLayerWithStyle(String workspace, String datastore, String srs,
-			String styleName, File geoTiffFile) throws FileNotFoundException, IllegalArgumentException {
+	public boolean publishGeoTiffLayerWithStyle(String workspace, String datastore, String srs, String styleName,
+			File geoTiffFile) throws FileNotFoundException, IllegalArgumentException {
 		srs = srs == null ? "EPSG:4326" : srs;
 		return manager.getPublisher().publishGeoTIFF(workspace, datastore, datastore, geoTiffFile, srs,
 				ProjectionPolicy.NONE, styleName, null);
@@ -227,5 +230,25 @@ return demo;
 		}
 
 		return byteArrayResponse != null ? byteArrayResponse : new byte[0];
+	}
+
+	@Override
+	public List<List<Double>> getBBoxByLayerName(String workspace, String layerName) {
+		RESTLayer layer = manager.getReader().getLayer(workspace, layerName);
+		RESTBoundingBox bbox = manager.getReader().getFeatureType(layer).getLatLonBoundingBox();
+		List<List<Double>> boundingBox = new ArrayList<>();
+		List<Double> topLeft = new ArrayList<>();
+		List<Double> bottomRight = new ArrayList<>();
+
+		topLeft.add(bbox.getMinX());
+		topLeft.add(bbox.getMaxY());
+
+		bottomRight.add(bbox.getMaxX());
+		bottomRight.add(bbox.getMinY());
+
+		boundingBox.add(topLeft);
+		boundingBox.add(bottomRight);
+
+		return boundingBox;
 	}
 }

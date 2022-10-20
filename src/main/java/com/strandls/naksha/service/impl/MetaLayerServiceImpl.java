@@ -137,7 +137,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 			Boolean isDownloadable = checkDownLoadAccess(userProfile, metaLayer);
 
-			List<List<Double>> bbox = getBoundingBox(metaLayer);
+			List<List<Double>> bbox = geoserverService.getBBoxByLayerName(WORKSPACE, metaLayer.getLayerTableName());
 			String thumbnail = getThumbnail(metaLayer, bbox);
 			TOCLayer tocLayer = new TOCLayer(metaLayer, userIbp, isDownloadable, bbox, thumbnail);
 			layerLists.add(tocLayer);
@@ -279,19 +279,19 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		metaLayer.setLayerTableName(layerTableName);
 		update(metaLayer);
 
-		if ("tif".equals(fileType) ) {
+		if ("tif".equals(fileType)) {
 			try {
-				String styleName = uploadSLDStyle(layerTableName,ogrInputStyleFileLocation  , result);
-				uploadGeoTiff(layerTableName, ogrInputFileLocation,ogrInputFileLocation,styleName, result);
+				String styleName = uploadSLDStyle(layerTableName, ogrInputStyleFileLocation, result);
+				uploadGeoTiff(layerTableName, ogrInputFileLocation, ogrInputFileLocation, styleName, result);
 				return result;
-			}catch(Exception e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 				MetaLayerUtil.deleteFiles(dirPath);
 				metaLayerDao.delete(metaLayer);
 				Thread.currentThread().interrupt();
 				throw new IOException("Table creation failed");
 			}
-			
+
 		}
 		try {
 			createDBTable(layerTableName, ogrInputFileLocation, layerColumnDescription, layerFileDescription, result);
