@@ -241,9 +241,9 @@ public class GeoserverServiceImpl implements GeoserverService {
 			if (layer == null)
 				return null;
 			if(layer.getType() == RESTLayer.Type.RASTER) {
-				bbox = manager.getReader().getCoverage(layer).getLatLonBoundingBox();
+				bbox = manager.getReader().getCoverage(layer).getNativeBoundingBox();
 			}else {
-				bbox = manager.getReader().getFeatureType(layer).getLatLonBoundingBox();
+				bbox = manager.getReader().getFeatureType(layer).getNativeBoundingBox();
 
 			}
 			
@@ -251,10 +251,10 @@ public class GeoserverServiceImpl implements GeoserverService {
 			List<Double> bottomRight = new ArrayList<>();
 
 			topLeft.add(bbox.getMinX());
-			topLeft.add(bbox.getMaxY());
+			topLeft.add(bbox.getMinY() );
 
 			bottomRight.add(bbox.getMaxX());
-			bottomRight.add(bbox.getMinY());
+			bottomRight.add(bbox.getMaxY());
 
 			boundingBox.add(topLeft);
 			boundingBox.add(bottomRight);
