@@ -20,6 +20,8 @@ public interface GeoserverService {
 			List<String> keywords, List<String> styles);
 		
 	public boolean removeLayer(String workspace, String layerName);
+	
+	public boolean removeDataStore(String workspace, String layerName);
 
 	public byte[] postRequest(String uri, String styleContent, String contentType, List<NameValuePair> params);
 	public byte[] getRequest(String url, List<NameValuePair> params);

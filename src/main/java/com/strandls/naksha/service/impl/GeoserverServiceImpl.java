@@ -105,9 +105,7 @@ public class GeoserverServiceImpl implements GeoserverService {
 			throws FileNotFoundException {
 		try {
 
-			boolean istrue = manager.getReader().existGeoserver();
-			boolean demo = manager.getPublisher().publishStyleInWorkspace(workspace, sldStyleFile, styleName);
-			return demo;
+			return manager.getPublisher().publishStyleInWorkspace(workspace, sldStyleFile, styleName);
 		} catch (Exception e) {
 			throw new FileNotFoundException("Geoserver publication of layer failed");
 		}
@@ -127,6 +125,11 @@ public class GeoserverServiceImpl implements GeoserverService {
 		return manager.getPublisher().publishGeoTIFF(workspace, datastore, datastore, geoTiffFile, srs,
 				ProjectionPolicy.NONE, styleName, null);
 
+	}
+
+	@Override
+	public boolean removeDataStore(String workspace, String layerName) {
+		return manager.getPublisher().removeDatastore(workspace, layerName, true);
 	}
 
 	@Override
@@ -239,19 +242,19 @@ public class GeoserverServiceImpl implements GeoserverService {
 			RESTLayer layer = manager.getReader().getLayer(workspace, layerName);
 			RESTBoundingBox bbox = null;
 			if (layer == null)
-				return null;
-			if(layer.getType() == RESTLayer.Type.RASTER) {
+				return boundingBox;
+			if (layer.getType() == RESTLayer.Type.RASTER) {
 				bbox = manager.getReader().getCoverage(layer).getNativeBoundingBox();
-			}else {
+			} else {
 				bbox = manager.getReader().getFeatureType(layer).getNativeBoundingBox();
 
 			}
-			
+
 			List<Double> topLeft = new ArrayList<>();
 			List<Double> bottomRight = new ArrayList<>();
 
 			topLeft.add(bbox.getMinX());
-			topLeft.add(bbox.getMinY() );
+			topLeft.add(bbox.getMinY());
 
 			bottomRight.add(bbox.getMaxX());
 			bottomRight.add(bbox.getMaxY());
@@ -261,8 +264,8 @@ public class GeoserverServiceImpl implements GeoserverService {
 
 			return boundingBox;
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error(e.getMessage());
 		}
-		return null;
+		return boundingBox;
 	}
 }

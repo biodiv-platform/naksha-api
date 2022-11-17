@@ -39,6 +39,7 @@ import com.strandls.naksha.pojo.MetaLayer;
 import com.strandls.naksha.pojo.OGR2OGR;
 import com.strandls.naksha.pojo.enumtype.DownloadAccess;
 import com.strandls.naksha.pojo.enumtype.LayerStatus;
+import com.strandls.naksha.pojo.enumtype.LayerType;
 import com.strandls.naksha.pojo.request.LayerDownload;
 import com.strandls.naksha.pojo.request.LayerFileDescription;
 import com.strandls.naksha.pojo.request.MetaData;
@@ -58,9 +59,6 @@ import com.strandls.user.ApiException;
 import com.strandls.user.controller.UserServiceApi;
 import com.strandls.user.pojo.DownloadLogData;
 import com.strandls.user.pojo.UserIbp;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.io.WKTReader;
 
 import it.geosolutions.geoserver.rest.decoder.RESTLayer;
 import net.minidev.json.JSONArray;
@@ -83,9 +81,6 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 	@Inject
 	private MetaLayerDao metaLayerDao;
-
-	@Inject
-	private GeometryFactory geoFactory;
 
 	@Inject
 	private MailService mailService;
@@ -133,7 +128,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 			Long authorId = metaLayer.getUploaderUserId();
 
-			UserIbp userIbp = userServiceApi.getUserIbp(authorId + "");
+			UserIbp userIbp =null;
 
 			Boolean isDownloadable = checkDownLoadAccess(userProfile, metaLayer);
 
@@ -146,8 +141,9 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	}
 
 	private String getThumbnail(MetaLayer metaLayer, List<List<Double>> bbox) throws URISyntaxException {
-		String bboxValue = bbox!= null ?bbox.get(0).get(0) + "," + bbox.get(0).get(1) + "," + bbox.get(1).get(0) + ","
-				+ bbox.get(1).get(1):"";
+		String bboxValue = bbox != null
+				? bbox.get(0).get(0) + "," + bbox.get(0).get(1) + "," + bbox.get(1).get(0) + "," + bbox.get(1).get(1)
+				: "";
 
 		String uri = ApiConstants.GEOSERVER + ApiConstants.THUMBNAILS + "/" + MetaLayerService.WORKSPACE + "/"
 				+ metaLayer.getLayerTableName();
@@ -164,36 +160,6 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		builder.setParameters(params);
 		return builder.build().toString();
-	}
-
-	private List<List<Double>> getBoundingBox(MetaLayer metaLayer) throws com.vividsolutions.jts.io.ParseException {
-		String bbox = metaLayerDao.getBoundingBox(metaLayer.getLayerTableName());
-
-		WKTReader reader = new WKTReader(geoFactory);
-		Geometry topology = reader.read(bbox);
-
-		Geometry envelop = topology.getEnvelope();
-
-		Double top = envelop.getCoordinates()[0].x;
-		Double left = envelop.getCoordinates()[0].y;
-		Double bottom = envelop.getCoordinates()[2].x;
-		Double right = envelop.getCoordinates()[2].y;
-
-		List<List<Double>> boundingBox = new ArrayList<>();
-
-		List<Double> topLeft = new ArrayList<>();
-		List<Double> bottomRight = new ArrayList<>();
-
-		topLeft.add(top);
-		topLeft.add(left);
-
-		bottomRight.add(bottom);
-		bottomRight.add(right);
-
-		boundingBox.add(topLeft);
-		boundingBox.add(bottomRight);
-
-		return boundingBox;
 	}
 
 	@Override
@@ -285,7 +251,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 				uploadGeoTiff(layerTableName, ogrInputFileLocation, ogrInputFileLocation, styleName, result);
 				return result;
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.error(e.getMessage());
 				MetaLayerUtil.deleteFiles(dirPath);
 				metaLayerDao.delete(metaLayer);
 				Thread.currentThread().interrupt();
@@ -569,6 +535,9 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		String dirPath = metaLayer.getDirPath();
 		MetaLayerUtil.deleteFiles(dirPath);
 
+		if (metaLayer.getLayerType() == LayerType.RASTER) {
+			geoserverService.removeDataStore(WORKSPACE, layerName);
+		}
 		// remove-published layer from the geoserver
 		geoserverService.removeLayer(WORKSPACE, layerName);
 
