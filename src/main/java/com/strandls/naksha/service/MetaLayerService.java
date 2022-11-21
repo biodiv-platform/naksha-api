@@ -43,7 +43,7 @@ public interface MetaLayerService {
 	public List<MetaLayer> findAll(HttpServletRequest request, Integer limit, Integer offset);
 
 	public Map<String, Object> uploadLayer(HttpServletRequest request, FormDataMultiPart multiPart)
-			throws IOException, ParseException, InvalidAttributesException, InterruptedException;
+			throws Exception;
 
 	public Map<String, String> prepareDownloadLayer(HttpServletRequest request, LayerDownload layerDownload)
 			throws InvalidAttributesException, InterruptedException, IOException;

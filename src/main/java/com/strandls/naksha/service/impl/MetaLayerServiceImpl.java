@@ -200,8 +200,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	}
 
 	@Override
-	public Map<String, Object> uploadLayer(HttpServletRequest request, FormDataMultiPart multiPart)
-			throws IOException, ParseException, InvalidAttributesException, InterruptedException {
+	public Map<String, Object> uploadLayer(HttpServletRequest request, FormDataMultiPart multiPart) throws Exception {
 		Map<String, Object> result = new HashMap<>();
 
 		String jsonString = MetaLayerUtil.getMetadataAsJson(multiPart).toJSONString();
