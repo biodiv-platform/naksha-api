@@ -29,7 +29,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.strandls.naksha.NakshaConfig;
+import com.strandls.naksha.dao.MetaLayerDao;
+import com.strandls.naksha.pojo.MetaLayer;
 import com.strandls.naksha.service.GeoserverService;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.io.WKTReader;
 
 import it.geosolutions.geoserver.rest.GeoServerRESTManager;
 import it.geosolutions.geoserver.rest.decoder.RESTBoundingBox;
@@ -48,6 +53,11 @@ public class GeoserverServiceImpl implements GeoserverService {
 
 	private GeoServerRESTManager manager;
 	private HttpClientContext context;
+
+	@Inject
+	private MetaLayerDao metaLayerDao;
+	@Inject
+	private GeometryFactory geoFactory;
 
 	@Inject
 	public GeoserverServiceImpl() throws MalformedURLException {
@@ -235,10 +245,41 @@ public class GeoserverServiceImpl implements GeoserverService {
 		return byteArrayResponse != null ? byteArrayResponse : new byte[0];
 	}
 
+	private List<List<Double>> getBoundingBox(MetaLayer metaLayer) throws com.vividsolutions.jts.io.ParseException {
+		String bbox = metaLayerDao.getBoundingBox(metaLayer.getLayerTableName());
+
+		WKTReader reader = new WKTReader(geoFactory);
+		Geometry topology = reader.read(bbox);
+
+		Geometry envelop = topology.getEnvelope();
+
+		Double top = envelop.getCoordinates()[0].x;
+		Double left = envelop.getCoordinates()[0].y;
+		Double bottom = envelop.getCoordinates()[2].x;
+		Double right = envelop.getCoordinates()[2].y;
+
+		List<List<Double>> boundingBox = new ArrayList<>();
+
+		List<Double> topLeft = new ArrayList<>();
+		List<Double> bottomRight = new ArrayList<>();
+
+		topLeft.add(top);
+		topLeft.add(left);
+
+		bottomRight.add(bottom);
+		bottomRight.add(right);
+
+		boundingBox.add(topLeft);
+		boundingBox.add(bottomRight);
+
+		return boundingBox;
+	}
+
 	@Override
 	public List<List<Double>> getBBoxByLayerName(String workspace, String layerName) {
 		List<List<Double>> boundingBox = new ArrayList<List<Double>>();
 		try {
+			MetaLayer layerMeta = metaLayerDao.findByLayerTableName(layerName);
 			RESTLayer layer = manager.getReader().getLayer(workspace, layerName);
 			RESTBoundingBox bbox = null;
 			if (layer == null)
@@ -246,8 +287,7 @@ public class GeoserverServiceImpl implements GeoserverService {
 			if (layer.getType() == RESTLayer.Type.RASTER) {
 				bbox = manager.getReader().getCoverage(layer).getNativeBoundingBox();
 			} else {
-				bbox = manager.getReader().getFeatureType(layer).getNativeBoundingBox();
-
+				return getBoundingBox(layerMeta);
 			}
 
 			List<Double> topLeft = new ArrayList<>();

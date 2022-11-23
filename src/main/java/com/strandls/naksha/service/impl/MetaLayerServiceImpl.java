@@ -24,7 +24,6 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.json.simple.parser.ParseException;
 import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -128,7 +127,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 			Long authorId = metaLayer.getUploaderUserId();
 
-			UserIbp userIbp = null;
+			UserIbp userIbp = userServiceApi.getUserIbp(authorId + "");
 
 			Boolean isDownloadable = checkDownLoadAccess(userProfile, metaLayer);
 
