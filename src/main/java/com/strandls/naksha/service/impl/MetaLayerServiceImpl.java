@@ -20,6 +20,7 @@ import javax.naming.directory.InvalidAttributesException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.HttpHeaders;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.message.BasicNameValuePair;
@@ -334,6 +335,13 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			return retValue;
 		}
 
+		MetaLayer metaLayer = layerDownload.getLayerName() != null ? findByLayerTableName(layerDownload.getLayerName())
+				: null;
+		if (metaLayer == null) {
+			throw new InvalidAttributesException("Layer not found");
+
+		}
+
 		String uri = request.getRequestURI();
 		String hashKey = UUID.randomUUID().toString();
 		String authToken = request.getHeader(HttpHeaders.AUTHORIZATION);
@@ -341,7 +349,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		ExecutorService service = Executors.newFixedThreadPool(10);
 		service.execute(() -> {
 			try {
-				runDownloadLayer(profile.getId(), uri, hashKey, authToken, layerDownload);
+				runDownloadLayer(profile.getId(), uri, hashKey, authToken, layerDownload,metaLayer);
 			} catch (InvalidAttributesException | InterruptedException | IOException e) {
 				logger.error(e.getMessage());
 				Thread.currentThread().interrupt();
@@ -376,7 +384,8 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	}
 
 	public void runDownloadLayer(String authorId, String uri, String hashKey, String requestToken,
-			LayerDownload layerDownload) throws InvalidAttributesException, InterruptedException, IOException {
+			LayerDownload layerDownload, MetaLayer metaLayer)
+			throws InvalidAttributesException, InterruptedException, IOException {
 
 		String layerName = layerDownload.getLayerName();
 
@@ -413,16 +422,24 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			logger.debug(filter);
 		}
 
-		String query = "select " + attributeString + " from " + layerName;
-
 		shapeFileDirectoryPath = shapeFileDirectory.getAbsolutePath();
-		OGR2OGR ogr2ogr = new OGR2OGR(OGR2OGR.POSTGRES_TO_SHP, null, layerName, null, query, shapeFileDirectoryPath,
-				null);
-		Process process = ogr2ogr.execute();
-		if (process == null) {
-			throw new IOException("Shape file creation failed");
+
+		if (metaLayer.getLayerType() == LayerType.RASTER) {
+			FileUtils.copyDirectory(new File(metaLayer.getDirPath()), shapeFileDirectory);
+
 		} else {
-			process.waitFor();
+
+			String query = "select " + attributeString + " from " + layerName;
+
+			OGR2OGR ogr2ogr = new OGR2OGR(OGR2OGR.POSTGRES_TO_SHP, null, layerName, null, query, shapeFileDirectoryPath,
+					null);
+			Process process = ogr2ogr.execute();
+			if (process == null) {
+				throw new IOException("Shape file creation failed");
+			} else {
+				process.waitFor();
+			}
+
 		}
 
 		String zipFileLocation = shapeFileDirectoryPath + ".zip";
@@ -437,7 +454,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		userServiceApi = headers.addUserHeaders(userServiceApi, requestToken);
 		DownloadLogData data = new DownloadLogData();
 		data.setFilePath(url);
-		data.setFileType("SHP");
+		data.setFileType(metaLayer.getLayerType() == LayerType.RASTER ? LayerType.RASTER.toString() : "SHP");
 		data.setFilterUrl(uri);
 		data.setStatus("success");
 		data.setSourcetype("Map");
