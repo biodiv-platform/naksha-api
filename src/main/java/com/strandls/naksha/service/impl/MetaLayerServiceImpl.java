@@ -172,8 +172,10 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		File inputGeoTiffFile = new File(inputGeoTiffFileLocation);
 //		geoserverService.publishGeoTiffLayer(WORKSPACE, geoLayerName, inputGeoTiffFile);
 
-		boolean isPublished = geoserverService.publishGeoTiffLayerWithStyle(WORKSPACE, geoLayerName, null, styleName,
-				inputGeoTiffFile);
+		boolean isPublished = styleName != null
+				? geoserverService.publishGeoTiffLayerWithStyle(WORKSPACE, geoLayerName, null, styleName,
+						inputGeoTiffFile)
+				: geoserverService.publishGeoTiffLayer(WORKSPACE, geoLayerName, inputGeoTiffFile);
 
 		if (!isPublished) {
 			throw new IOException("Geoserver publication of layer failed");
@@ -246,7 +248,9 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		if ("tif".equals(fileType)) {
 			try {
-				String styleName = uploadSLDStyle(layerTableName, ogrInputStyleFileLocation, result);
+				String styleName = ogrInputStyleFileLocation != null
+						? uploadSLDStyle(layerTableName, ogrInputStyleFileLocation, result)
+						: null;
 				uploadGeoTiff(layerTableName, ogrInputFileLocation, ogrInputFileLocation, styleName, result);
 				return result;
 			} catch (Exception e) {
@@ -349,7 +353,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		ExecutorService service = Executors.newFixedThreadPool(10);
 		service.execute(() -> {
 			try {
-				runDownloadLayer(profile.getId(), uri, hashKey, authToken, layerDownload,metaLayer);
+				runDownloadLayer(profile.getId(), uri, hashKey, authToken, layerDownload, metaLayer);
 			} catch (InvalidAttributesException | InterruptedException | IOException e) {
 				logger.error(e.getMessage());
 				Thread.currentThread().interrupt();
