@@ -26,6 +26,7 @@ import com.strandls.authentication_utility.filter.ValidateUser;
 import com.strandls.naksha.ApiConstants;
 import com.strandls.naksha.controller.GeoserverController;
 import com.strandls.naksha.pojo.MetaLayer;
+import com.strandls.naksha.pojo.enumtype.LayerType;
 import com.strandls.naksha.pojo.response.GeoserverLayerStyles;
 import com.strandls.naksha.service.GeoserverService;
 import com.strandls.naksha.service.GeoserverStyleService;
@@ -188,7 +189,10 @@ public class GeoserverControllerImpl implements GeoserverController {
 			params.add(new BasicNameValuePair("height", height));
 			params.add(new BasicNameValuePair("srs", srs));
 			params.add(new BasicNameValuePair("format", "image/gif"));
-			params.add(new BasicNameValuePair("styles", style.toLowerCase()));
+			if(metaLayer.getLayerType()!= LayerType.RASTER) {
+				params.add(new BasicNameValuePair("styles", style.toLowerCase()));
+			}
+			
 
 			byte[] file = geoserverService.getRequest(wspace + "/wms", params);
 

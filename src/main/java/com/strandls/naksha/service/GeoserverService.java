@@ -18,12 +18,23 @@ public interface GeoserverService {
 	
 	public boolean publishLayer(String workspace, String datastore, String layerName, String srs, String layerTitle,
 			List<String> keywords, List<String> styles);
-	
+		
 	public boolean removeLayer(String workspace, String layerName);
+	
+	public boolean removeDataStore(String workspace, String layerName);
 
 	public byte[] postRequest(String uri, String styleContent, String contentType, List<NameValuePair> params);
 	public byte[] getRequest(String url, List<NameValuePair> params);
 
 	boolean publishGeoTiffLayer(String workspace, String datastore, File geoTiffFile) throws FileNotFoundException;
+	
+	boolean publishGeoTiffStyleLayer(String workspace, String datastore, File sldStyleFile) throws FileNotFoundException;
+
+	boolean publishGeoTiffLayerWithStyle(String workspace, String datastore, String srs, String styleName,
+			File geoTiffFile) throws FileNotFoundException, IllegalArgumentException;
+
+	public List<List<Double>> getBBoxByLayerName(String workspace, String layerName);
+
+	
 
 }

@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
@@ -28,10 +29,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.strandls.naksha.NakshaConfig;
+import com.strandls.naksha.dao.MetaLayerDao;
+import com.strandls.naksha.pojo.MetaLayer;
 import com.strandls.naksha.service.GeoserverService;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.io.WKTReader;
 
 import it.geosolutions.geoserver.rest.GeoServerRESTManager;
+import it.geosolutions.geoserver.rest.decoder.RESTBoundingBox;
+import it.geosolutions.geoserver.rest.decoder.RESTLayer;
 import it.geosolutions.geoserver.rest.encoder.GSLayerEncoder;
+import it.geosolutions.geoserver.rest.encoder.GSResourceEncoder.ProjectionPolicy;
 import it.geosolutions.geoserver.rest.encoder.feature.GSFeatureTypeEncoder;
 
 public class GeoserverServiceImpl implements GeoserverService {
@@ -44,6 +53,11 @@ public class GeoserverServiceImpl implements GeoserverService {
 
 	private GeoServerRESTManager manager;
 	private HttpClientContext context;
+
+	@Inject
+	private MetaLayerDao metaLayerDao;
+	@Inject
+	private GeometryFactory geoFactory;
 
 	@Inject
 	public GeoserverServiceImpl() throws MalformedURLException {
@@ -97,9 +111,35 @@ public class GeoserverServiceImpl implements GeoserverService {
 	}
 
 	@Override
+	public boolean publishGeoTiffStyleLayer(String workspace, String styleName, File sldStyleFile)
+			throws FileNotFoundException {
+		try {
+
+			return manager.getPublisher().publishStyleInWorkspace(workspace, sldStyleFile, styleName);
+		} catch (Exception e) {
+			throw new FileNotFoundException("Geoserver publication of layer failed");
+		}
+	}
+
+	@Override
 	public boolean publishGeoTiffLayer(String workspace, String datastore, File geoTiffFile)
 			throws FileNotFoundException {
+
 		return manager.getPublisher().publishGeoTIFF(workspace, datastore, geoTiffFile);
+	}
+
+	@Override
+	public boolean publishGeoTiffLayerWithStyle(String workspace, String datastore, String srs, String styleName,
+			File geoTiffFile) throws FileNotFoundException, IllegalArgumentException {
+		srs = srs == null ? "EPSG:4326" : srs;
+		return manager.getPublisher().publishGeoTIFF(workspace, datastore, datastore, geoTiffFile, srs,
+				ProjectionPolicy.NONE, styleName, null);
+
+	}
+
+	@Override
+	public boolean removeDataStore(String workspace, String layerName) {
+		return manager.getPublisher().removeDatastore(workspace, layerName, true);
 	}
 
 	@Override
@@ -203,5 +243,69 @@ public class GeoserverServiceImpl implements GeoserverService {
 		}
 
 		return byteArrayResponse != null ? byteArrayResponse : new byte[0];
+	}
+
+	private List<List<Double>> getBoundingBox(MetaLayer metaLayer) throws com.vividsolutions.jts.io.ParseException {
+		String bbox = metaLayerDao.getBoundingBox(metaLayer.getLayerTableName());
+
+		WKTReader reader = new WKTReader(geoFactory);
+		Geometry topology = reader.read(bbox);
+
+		Geometry envelop = topology.getEnvelope();
+
+		Double top = envelop.getCoordinates()[0].x;
+		Double left = envelop.getCoordinates()[0].y;
+		Double bottom = envelop.getCoordinates()[2].x;
+		Double right = envelop.getCoordinates()[2].y;
+
+		List<List<Double>> boundingBox = new ArrayList<>();
+
+		List<Double> topLeft = new ArrayList<>();
+		List<Double> bottomRight = new ArrayList<>();
+
+		topLeft.add(top);
+		topLeft.add(left);
+
+		bottomRight.add(bottom);
+		bottomRight.add(right);
+
+		boundingBox.add(topLeft);
+		boundingBox.add(bottomRight);
+
+		return boundingBox;
+	}
+
+	@Override
+	public List<List<Double>> getBBoxByLayerName(String workspace, String layerName) {
+		List<List<Double>> boundingBox = new ArrayList<List<Double>>();
+		try {
+			MetaLayer layerMeta = metaLayerDao.findByLayerTableName(layerName);
+			RESTLayer layer = manager.getReader().getLayer(workspace, layerName);
+			RESTBoundingBox bbox = null;
+			if (layer == null)
+				return boundingBox;
+			if (layer.getType() == RESTLayer.Type.RASTER) {
+				bbox = manager.getReader().getCoverage(layer).getNativeBoundingBox();
+			} else {
+				return getBoundingBox(layerMeta);
+			}
+
+			List<Double> topLeft = new ArrayList<>();
+			List<Double> bottomRight = new ArrayList<>();
+
+			topLeft.add(bbox.getMinX());
+			topLeft.add(bbox.getMinY());
+
+			bottomRight.add(bbox.getMaxX());
+			bottomRight.add(bbox.getMaxY());
+
+			boundingBox.add(topLeft);
+			boundingBox.add(bottomRight);
+
+			return boundingBox;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return boundingBox;
 	}
 }

@@ -28,7 +28,7 @@ import com.strandls.naksha.pojo.request.LayerFileDescription;
 public class MetaLayerUtil {
 
 	private static final Logger logger = LoggerFactory.getLogger(MetaLayerUtil.class);
-	
+
 	private MetaLayerUtil() {
 	}
 
@@ -38,6 +38,8 @@ public class MetaLayerUtil {
 	private static final String FINAL = "final";
 
 	private static final String[] COMPULSORY_EXTENSIONS = { "shp", "dbf", "shx" };
+	private static final String[] RASTER_COMPULSORY_EXTENSIONS = { "tif" };
+	private static final String[] RASTER_OPTNAL_EXTENSIONS = { "sld" };
 	private static final String[] OPTIONAL_EXTENSIONS = { "prj", "sbn", "sbx", "fbn", "fbx", "ain", "aih", "ixs", "mxs",
 			"atx", "shp.xml", "cpg", "qix" };
 
@@ -134,6 +136,26 @@ public class MetaLayerUtil {
 		return result;
 	}
 
+	public static Map<String, String> copyRasterFiles(FormDataMultiPart multiPart) throws IOException {
+
+		Map<String, String> result = new HashMap<>();
+		String dataPath = NakshaConfig.getString(TEMP_DIR_PATH) + File.separator + System.currentTimeMillis();
+		String tmpDirPath = dataPath + File.separator + FINAL;
+
+		for (String type : RASTER_COMPULSORY_EXTENSIONS) {
+			String location = copyFile(multiPart, type, tmpDirPath, false);
+			result.put(type, location);
+		}
+
+		for (String type : RASTER_OPTNAL_EXTENSIONS) {
+			String location = copyFile(multiPart, type, tmpDirPath, true);
+			result.put(type, location);
+		}
+
+		result.put(DIR_PATH, tmpDirPath);
+		return result;
+	}
+
 	public static Map<String, String> copyGeneralFile(FormDataMultiPart multiPart, String type, boolean optional)
 			throws IOException {
 		String dataPath = NakshaConfig.getString(TEMP_DIR_PATH) + File.separator + System.currentTimeMillis();
@@ -174,7 +196,7 @@ public class MetaLayerUtil {
 		String fileName = formdata.getContentDisposition().getFileName();
 		fileName += ".";
 		String layerName = fileName.split("\\.")[0].toLowerCase();
-		
+
 		layerName = refineLayerName(layerName);
 
 		String filePath = tmpDirPath + File.separator + layerName + "." + type;
@@ -183,14 +205,14 @@ public class MetaLayerUtil {
 		FileUtils.copyInputStreamToFile(inputStream, file);
 		return filePath;
 	}
-	
+
 	public static String refineLayerName(String layerName) {
 		// Remove all the space character
 		layerName = layerName.trim().replaceAll("\\s+", "_");
-		
+
 		// Keep only the character and number in the string (along with the underscore)
 		layerName = layerName.replaceAll("[^a-zA-Z0-9_]", "");
-		
+
 		return layerName;
 	}
 
