@@ -20,11 +20,11 @@ import javax.naming.directory.InvalidAttributesException;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.HttpHeaders;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.json.simple.parser.ParseException;
 import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +39,7 @@ import com.strandls.naksha.pojo.MetaLayer;
 import com.strandls.naksha.pojo.OGR2OGR;
 import com.strandls.naksha.pojo.enumtype.DownloadAccess;
 import com.strandls.naksha.pojo.enumtype.LayerStatus;
+import com.strandls.naksha.pojo.enumtype.LayerType;
 import com.strandls.naksha.pojo.request.LayerDownload;
 import com.strandls.naksha.pojo.request.LayerFileDescription;
 import com.strandls.naksha.pojo.request.MetaData;
@@ -59,9 +60,6 @@ import com.strandls.user.ApiException;
 import com.strandls.user.controller.UserServiceApi;
 import com.strandls.user.pojo.DownloadLogData;
 import com.strandls.user.pojo.UserIbp;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.io.WKTReader;
 
 import it.geosolutions.geoserver.rest.decoder.RESTLayer;
 import net.minidev.json.JSONArray;
@@ -84,9 +82,6 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 	@Inject
 	private MetaLayerDao metaLayerDao;
-
-	@Inject
-	private GeometryFactory geoFactory;
 
 	@Inject
 	private MailService mailService;
@@ -138,7 +133,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 			Boolean isDownloadable = checkDownLoadAccess(userProfile, metaLayer);
 
-			List<List<Double>> bbox = getBoundingBox(metaLayer);
+			List<List<Double>> bbox = geoserverService.getBBoxByLayerName(WORKSPACE, metaLayer.getLayerTableName());
 			String thumbnail = getThumbnail(metaLayer, bbox);
 			TOCLayer tocLayer = new TOCLayer(metaLayer, userIbp, isDownloadable, bbox, thumbnail);
 			layerLists.add(tocLayer);
@@ -147,8 +142,9 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	}
 
 	private String getThumbnail(MetaLayer metaLayer, List<List<Double>> bbox) throws URISyntaxException {
-		String bboxValue = bbox.get(0).get(0) + "," + bbox.get(0).get(1) + "," + bbox.get(1).get(0) + ","
-				+ bbox.get(1).get(1);
+		String bboxValue = bbox.size() > 0
+				? bbox.get(0).get(0) + "," + bbox.get(0).get(1) + "," + bbox.get(1).get(0) + "," + bbox.get(1).get(1)
+				: "";
 
 		String uri = ApiConstants.GEOSERVER + ApiConstants.THUMBNAILS + "/" + MetaLayerService.WORKSPACE + "/"
 				+ metaLayer.getLayerTableName();
@@ -167,45 +163,20 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		return builder.build().toString();
 	}
 
-	private List<List<Double>> getBoundingBox(MetaLayer metaLayer) throws com.vividsolutions.jts.io.ParseException {
-		String bbox = metaLayerDao.getBoundingBox(metaLayer.getLayerTableName());
-
-		WKTReader reader = new WKTReader(geoFactory);
-		Geometry topology = reader.read(bbox);
-
-		Geometry envelop = topology.getEnvelope();
-
-		Double top = envelop.getCoordinates()[0].x;
-		Double left = envelop.getCoordinates()[0].y;
-		Double bottom = envelop.getCoordinates()[2].x;
-		Double right = envelop.getCoordinates()[2].y;
-
-		List<List<Double>> boundingBox = new ArrayList<>();
-
-		List<Double> topLeft = new ArrayList<>();
-		List<Double> bottomRight = new ArrayList<>();
-
-		topLeft.add(top);
-		topLeft.add(left);
-
-		bottomRight.add(bottom);
-		bottomRight.add(right);
-
-		boundingBox.add(topLeft);
-		boundingBox.add(bottomRight);
-
-		return boundingBox;
-	}
-
 	@Override
 	public List<MetaLayer> findAll(HttpServletRequest request, Integer limit, Integer offset) {
 		return metaLayerDao.findAll(limit, offset);
 	}
 
-	public void uploadGeoTiff(String geoLayerName, String inputGeoTiffFileLocation, Map<String, Object> result)
-			throws IOException {
+	public void uploadGeoTiff(String geoLayerName, String inputGeoTiffFileLocation, String inputGeoTiffStyleLocation,
+			String styleName, Map<String, Object> result) throws IOException {
 		File inputGeoTiffFile = new File(inputGeoTiffFileLocation);
-		boolean isPublished = geoserverService.publishGeoTiffLayer(WORKSPACE, geoLayerName, inputGeoTiffFile);
+//		geoserverService.publishGeoTiffLayer(WORKSPACE, geoLayerName, inputGeoTiffFile);
+
+		boolean isPublished = styleName != null
+				? geoserverService.publishGeoTiffLayerWithStyle(WORKSPACE, geoLayerName, null, styleName,
+						inputGeoTiffFile)
+				: geoserverService.publishGeoTiffLayer(WORKSPACE, geoLayerName, inputGeoTiffFile);
 
 		if (!isPublished) {
 			throw new IOException("Geoserver publication of layer failed");
@@ -215,9 +186,24 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		result.put("Geoserver layer url", layer.getResourceUrl());
 	}
 
+	public String uploadSLDStyle(String styleName, String inputStyleFile, Map<String, Object> result)
+			throws IOException {
+		File inputStyle = new File(inputStyleFile);
+		String resultantStyleName = null;
+		boolean isPublished = geoserverService.publishGeoTiffStyleLayer(WORKSPACE, styleName, inputStyle);
+
+		if (!isPublished) {
+			throw new IOException("Geoserver publication of layer failed");
+		}
+		resultantStyleName = WORKSPACE + ":" + styleName;
+		result.put("Uplaoded SLD on geoserver", styleName);
+		result.put("Geoserver layer file name", resultantStyleName);
+		return resultantStyleName;
+
+	}
+
 	@Override
-	public Map<String, Object> uploadLayer(HttpServletRequest request, FormDataMultiPart multiPart)
-			throws IOException, ParseException, InvalidAttributesException, InterruptedException {
+	public Map<String, Object> uploadLayer(HttpServletRequest request, FormDataMultiPart multiPart) throws Exception {
 		Map<String, Object> result = new HashMap<>();
 
 		String jsonString = MetaLayerUtil.getMetadataAsJson(multiPart).toJSONString();
@@ -230,6 +216,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		Map<String, String> copiedFiles;
 		String ogrInputFileLocation;
+		String ogrInputStyleFileLocation = null;
 		String layerName;
 
 		if ("shp".equals(fileType)) {
@@ -241,8 +228,9 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			ogrInputFileLocation = copiedFiles.get("vrt");
 			layerName = multiPart.getField("csv").getContentDisposition().getFileName().split("\\.")[0].toLowerCase();
 		} else if ("tif".equals(fileType)) {
-			copiedFiles = MetaLayerUtil.copyGeneralFile(multiPart, "tif", false);
+			copiedFiles = MetaLayerUtil.copyRasterFiles(multiPart);
 			ogrInputFileLocation = copiedFiles.get("tif");
+			ogrInputStyleFileLocation = copiedFiles.get("sld");
 			layerName = multiPart.getField("tif").getContentDisposition().getFileName().split("\\.")[0].toLowerCase();
 		} else {
 			throw new IllegalArgumentException("Invalid file type");
@@ -260,8 +248,20 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		update(metaLayer);
 
 		if ("tif".equals(fileType)) {
-			uploadGeoTiff(layerTableName, ogrInputFileLocation, result);
-			return result;
+			try {
+				String styleName = ogrInputStyleFileLocation != null
+						? uploadSLDStyle(layerTableName, ogrInputStyleFileLocation, result)
+						: null;
+				uploadGeoTiff(layerTableName, ogrInputFileLocation, ogrInputFileLocation, styleName, result);
+				return result;
+			} catch (Exception e) {
+				logger.error(e.getMessage());
+				MetaLayerUtil.deleteFiles(dirPath);
+				metaLayerDao.delete(metaLayer);
+				Thread.currentThread().interrupt();
+				throw new IOException("Table creation failed");
+			}
+
 		}
 		try {
 			createDBTable(layerTableName, ogrInputFileLocation, layerColumnDescription, layerFileDescription, result);
@@ -340,6 +340,13 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			return retValue;
 		}
 
+		MetaLayer metaLayer = layerDownload.getLayerName() != null ? findByLayerTableName(layerDownload.getLayerName())
+				: null;
+		if (metaLayer == null) {
+			throw new InvalidAttributesException("Layer not found");
+
+		}
+
 		String uri = request.getRequestURI();
 		String hashKey = UUID.randomUUID().toString();
 		String authToken = request.getHeader(HttpHeaders.AUTHORIZATION);
@@ -347,7 +354,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		ExecutorService service = Executors.newFixedThreadPool(10);
 		service.execute(() -> {
 			try {
-				runDownloadLayer(profile.getId(), uri, hashKey, authToken, layerDownload);
+				runDownloadLayer(profile.getId(), uri, hashKey, authToken, layerDownload, metaLayer);
 			} catch (InvalidAttributesException | InterruptedException | IOException e) {
 				logger.error(e.getMessage());
 				Thread.currentThread().interrupt();
@@ -382,7 +389,8 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	}
 
 	public void runDownloadLayer(String authorId, String uri, String hashKey, String requestToken,
-			LayerDownload layerDownload) throws InvalidAttributesException, InterruptedException, IOException {
+			LayerDownload layerDownload, MetaLayer metaLayer)
+			throws InvalidAttributesException, InterruptedException, IOException {
 
 		String layerName = layerDownload.getLayerName();
 
@@ -419,16 +427,24 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			logger.debug(filter);
 		}
 
-		String query = "select " + attributeString + " from " + layerName;
-
 		shapeFileDirectoryPath = shapeFileDirectory.getAbsolutePath();
-		OGR2OGR ogr2ogr = new OGR2OGR(OGR2OGR.POSTGRES_TO_SHP, null, layerName, null, query, shapeFileDirectoryPath,
-				null);
-		Process process = ogr2ogr.execute();
-		if (process == null) {
-			throw new IOException("Shape file creation failed");
+
+		if (metaLayer.getLayerType() == LayerType.RASTER) {
+			FileUtils.copyDirectory(new File(metaLayer.getDirPath()), shapeFileDirectory);
+
 		} else {
-			process.waitFor();
+
+			String query = "select " + attributeString + " from " + layerName;
+
+			OGR2OGR ogr2ogr = new OGR2OGR(OGR2OGR.POSTGRES_TO_SHP, null, layerName, null, query, shapeFileDirectoryPath,
+					null);
+			Process process = ogr2ogr.execute();
+			if (process == null) {
+				throw new IOException("Shape file creation failed");
+			} else {
+				process.waitFor();
+			}
+
 		}
 
 		String zipFileLocation = shapeFileDirectoryPath + ".zip";
@@ -443,7 +459,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		userServiceApi = headers.addUserHeaders(userServiceApi, requestToken);
 		DownloadLogData data = new DownloadLogData();
 		data.setFilePath(url);
-		data.setFileType("SHP");
+		data.setFileType(metaLayer.getLayerType() == LayerType.RASTER ? LayerType.RASTER.toString() : "SHP");
 		data.setFilterUrl(uri);
 		data.setStatus("success");
 		data.setSourcetype("Map");
@@ -539,6 +555,9 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		String dirPath = metaLayer.getDirPath();
 		MetaLayerUtil.deleteFiles(dirPath);
 
+		if (metaLayer.getLayerType() == LayerType.RASTER) {
+			geoserverService.removeDataStore(WORKSPACE, layerName);
+		}
 		// remove-published layer from the geoserver
 		geoserverService.removeLayer(WORKSPACE, layerName);
 
