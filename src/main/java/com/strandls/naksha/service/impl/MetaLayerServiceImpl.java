@@ -121,23 +121,30 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		List<TOCLayer> layerLists = new ArrayList<>();
 		boolean isAdmin = Utils.isAdmin(request);
 
-		for (MetaLayer metaLayer : metaLayers) {
+		try {
+			for (MetaLayer metaLayer : metaLayers) {
 
-			if ((!isAdmin && LayerStatus.PENDING.equals(metaLayer.getLayerStatus()))
-					|| (showOnlyPending && !LayerStatus.PENDING.equals(metaLayer.getLayerStatus())))
-				continue;
+				if ((!isAdmin && LayerStatus.PENDING.equals(metaLayer.getLayerStatus()))
+						|| (showOnlyPending && !LayerStatus.PENDING.equals(metaLayer.getLayerStatus())))
+					continue;
 
-			Long authorId = metaLayer.getUploaderUserId();
+				Long authorId = metaLayer.getUploaderUserId();
 
-			UserIbp userIbp = userServiceApi.getUserIbp(authorId + "");
+				UserIbp userIbp = userServiceApi.getUserIbp(authorId + "");
 
-			Boolean isDownloadable = checkDownLoadAccess(userProfile, metaLayer);
+				Boolean isDownloadable = checkDownLoadAccess(userProfile, metaLayer);
 
-			List<List<Double>> bbox = geoserverService.getBBoxByLayerName(WORKSPACE, metaLayer.getLayerTableName());
-			String thumbnail = getThumbnail(metaLayer, bbox);
-			TOCLayer tocLayer = new TOCLayer(metaLayer, userIbp, isDownloadable, bbox, thumbnail);
-			layerLists.add(tocLayer);
+				List<List<Double>> bbox = geoserverService.getBBoxByLayerName(WORKSPACE, metaLayer.getLayerTableName());
+				String thumbnail = getThumbnail(metaLayer, bbox);
+				TOCLayer tocLayer = new TOCLayer(metaLayer, userIbp, isDownloadable, bbox, thumbnail);
+				layerLists.add(tocLayer);
+			}
+			return layerLists;
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
 		}
+
 		return layerLists;
 	}
 
