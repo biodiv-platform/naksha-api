@@ -117,6 +117,8 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		CommonProfile userProfile = AuthUtil.getProfileFromRequest(request);
 
+		System.out.println("profile=" + userProfile);
+
 		List<MetaLayer> metaLayers = findAll(request, limit, offset);
 		List<TOCLayer> layerLists = new ArrayList<>();
 		boolean isAdmin = Utils.isAdmin(request);
