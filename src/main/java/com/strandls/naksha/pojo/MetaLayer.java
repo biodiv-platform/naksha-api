@@ -156,7 +156,7 @@ public class MetaLayer implements Serializable {
 	private Timestamp modifiedDate;
 
 	@Column(name = "portal_id")
-	private Long portal_id;
+	private Long portalId;
 
 	public MetaLayer() {
 		super();
@@ -425,12 +425,12 @@ public class MetaLayer implements Serializable {
 		this.modifiedDate = modifiedDate;
 	}
 
-	public Long getPortal_id() {
-		return portal_id;
+	public Long getPortalId() {
+		return portalId;
 	}
 
-	public void setPortal_id(Long portal_id) {
-		this.portal_id = portal_id;
+	public void setPortalId(Long portalId) {
+		this.portalId = portalId;
 	}
 
 }

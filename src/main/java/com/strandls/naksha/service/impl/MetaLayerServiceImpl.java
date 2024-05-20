@@ -117,7 +117,9 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		// CommonProfile userProfile = AuthUtil.getProfileFromRequest(request);
 
-		List<MetaLayer> metaLayers = findAll(request, limit, offset);
+		String portalId = request.getHeader("Portal-Id");
+
+		List<MetaLayer> metaLayers = findAllByPortalId(request, limit, offset, Long.valueOf(portalId));
 		List<TOCLayer> layerLists = new ArrayList<>();
 		// boolean isAdmin = Utils.isAdmin(request);
 
@@ -167,6 +169,10 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	@Override
 	public List<MetaLayer> findAll(HttpServletRequest request, Integer limit, Integer offset) {
 		return metaLayerDao.findAll(limit, offset);
+	}
+
+	public List<MetaLayer> findAllByPortalId(HttpServletRequest request, Integer limit, Integer offset, Long portalId) {
+		return metaLayerDao.findAll(limit, offset, portalId);
 	}
 
 	public void uploadGeoTiff(String geoLayerName, String inputGeoTiffFileLocation, String inputGeoTiffStyleLocation,
