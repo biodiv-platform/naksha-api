@@ -16,18 +16,18 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public class Portal implements Serializable {
 
 	private static final long serialVersionUID = -7336349045473475719L;
-	private String portalId;
+	private Long portalId;
 	private String portalName;
 	private String portalDomain;
 
 	@Id
 	@GeneratedValue
 	@Column(name = "portal_id")
-	public String getPortalId() {
+	public Long getPortalId() {
 		return portalId;
 	}
 
-	public void setPortalId(String portalId) {
+	public void setPortalId(Long portalId) {
 		this.portalId = portalId;
 	}
 
