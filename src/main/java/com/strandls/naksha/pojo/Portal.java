@@ -4,6 +4,8 @@ import java.io.Serializable;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -18,6 +20,8 @@ public class Portal implements Serializable {
 	private String portalName;
 	private String portalDomain;
 
+	@Id
+	@GeneratedValue
 	@Column(name = "portal_id")
 	public String getPortalId() {
 		return portalId;
