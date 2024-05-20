@@ -115,23 +115,24 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	public List<TOCLayer> getTOCList(HttpServletRequest request, Integer limit, Integer offset, boolean showOnlyPending)
 			throws ApiException, com.vividsolutions.jts.io.ParseException, URISyntaxException {
 
-		CommonProfile userProfile = AuthUtil.getProfileFromRequest(request);
+		// CommonProfile userProfile = AuthUtil.getProfileFromRequest(request);
 
 		List<MetaLayer> metaLayers = findAll(request, limit, offset);
 		List<TOCLayer> layerLists = new ArrayList<>();
-		boolean isAdmin = Utils.isAdmin(request);
+		// boolean isAdmin = Utils.isAdmin(request);
 
 		for (MetaLayer metaLayer : metaLayers) {
 
-			if ((!isAdmin && LayerStatus.PENDING.equals(metaLayer.getLayerStatus()))
-					|| (showOnlyPending && !LayerStatus.PENDING.equals(metaLayer.getLayerStatus())))
-				continue;
+//			if ((!isAdmin && LayerStatus.PENDING.equals(metaLayer.getLayerStatus()))
+//					|| (showOnlyPending && !LayerStatus.PENDING.equals(metaLayer.getLayerStatus())))
+//				continue;
 
 			Long authorId = metaLayer.getUploaderUserId();
 
 			UserIbp userIbp = userServiceApi.getUserIbp(authorId + "");
 
-			Boolean isDownloadable = checkDownLoadAccess(userProfile, metaLayer);
+			// Boolean isDownloadable = checkDownLoadAccess(userProfile, metaLayer);
+			Boolean isDownloadable = false;
 
 			List<List<Double>> bbox = geoserverService.getBBoxByLayerName(WORKSPACE, metaLayer.getLayerTableName());
 			String thumbnail = getThumbnail(metaLayer, bbox);
