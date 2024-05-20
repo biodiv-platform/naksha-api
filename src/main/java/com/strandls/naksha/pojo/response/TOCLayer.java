@@ -35,12 +35,14 @@ public class TOCLayer {
 	private List<List<Double>> bbox;
 	private String thumbnail;
 	private LayerStatus layerStatus;
+	private String uploaderUserId;
 
 	public TOCLayer() {
 		super();
 	}
 
-	public TOCLayer(MetaLayer metaLayer, UserIbp userIbp, Boolean isDownloadable, List<List<Double>> bbox, String thumbnail) {
+	public TOCLayer(MetaLayer metaLayer, UserIbp userIbp, Boolean isDownloadable, List<List<Double>> bbox,
+			String thumbnail, String uploaderUserId) {
 		this.id = metaLayer.getId();
 		this.name = metaLayer.getLayerTableName();
 		this.title = metaLayer.getLayerName();
@@ -51,8 +53,8 @@ public class TOCLayer {
 		this.author = userIbp;
 		this.attribution = metaLayer.getAttribution();
 		this.tags = new ArrayList<>();
-		for(String tag : metaLayer.getTags().split(",")) {
-			if(tag == null || "".equals(tag))
+		for (String tag : metaLayer.getTags().split(",")) {
+			if (tag == null || "".equals(tag))
 				continue;
 			this.tags.add(tag.trim());
 		}
@@ -62,11 +64,12 @@ public class TOCLayer {
 		this.createdDate = metaLayer.getCreatedDate();
 		this.modifiedBy = metaLayer.getModifiedBy();
 		this.modifiedDate = metaLayer.getModifiedDate();
-		
+
 		this.isDownloadable = isDownloadable;
 		this.bbox = bbox;
 		this.thumbnail = thumbnail;
 		this.layerStatus = metaLayer.getLayerStatus();
+		this.uploaderUserId = uploaderUserId;
 	}
 
 	public Long getId() {
@@ -220,12 +223,21 @@ public class TOCLayer {
 	public void setThumbnail(String thumbnail) {
 		this.thumbnail = thumbnail;
 	}
-	
+
 	public LayerStatus getLayerStatus() {
 		return layerStatus;
 	}
-	
+
 	public void setLayerStatus(LayerStatus layerStatus) {
 		this.layerStatus = layerStatus;
 	}
+
+	public String getUploaderUserId() {
+		return uploaderUserId;
+	}
+
+	public void setUploaderUserId(String uploaderUserId) {
+		this.uploaderUserId = uploaderUserId;
+	}
+
 }
