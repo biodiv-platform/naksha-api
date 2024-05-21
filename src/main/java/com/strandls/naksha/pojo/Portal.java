@@ -19,6 +19,7 @@ public class Portal implements Serializable {
 	private Long portalId;
 	private String portalName;
 	private String portalDomain;
+	private String apiKey;
 
 	@Id
 	@GeneratedValue
@@ -47,6 +48,15 @@ public class Portal implements Serializable {
 
 	public void setPortalDomain(String portalDomain) {
 		this.portalDomain = portalDomain;
+	}
+
+	@Column(name = "api_key", columnDefinition = "TEXT")
+	public String getApiKey() {
+		return apiKey;
+	}
+
+	public void setApiKey(String apiKey) {
+		this.apiKey = apiKey;
 	}
 
 }
