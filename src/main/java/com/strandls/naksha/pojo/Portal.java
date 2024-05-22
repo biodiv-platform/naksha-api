@@ -21,6 +21,18 @@ public class Portal implements Serializable {
 	private String portalDomain;
 	private String apiKey;
 
+	public Portal() {
+		super();
+	}
+
+	public Portal(Long portalId, String portalName, String portalDomain, String apiKey) {
+		super();
+		this.portalId = portalId;
+		this.portalName = portalName;
+		this.portalDomain = portalDomain;
+		this.apiKey = apiKey;
+	}
+
 	@Id
 	@GeneratedValue
 	@Column(name = "portal_id")

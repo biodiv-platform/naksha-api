@@ -1,5 +1,7 @@
 package com.strandls.naksha.dao;
 
+import javax.inject.Inject;
+
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
@@ -7,6 +9,7 @@ import com.strandls.naksha.pojo.Portal;
 
 public class PortalDao extends AbstractDao<Portal, Long> {
 
+	@Inject
 	protected PortalDao(SessionFactory sessionFactory) {
 		super(sessionFactory);
 	}

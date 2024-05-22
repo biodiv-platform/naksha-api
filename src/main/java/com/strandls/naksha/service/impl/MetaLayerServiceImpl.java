@@ -18,6 +18,7 @@ import java.util.zip.ZipOutputStream;
 import javax.inject.Inject;
 import javax.naming.directory.InvalidAttributesException;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.HttpHeaders;
 
 import org.apache.commons.io.FileUtils;
@@ -35,8 +36,10 @@ import com.strandls.naksha.ApiConstants;
 import com.strandls.naksha.Headers;
 import com.strandls.naksha.NakshaConfig;
 import com.strandls.naksha.dao.MetaLayerDao;
+import com.strandls.naksha.dao.PortalDao;
 import com.strandls.naksha.pojo.MetaLayer;
 import com.strandls.naksha.pojo.OGR2OGR;
+import com.strandls.naksha.pojo.Portal;
 import com.strandls.naksha.pojo.enumtype.DownloadAccess;
 import com.strandls.naksha.pojo.enumtype.LayerStatus;
 import com.strandls.naksha.pojo.enumtype.LayerType;
@@ -60,6 +63,7 @@ import com.strandls.user.ApiException;
 import com.strandls.user.controller.UserServiceApi;
 import com.strandls.user.pojo.DownloadLogData;
 import com.strandls.user.pojo.UserIbp;
+import com.strandls.naksha.utils.MessageDigestPasswordEncoder;
 
 import it.geosolutions.geoserver.rest.decoder.RESTLayer;
 import net.minidev.json.JSONArray;
@@ -84,7 +88,13 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	private MetaLayerDao metaLayerDao;
 
 	@Inject
+	private PortalDao portaldao;
+
+	@Inject
 	private MailService mailService;
+
+	@Inject
+	private MessageDigestPasswordEncoder passwordEncoder;
 
 	@Inject
 	private Headers headers;
@@ -113,11 +123,23 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 	@Override
 	public List<TOCLayer> getTOCList(HttpServletRequest request, Integer limit, Integer offset, boolean showOnlyPending)
-			throws ApiException, com.vividsolutions.jts.io.ParseException, URISyntaxException {
+			throws ApiException, com.vividsolutions.jts.io.ParseException, URISyntaxException, BadRequestException {
 
 		// CommonProfile userProfile = AuthUtil.getProfileFromRequest(request);
 
 		String portalId = request.getHeader("Portal-Id");
+
+		System.out.println("key=" + request.getHeader("api-key"));
+		String apiKeyRecieved = request.getHeader("api-key");
+
+		Portal portal = portaldao.findById(Long.valueOf(portalId));
+		String apiKeyStored = portal.getApiKey();
+
+		boolean apikeyIsValid = passwordEncoder.isPasswordValid(apiKeyStored, apiKeyRecieved, null);
+
+		if (!apikeyIsValid) {
+			throw new BadRequestException("api key is not valid");
+		}
 
 		List<MetaLayer> metaLayers = findAllByPortalId(request, limit, offset, Long.valueOf(portalId));
 		List<TOCLayer> layerLists = new ArrayList<>();
