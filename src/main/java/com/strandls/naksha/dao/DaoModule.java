@@ -9,5 +9,6 @@ public class DaoModule extends AbstractModule {
 	protected void configure() {
 		bind(MetaLayerDao.class).in(Scopes.SINGLETON);
 		bind(PortalDao.class).in(Scopes.SINGLETON);
+		bind(LayerPortalDao.class).in(Scopes.SINGLETON);
 	}
 }

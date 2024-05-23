@@ -25,6 +25,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.message.BasicNameValuePair;
+import org.bouncycastle.pqc.crypto.rainbow.Layer;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.pac4j.core.profile.CommonProfile;
@@ -36,11 +37,13 @@ import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.naksha.ApiConstants;
 import com.strandls.naksha.Headers;
 import com.strandls.naksha.NakshaConfig;
+import com.strandls.naksha.dao.LayerPortalDao;
 import com.strandls.naksha.dao.MetaLayerDao;
 import com.strandls.naksha.dao.PortalDao;
 import com.strandls.naksha.pojo.MetaLayer;
 import com.strandls.naksha.pojo.OGR2OGR;
 import com.strandls.naksha.pojo.Portal;
+import com.strandls.naksha.pojo.layerPortalMapping;
 import com.strandls.naksha.pojo.enumtype.DownloadAccess;
 import com.strandls.naksha.pojo.enumtype.LayerStatus;
 import com.strandls.naksha.pojo.enumtype.LayerType;
@@ -90,6 +93,9 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 	@Inject
 	private PortalDao portaldao;
+
+	@Inject
+	private LayerPortalDao layerPortalDao;
 
 	@Inject
 	private MailService mailService;
@@ -294,6 +300,9 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		String layerTableName = "lyr_" + metaLayer.getId() + "_" + MetaLayerUtil.refineLayerName(layerName);
 		metaLayer.setLayerTableName(layerTableName);
 		update(metaLayer);
+
+		layerPortalMapping layerPortalMapping = new layerPortalMapping(metaLayer.getId(), Long.valueOf(portalId));
+		layerPortalDao.save(layerPortalMapping);
 
 		if ("tif".equals(fileType)) {
 			try {
