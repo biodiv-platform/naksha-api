@@ -146,7 +146,7 @@ public class LayerControllerImpl implements LayerController {
 	@ApiOperation(value = "Upload Layer", notes = "Returns succuess failure", response = MetaData.class)
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "file not present", response = String.class),
 			@ApiResponse(code = 500, message = "ERROR", response = String.class) })
-	@ValidateUser
+	//@ValidateUser
 	public Response upload(@Context HttpServletRequest request, final FormDataMultiPart multiPart) {
 		try {
 			Map<String, Object> result = metaLayerService.uploadLayer(request, multiPart);

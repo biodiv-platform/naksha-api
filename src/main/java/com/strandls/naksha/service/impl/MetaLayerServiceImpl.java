@@ -25,6 +25,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.message.BasicNameValuePair;
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
@@ -237,8 +238,12 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		String jsonString = MetaLayerUtil.getMetadataAsJson(multiPart).toJSONString();
 		MetaData metaData = objectMapper.readValue(jsonString, MetaData.class);
-		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
-		long uploaderUserId = Long.parseLong(profile.getId());
+		// CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+		// long uploaderUserId = Long.parseLong(profile.getId());
+		// long uploaderUserId=request.
+		FormDataBodyPart formdata = multiPart.getField("uploaderUserId");
+		long uploaderUserId = Long.valueOf(formdata.getValue());
+
 		Map<String, String> layerColumnDescription = metaData.getLayerColumnDescription();
 		LayerFileDescription layerFileDescription = metaData.getLayerFileDescription();
 		String fileType = layerFileDescription.getFileType();
