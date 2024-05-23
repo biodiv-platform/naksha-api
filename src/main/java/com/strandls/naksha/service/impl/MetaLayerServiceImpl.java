@@ -236,6 +236,18 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	public Map<String, Object> uploadLayer(HttpServletRequest request, FormDataMultiPart multiPart) throws Exception {
 		Map<String, Object> result = new HashMap<>();
 
+		String portalId = request.getHeader("Portal-Id");
+		String apiKeyRecieved = request.getHeader("api-key");
+
+		Portal portal = portaldao.findById(Long.valueOf(portalId));
+		String apiKeyStored = portal.getApiKey();
+
+		boolean apikeyIsValid = passwordEncoder.isPasswordValid(apiKeyStored, apiKeyRecieved, null);
+
+		if (!apikeyIsValid) {
+			throw new BadRequestException("api key is not valid");
+		}
+
 		String jsonString = MetaLayerUtil.getMetadataAsJson(multiPart).toJSONString();
 		MetaData metaData = objectMapper.readValue(jsonString, MetaData.class);
 		// CommonProfile profile = AuthUtil.getProfileFromRequest(request);
@@ -274,6 +286,8 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		result.put("Files copied to", dirPath);
 
 		MetaLayer metaLayer = new MetaLayer(metaData, uploaderUserId, dirPath);
+		metaLayer.setPortalId(Long.valueOf(portalId));
+
 		metaLayer = save(metaLayer);
 		result.put("Meta layer table entry", metaLayer.getId());
 
