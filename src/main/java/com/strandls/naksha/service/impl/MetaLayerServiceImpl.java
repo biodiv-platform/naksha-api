@@ -390,12 +390,12 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		Map<String, String> retValue = new HashMap<>();
 
-		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
-
-		if (!checkDownLoadAccess(profile, layerDownload)) {
-			retValue.put("failed", "User is not authorized to download the layer");
-			return retValue;
-		}
+//		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+//
+//		if (!checkDownLoadAccess(profile, layerDownload)) {
+//			retValue.put("failed", "User is not authorized to download the layer");
+//			return retValue;
+//		}
 
 		MetaLayer metaLayer = layerDownload.getLayerName() != null ? findByLayerTableName(layerDownload.getLayerName())
 				: null;
@@ -406,12 +406,12 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		String uri = request.getRequestURI();
 		String hashKey = UUID.randomUUID().toString();
-		String authToken = request.getHeader(HttpHeaders.AUTHORIZATION);
+		// String authToken = request.getHeader(HttpHeaders.AUTHORIZATION);
 
 		ExecutorService service = Executors.newFixedThreadPool(10);
 		service.execute(() -> {
 			try {
-				runDownloadLayer(profile.getId(), uri, hashKey, authToken, layerDownload, metaLayer);
+				runDownloadLayer(null, uri, hashKey, null, layerDownload, metaLayer);
 			} catch (InvalidAttributesException | InterruptedException | IOException e) {
 				logger.error(e.getMessage());
 				Thread.currentThread().interrupt();
@@ -512,22 +512,22 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		logger.debug("{} / {} / {}", uri, hashKey, layerName);
 
-		String url = uri + "/" + hashKey + "/" + layerName;
-
-		mailService.sendMail(authorId, url, "naksha");
-		userServiceApi = headers.addUserHeaders(userServiceApi, requestToken);
-		DownloadLogData data = new DownloadLogData();
-		data.setFilePath(url);
-		data.setFileType(metaLayer.getLayerType() == LayerType.RASTER ? LayerType.RASTER.toString() : "SHP");
-		data.setFilterUrl(uri);
-		data.setStatus("success");
-		data.setSourcetype("Map");
-		data.setNotes(layerDownload.getLayerTitle());
-		try {
-			userServiceApi.logDocumentDownload(data);
-		} catch (ApiException e) {
-			logger.error(e.getMessage());
-		}
+//		String url = uri + "/" + hashKey + "/" + layerName;
+//
+//		mailService.sendMail(authorId, url, "naksha");
+//		userServiceApi = headers.addUserHeaders(userServiceApi, requestToken);
+//		DownloadLogData data = new DownloadLogData();
+//		data.setFilePath(url);
+//		data.setFileType(metaLayer.getLayerType() == LayerType.RASTER ? LayerType.RASTER.toString() : "SHP");
+//		data.setFilterUrl(uri);
+//		data.setStatus("success");
+//		data.setSourcetype("Map");
+//		data.setNotes(layerDownload.getLayerTitle());
+//		try {
+//			userServiceApi.logDocumentDownload(data);
+//		} catch (ApiException e) {
+//			logger.error(e.getMessage());
+//		}
 		// TODO : send mail notification for download url
 		// return directory.getAbsolutePath();
 	}
