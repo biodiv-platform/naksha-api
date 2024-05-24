@@ -43,8 +43,7 @@ public interface MetaLayerService {
 
 	public List<MetaLayer> findAll(HttpServletRequest request, Integer limit, Integer offset);
 
-	public Map<String, Object> uploadLayer(HttpServletRequest request, FormDataMultiPart multiPart)
-			throws Exception;
+	public Map<String, Object> uploadLayer(HttpServletRequest request, FormDataMultiPart multiPart) throws Exception;
 
 	public Map<String, String> prepareDownloadLayer(HttpServletRequest request, LayerDownload layerDownload)
 			throws InvalidAttributesException, InterruptedException, IOException;
@@ -60,7 +59,7 @@ public interface MetaLayerService {
 
 	public MetaLayer makeLayerActive(String layer);
 
-	public MetaLayer makeLayerPending(String layerName);
+	public MetaLayer makeLayerPending(HttpServletRequest request, String layerName);
 
 	public MetaLayer deleteLayer(String layerName);
 

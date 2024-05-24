@@ -146,7 +146,7 @@ public class LayerControllerImpl implements LayerController {
 	@ApiOperation(value = "Upload Layer", notes = "Returns succuess failure", response = MetaData.class)
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "file not present", response = String.class),
 			@ApiResponse(code = 500, message = "ERROR", response = String.class) })
-	//@ValidateUser
+	// @ValidateUser
 	public Response upload(@Context HttpServletRequest request, final FormDataMultiPart multiPart) {
 		try {
 			Map<String, Object> result = metaLayerService.uploadLayer(request, multiPart);
@@ -268,14 +268,14 @@ public class LayerControllerImpl implements LayerController {
 	@PUT
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "Make the layer pending", response = MetaLayer.class)
-	@ValidateUser
+	// @ValidateUser
 	public Response makeLayerPending(@Context HttpServletRequest request, @PathParam("layer") String layer) {
 		try {
-			if (!Utils.isAdmin(request)) {
-				throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
-						.entity("Only admin can make the layer pending").build());
-			}
-			MetaLayer metaLayer = metaLayerService.makeLayerPending(layer);
+//			if (!Utils.isAdmin(request)) {
+//				throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
+//						.entity("Only admin can make the layer pending").build());
+//			}
+			MetaLayer metaLayer = metaLayerService.makeLayerPending(request, layer);
 			return Response.ok().entity(metaLayer).build();
 		} catch (Exception e) {
 			throw new WebApplicationException(
