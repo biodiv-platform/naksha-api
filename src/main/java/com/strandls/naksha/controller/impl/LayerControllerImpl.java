@@ -248,14 +248,14 @@ public class LayerControllerImpl implements LayerController {
 	@PUT
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "Make the layer active", response = MetaLayer.class)
-	@ValidateUser
+	// @ValidateUser
 	public Response makeLayerActive(@Context HttpServletRequest request, @PathParam("layer") String layer) {
 		try {
-			if (!Utils.isAdmin(request)) {
-				throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
-						.entity("Only admin can make the layer active").build());
-			}
-			MetaLayer metaLayer = metaLayerService.makeLayerActive(layer);
+//			if (!Utils.isAdmin(request)) {
+//				throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
+//						.entity("Only admin can make the layer active").build());
+//			}
+			MetaLayer metaLayer = metaLayerService.makeLayerActive(request, layer);
 			return Response.ok().entity(metaLayer).build();
 		} catch (Exception e) {
 			throw new WebApplicationException(

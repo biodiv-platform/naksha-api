@@ -57,7 +57,7 @@ public interface MetaLayerService {
 	public List<TOCLayer> getTOCList(HttpServletRequest request, Integer limit, Integer offset, boolean showOnlyPending)
 			throws ApiException, com.vividsolutions.jts.io.ParseException, URISyntaxException;
 
-	public MetaLayer makeLayerActive(String layer);
+	public MetaLayer makeLayerActive(HttpServletRequest request, String layer);
 
 	public MetaLayer makeLayerPending(HttpServletRequest request, String layerName);
 

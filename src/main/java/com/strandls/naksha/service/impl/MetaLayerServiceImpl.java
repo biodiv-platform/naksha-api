@@ -567,7 +567,18 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	}
 
 	@Override
-	public MetaLayer makeLayerActive(String layerName) {
+	public MetaLayer makeLayerActive(HttpServletRequest request, String layerName) {
+		String portalId = request.getHeader("Portal-Id");
+		String apiKeyRecieved = request.getHeader("api-key");
+
+		Portal portal = portaldao.findById(Long.valueOf(portalId));
+		String apiKeyStored = portal.getApiKey();
+
+		boolean apikeyIsValid = passwordEncoder.isPasswordValid(apiKeyStored, apiKeyRecieved, null);
+
+		if (!apikeyIsValid) {
+			throw new BadRequestException("api key is not valid");
+		}
 		MetaLayer metaLayer = findByLayerTableName(layerName);
 		metaLayer.setLayerStatus(LayerStatus.ACTIVE);
 		return update(metaLayer);
