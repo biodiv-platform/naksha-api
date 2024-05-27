@@ -184,7 +184,7 @@ public class LayerControllerImpl implements LayerController {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "prepate shape file", notes = "Return the shape file location", response = Map.class)
-	@ValidateUser
+	// @ValidateUser
 	public Response prepareDownload(@Context HttpServletRequest request,
 			@ApiParam("layerDownload") LayerDownload layerDownload) {
 		try {
