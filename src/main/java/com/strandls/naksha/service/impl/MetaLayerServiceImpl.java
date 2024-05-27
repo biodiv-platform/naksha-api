@@ -420,7 +420,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		String layerName = layerDownload.getLayerName();
 
-		retValue.put("url", uri + "/" + hashKey + "/" + layerName);
+		retValue.put("filePath", "/" + hashKey + "/" + layerName);
 		retValue.put("success", "The layer download process has started. You will receive the mail shortly");
 
 		service.shutdown();
