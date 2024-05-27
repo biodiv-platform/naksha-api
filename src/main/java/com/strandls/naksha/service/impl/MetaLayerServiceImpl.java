@@ -397,6 +397,18 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 //			return retValue;
 //		}
 
+		String portalId = request.getHeader("Portal-Id");
+		String apiKeyRecieved = request.getHeader("api-key");
+
+		Portal portal = portaldao.findById(Long.valueOf(portalId));
+		String apiKeyStored = portal.getApiKey();
+
+		boolean apikeyIsValid = passwordEncoder.isPasswordValid(apiKeyStored, apiKeyRecieved, null);
+
+		if (!apikeyIsValid) {
+			throw new BadRequestException("api key is not valid");
+		}
+
 		MetaLayer metaLayer = layerDownload.getLayerName() != null ? findByLayerTableName(layerDownload.getLayerName())
 				: null;
 		if (metaLayer == null) {
