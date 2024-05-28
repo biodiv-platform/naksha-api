@@ -71,4 +71,6 @@ public interface MetaLayerService {
 
 	public String isTableAvailable(String layerName);
 
+	public MetaLayer getMetaLayerInfo(HttpServletRequest request, String layerName);
+
 }

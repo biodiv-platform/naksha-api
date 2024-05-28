@@ -243,6 +243,22 @@ public class LayerControllerImpl implements LayerController {
 		}
 	}
 
+	@GET
+	@Path("/{layerName}")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Find meta data layer info By layer name", notes = " Returns meta Layer Details", response = MetaLayer.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Layer info notfound", response = String.class) })
+	public Response getMetalayerInfoByName(@PathParam("layerName") String layerName) {
+		try {
+			MetaLayer metaLayer = metaLayerService.getMetaLayerInfo(null, layerName);
+			return Response.ok().entity(metaLayer).build();
+		} catch (Exception e) {
+			throw new WebApplicationException(
+					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
+		}
+	}
+
 	@Override
 	@Path("active/{layer}")
 	@PUT

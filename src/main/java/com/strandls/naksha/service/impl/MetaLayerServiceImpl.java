@@ -735,4 +735,10 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		return locationResponse;
 	}
+
+	@Override
+	public MetaLayer getMetaLayerInfo(HttpServletRequest request, String layerName) {
+		MetaLayer layer = findByLayerTableName(layerName);
+		return layer;
+	}
 }
