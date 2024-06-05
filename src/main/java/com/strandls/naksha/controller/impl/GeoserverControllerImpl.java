@@ -256,6 +256,8 @@ public class GeoserverControllerImpl implements GeoserverController {
 			params.add(new BasicNameValuePair("height", height));
 			params.add(new BasicNameValuePair("srs", srs));
 			params.add(new BasicNameValuePair("format", "image/png"));
+			params.add(new BasicNameValuePair("transparent", "true"));
+			
 
 			byte[] file = geoserverService.getRequest("/wms", params);
 
