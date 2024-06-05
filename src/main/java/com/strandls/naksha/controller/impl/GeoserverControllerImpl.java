@@ -236,5 +236,34 @@ public class GeoserverControllerImpl implements GeoserverController {
 		byte[] file = geoserverService.getRequest(url, null);
 		return Response.ok(new ByteArrayInputStream(file)).build();
 	}
+	
+	@GET
+	@Path("/wms")
+	@Produces("image/png")
+	@ApiOperation(value = "Fetch Raster", notes = "Return Raster", response = ByteArrayInputStream.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Raster not found", response = String.class) })
+	public Response fetchRaster(@QueryParam("bbox") String para, @DefaultValue("200") @QueryParam("width") String width,
+			@DefaultValue("200") @QueryParam("height") String height,
+			@DefaultValue("EPSG:3857") @QueryParam("srs") String srs, @QueryParam("layers") String layers) {
+		try {
+			ArrayList<NameValuePair> params = new ArrayList<>();
+			params.add(new BasicNameValuePair("request", "GetMap"));
+			params.add(new BasicNameValuePair("layers", layers));
+			params.add(new BasicNameValuePair("service", "WMS"));
+			params.add(new BasicNameValuePair("version", "1.1.0"));
+			params.add(new BasicNameValuePair("bbox", para));
+			params.add(new BasicNameValuePair("width", width));
+			params.add(new BasicNameValuePair("height", height));
+			params.add(new BasicNameValuePair("srs", srs));
+			params.add(new BasicNameValuePair("format", "image/png"));
+
+			byte[] file = geoserverService.getRequest("/wms", params);
+
+			return Response.status(Status.OK).entity(new ByteArrayInputStream(file)).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).build();
+		}
+
+	}
 
 }
