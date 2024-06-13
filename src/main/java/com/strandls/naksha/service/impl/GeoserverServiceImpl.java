@@ -1,5 +1,6 @@
 package com.strandls.naksha.service.impl;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -8,7 +9,9 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 
@@ -178,6 +181,27 @@ public class GeoserverServiceImpl implements GeoserverService {
 			HttpEntity entity = response.getEntity();
 			byteArrayResponse = EntityUtils.toByteArray(entity);
 			EntityUtils.consume(entity);
+			
+			// Get all headers
+	        Map<String, String> headers = new HashMap<>();
+	        for (org.apache.http.Header header : response.getAllHeaders()) {
+	            headers.put(header.getName(), header.getValue());
+	        }
+
+	        // Convert headers to a single string
+	        StringBuilder headerStringBuilder = new StringBuilder();
+	        for (Map.Entry<String, String> entry : headers.entrySet()) {
+	            headerStringBuilder.append(entry.getKey()).append(": ").append(entry.getValue()).append("\n");
+	        }
+	        String headerString = headerStringBuilder.toString();
+
+	        // Combine headers and body into one byte array
+	        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+	        outputStream.write(headerString.getBytes(StandardCharsets.UTF_8));
+	        outputStream.write("\n\n".getBytes(StandardCharsets.UTF_8)); // Separator between headers and body
+	        outputStream.write(byteArrayResponse);
+
+	        byteArrayResponse = outputStream.toByteArray();
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());
