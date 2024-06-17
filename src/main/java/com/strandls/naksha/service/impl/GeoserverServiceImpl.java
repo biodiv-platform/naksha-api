@@ -1,5 +1,6 @@
 package com.strandls.naksha.service.impl;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -8,10 +9,13 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -30,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import com.strandls.naksha.NakshaConfig;
 import com.strandls.naksha.dao.MetaLayerDao;
+import com.strandls.naksha.pojo.GeoServerResponse;
 import com.strandls.naksha.pojo.MetaLayer;
 import com.strandls.naksha.service.GeoserverService;
 import com.vividsolutions.jts.geom.Geometry;
@@ -175,6 +180,10 @@ public class GeoserverServiceImpl implements GeoserverService {
 			httpclient = HttpClients.createDefault();
 
 			response = httpclient.execute(request, context);
+
+			Header[] h = response.getAllHeaders();
+			System.out.println("headers=" + h);
+
 			HttpEntity entity = response.getEntity();
 			byteArrayResponse = EntityUtils.toByteArray(entity);
 			EntityUtils.consume(entity);
@@ -194,6 +203,53 @@ public class GeoserverServiceImpl implements GeoserverService {
 		}
 
 		return byteArrayResponse != null ? byteArrayResponse : new byte[0];
+	}
+
+	@Override
+	public GeoServerResponse getRequestForTiles(String uri, List<NameValuePair> params) {
+
+		CloseableHttpResponse response = null;
+		CloseableHttpClient httpclient = null;
+		byte[] byteArrayResponse = null;
+		Map<String, String> responseHeaders = new HashMap<>();
+
+		try {
+			URIBuilder builder = new URIBuilder(baseUrl + uri);
+			if (params != null)
+				builder.setParameters(params);
+			HttpGet request = new HttpGet(builder.build());
+
+			String userPass = userName + ":" + password;
+			byte[] encoding = Base64.getEncoder().encode(userPass.getBytes(StandardCharsets.UTF_8.name()));
+			request.setHeader("Authorization", "Basic " + new String(encoding)); // NOSONAR
+
+			httpclient = HttpClients.createDefault();
+			response = httpclient.execute(request, context);
+
+			// Collect headers
+			for (Header header : response.getAllHeaders()) {
+				responseHeaders.put(header.getName(), header.getValue());
+			}
+
+			HttpEntity entity = response.getEntity();
+			byteArrayResponse = EntityUtils.toByteArray(entity);
+			EntityUtils.consume(entity);
+
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			logger.error("Error while trying to send request at URL {}", uri);
+		} finally {
+			if (byteArrayResponse != null)
+				HttpClientUtils.closeQuietly(response);
+			try {
+				if (httpclient != null)
+					httpclient.close();
+			} catch (IOException e) {
+				logger.error(e.getMessage());
+			}
+		}
+
+		return new GeoServerResponse(byteArrayResponse != null ? byteArrayResponse : new byte[0], responseHeaders);
 	}
 
 	@Override
