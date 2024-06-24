@@ -233,7 +233,7 @@ public class GeoserverControllerImpl implements GeoserverController {
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "Tiles not found", response = String.class) })
 	public Response fetchTiles(@PathParam("layer") String layer, @PathParam("z") String z, @PathParam("x") String x,
 			@PathParam("y") String y) {
-		String url = "gwc/service/tms/1.0.0/" + layer + "@EPSG%3A900913@pbf/" + z + "/" + x + "/" + y + ".pbf";
+		String url = "gwc/service/tms/1.0.0/" + layer + "/" + z + "/" + x + "/" + y;
 		GeoServerResponse geoServerResponse = geoserverService.getRequestForTiles(url, null);
 		Response.ResponseBuilder responseBuilder = Response.ok(new ByteArrayInputStream(geoServerResponse.getBody()));
 
