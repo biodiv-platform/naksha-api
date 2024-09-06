@@ -132,8 +132,6 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	public List<TOCLayer> getTOCList(HttpServletRequest request, Integer limit, Integer offset, boolean showOnlyPending)
 			throws ApiException, com.vividsolutions.jts.io.ParseException, URISyntaxException, BadRequestException {
 
-		// CommonProfile userProfile = AuthUtil.getProfileFromRequest(request);
-
 		String portalId = request.getHeader("Portal-Id");
 
 		String apiKeyRecieved = request.getHeader("api-key");
@@ -149,19 +147,11 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		List<MetaLayer> metaLayers = findAllByPortalId(request, limit, offset, Long.valueOf(portalId));
 		List<TOCLayer> layerLists = new ArrayList<>();
-		// boolean isAdmin = Utils.isAdmin(request);
 
 		for (MetaLayer metaLayer : metaLayers) {
 
-//			if ((!isAdmin && LayerStatus.PENDING.equals(metaLayer.getLayerStatus()))
-//					|| (showOnlyPending && !LayerStatus.PENDING.equals(metaLayer.getLayerStatus())))
-//				continue;
-
 			Long authorId = metaLayer.getUploaderUserId();
 
-			// UserIbp userIbp = userServiceApi.getUserIbp(authorId + "");
-
-			// Boolean isDownloadable = checkDownLoadAccess(userProfile, metaLayer);
 			Boolean isDownloadable = false;
 
 			List<List<Double>> bbox = geoserverService.getBBoxByLayerName(WORKSPACE, metaLayer.getLayerTableName());
@@ -255,9 +245,6 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		String jsonString = MetaLayerUtil.getMetadataAsJson(multiPart).toJSONString();
 		MetaData metaData = objectMapper.readValue(jsonString, MetaData.class);
-		// CommonProfile profile = AuthUtil.getProfileFromRequest(request);
-		// long uploaderUserId = Long.parseLong(profile.getId());
-		// long uploaderUserId=request.
 		FormDataBodyPart formdata = multiPart.getField("uploaderUserId");
 		long uploaderUserId = Long.valueOf(formdata.getValue());
 
@@ -389,13 +376,6 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		Map<String, String> retValue = new HashMap<>();
 
-//		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
-//
-//		if (!checkDownLoadAccess(profile, layerDownload)) {
-//			retValue.put("failed", "User is not authorized to download the layer");
-//			return retValue;
-//		}
-
 		String portalId = request.getHeader("Portal-Id");
 		String apiKeyRecieved = request.getHeader("api-key");
 
@@ -417,7 +397,6 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		String uri = request.getRequestURI();
 		String hashKey = UUID.randomUUID().toString();
-		// String authToken = request.getHeader(HttpHeaders.AUTHORIZATION);
 
 		ExecutorService service = Executors.newFixedThreadPool(10);
 		service.execute(() -> {
