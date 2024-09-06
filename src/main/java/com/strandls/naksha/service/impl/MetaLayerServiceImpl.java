@@ -136,7 +136,6 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		String portalId = request.getHeader("Portal-Id");
 
-		System.out.println("key=" + request.getHeader("api-key"));
 		String apiKeyRecieved = request.getHeader("api-key");
 
 		Portal portal = portaldao.findById(Long.valueOf(portalId));
