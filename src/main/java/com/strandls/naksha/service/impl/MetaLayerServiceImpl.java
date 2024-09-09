@@ -152,11 +152,13 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 			Long authorId = metaLayer.getUploaderUserId();
 
-			Boolean isDownloadable = false;
+			String downloadAccess = metaLayer.getDownloadAccess().name().toString();
+			String uploaderPortalId = metaLayer.getPortalId().toString();
 
 			List<List<Double>> bbox = geoserverService.getBBoxByLayerName(WORKSPACE, metaLayer.getLayerTableName());
 			String thumbnail = getThumbnail(metaLayer, bbox);
-			TOCLayer tocLayer = new TOCLayer(metaLayer, null, isDownloadable, bbox, thumbnail, authorId.toString());
+			TOCLayer tocLayer = new TOCLayer(metaLayer, null, downloadAccess, bbox, thumbnail, authorId.toString(),
+					uploaderPortalId);
 			layerLists.add(tocLayer);
 		}
 		return layerLists;

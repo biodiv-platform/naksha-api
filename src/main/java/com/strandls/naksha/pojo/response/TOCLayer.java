@@ -30,19 +30,20 @@ public class TOCLayer {
 	private String modifiedBy;
 	private Timestamp modifiedDate;
 
-	private Boolean isDownloadable;
+	private String downloadAccess;
 
 	private List<List<Double>> bbox;
 	private String thumbnail;
 	private LayerStatus layerStatus;
 	private String uploaderUserId;
+	private String portalId;
 
 	public TOCLayer() {
 		super();
 	}
 
-	public TOCLayer(MetaLayer metaLayer, UserIbp userIbp, Boolean isDownloadable, List<List<Double>> bbox,
-			String thumbnail, String uploaderUserId) {
+	public TOCLayer(MetaLayer metaLayer, UserIbp userIbp, String downloadAccess, List<List<Double>> bbox,
+			String thumbnail, String uploaderUserId, String portalId) {
 		this.id = metaLayer.getId();
 		this.name = metaLayer.getLayerTableName();
 		this.title = metaLayer.getLayerName();
@@ -65,11 +66,12 @@ public class TOCLayer {
 		this.modifiedBy = metaLayer.getModifiedBy();
 		this.modifiedDate = metaLayer.getModifiedDate();
 
-		this.isDownloadable = isDownloadable;
+		this.downloadAccess = downloadAccess;
 		this.bbox = bbox;
 		this.thumbnail = thumbnail;
 		this.layerStatus = metaLayer.getLayerStatus();
 		this.uploaderUserId = uploaderUserId;
+		this.portalId = portalId;
 	}
 
 	public Long getId() {
@@ -200,12 +202,12 @@ public class TOCLayer {
 		this.modifiedDate = modifiedDate;
 	}
 
-	public Boolean getIsDownloadable() {
-		return isDownloadable;
+	public String getDownloadAccess() {
+		return downloadAccess;
 	}
 
-	public void setIsDownloadable(Boolean isDownloadable) {
-		this.isDownloadable = isDownloadable;
+	public void setDownloadAccess(String downloadAccess) {
+		this.downloadAccess = downloadAccess;
 	}
 
 	public List<List<Double>> getBbox() {
@@ -238,6 +240,14 @@ public class TOCLayer {
 
 	public void setUploaderUserId(String uploaderUserId) {
 		this.uploaderUserId = uploaderUserId;
+	}
+
+	public String getPortalId() {
+		return portalId;
+	}
+
+	public void setPortalId(String portalId) {
+		this.portalId = portalId;
 	}
 
 }
