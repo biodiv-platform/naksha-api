@@ -1,10 +1,7 @@
 package com.strandls.naksha.pojo;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Map;
-
-import javax.naming.directory.InvalidAttributesException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,29 +25,23 @@ public class OGR2OGR {
 	private String dbName;
 	private String password;
 	private String port;
-	
+
 	private final Logger logger = LoggerFactory.getLogger(OGR2OGR.class);
-	
 
 	// Require to promote the data higher level.
 	private String nlt;
-
 	// To change the layer name to new name.
 	private String nln;
-
 	// Layer creation option
 	private String lco;
 
 	private String ogrCommand;
-
 	private String query;
-
 	private String shpFile;
-	
 	private String encoding;
 
 	public OGR2OGR(String formatName, String nlt, String nln, String lco, String query, String shpFile, String encoding)
-			throws InvalidAttributesException {
+			throws IllegalArgumentException {
 		super();
 		this.user = NakshaConfig.getString(GEOSERVER_DBUSER);
 		this.dbName = NakshaConfig.getString(GEOSERVER_DBNAME);
@@ -65,14 +56,13 @@ public class OGR2OGR {
 			this.nlt = nlt;
 		this.nln = nln;
 		this.lco = lco;
-
 		this.query = query;
 		this.shpFile = shpFile;
 		this.encoding = encoding;
 		init();
 	}
 
-	private void init() throws InvalidAttributesException {
+	private void init() throws IllegalArgumentException {
 		switch (formatName) {
 		case SHP_TO_POSTGRES:
 			ogrCommand = "ogr2ogr ";
@@ -88,7 +78,7 @@ public class OGR2OGR {
 				ogrCommand += " -nln " + nln;
 			if (lco != null)
 				ogrCommand += " -lco " + lco;
-			if(encoding != null)
+			if (encoding != null)
 				ogrCommand += " --config SHAPE_ENCODING " + this.encoding;
 			break;
 		case POSTGRES_TO_SHP:
@@ -106,7 +96,7 @@ public class OGR2OGR {
 				ogrCommand += " -nln " + nln;
 			break;
 		default:
-			throw new InvalidAttributesException("Invalid format");
+			throw new IllegalArgumentException("Invalid format");
 		}
 	}
 
@@ -132,20 +122,19 @@ public class OGR2OGR {
 	public Process addColumnDescription(String layerName, Map<String, String> layerColumnDescription) {
 
 		StringBuilder comments = new StringBuilder();
-
 		for (Map.Entry<String, String> entry : layerColumnDescription.entrySet()) {
 			String columnName = entry.getKey();
-			String description = layerColumnDescription.get(columnName);
-			
+			String description = entry.getValue();
+
 			String comment = "";
 			comment += "PGPASSWORD=" + password;
 			comment += " psql ";
 			comment += " -h " + host;
 			comment += " -d " + dbName;
 			comment += " -a -U " + user;
-			String sqlComment = "COMMENT ON COLUMN public." + layerName + "." + columnName + " IS \'" + description
-					+ "\'";
-			comment += " -c " + "\"" + sqlComment + "\"";
+			String sqlComment = "COMMENT ON COLUMN public." + layerName + "." + columnName + " IS '" + description
+					+ "'";
+			comment += " -c \"" + sqlComment + "\"";
 			comment += ";";
 			comments.append(comment);
 		}

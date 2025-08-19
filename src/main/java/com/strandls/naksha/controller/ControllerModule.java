@@ -1,6 +1,4 @@
-/**
- * 
- */
+/** */
 package com.strandls.naksha.controller;
 
 import com.google.inject.AbstractModule;
@@ -11,9 +9,7 @@ import com.strandls.naksha.controller.impl.ObservationControllerImpl;
 import com.strandls.naksha.controller.impl.PermissionControllerImpl;
 
 /**
- * 
  * @author vilay
- *
  */
 public class ControllerModule extends AbstractModule {
 

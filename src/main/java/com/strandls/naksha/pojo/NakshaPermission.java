@@ -2,29 +2,27 @@ package com.strandls.naksha.pojo;
 
 import java.io.Serializable;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.strandls.naksha.pojo.enumtype.PermissionType;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 @Entity
 @Table(name = "naksha_permission")
 @XmlRootElement
 @JsonIgnoreProperties
-public class NakshaPermission implements Serializable{
+public class NakshaPermission implements Serializable {
 
-	/**
-	 * 
-	 */
+	/** */
 	private static final long serialVersionUID = -5486710044415890517L;
 
 	@Id
@@ -32,19 +30,19 @@ public class NakshaPermission implements Serializable{
 	@SequenceGenerator(name = "naksha_permission_id_generator", sequenceName = "naksha_permission_id_seq", allocationSize = 1)
 	@Column(name = "id", updatable = false, nullable = false)
 	private Long id;
-	
+
 	@Column(name = "user_id")
 	private Long userId;
-	
+
 	@Column(name = "type")
 	private String type;
-	
+
 	@Column(name = "resource_type")
 	private String resourceType;
-	
+
 	@Column(name = "resource_id")
 	private Long resourceId;
-	
+
 	@Column(name = "permission")
 	@Enumerated(EnumType.STRING)
 	private PermissionType permission;

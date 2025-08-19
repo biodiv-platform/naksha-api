@@ -9,15 +9,14 @@ import com.strandls.naksha.style.json.JsonStyle;
 public interface GeoserverStyleService {
 
 	public JsonStyle generateJsonStyle(String layerName, String columnName);
-	
+
 	public List<Object[]> getColumnName(String tableName);
 
 	public List<String> publishAllStyles(String layerTableName, String workspace) throws IOException;
 
 	public void unpublishAllStyles(String layerName, String workspace);
-	
+
 	public List<GeoserverLayerStyles> fetchAllStyles(String id);
 
 	public List<String> publishAllStyles(String workspace) throws IOException;
-
 }

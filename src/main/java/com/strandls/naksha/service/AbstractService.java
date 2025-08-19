@@ -42,6 +42,6 @@ public abstract class AbstractService<T> {
 	}
 
 	public List<T> findAll(int limit, int offset) {
-		return  this.dao.findAll(limit, offset);
+		return this.dao.findAll(limit, offset);
 	}
 }

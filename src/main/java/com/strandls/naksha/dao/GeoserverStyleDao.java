@@ -2,24 +2,24 @@ package com.strandls.naksha.dao;
 
 import java.util.List;
 
-import javax.inject.Inject;
-
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
+
+import jakarta.inject.Inject;
 
 public class GeoserverStyleDao {
 
 	@Inject
 	private SessionFactory sessionFactory;
-	
+
 	private static final String TABLE_NAME = "tableName";
 
 	@Inject
 	public GeoserverStyleDao() {
 		// default constructor
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public List<Object[]> getColumnTypes(String tableName) {
 		Session session = sessionFactory.openSession();
@@ -33,7 +33,7 @@ public class GeoserverStyleDao {
 
 	@SuppressWarnings("unchecked")
 	public List<Object[]> getColumnNames(String tableName) {
-		
+
 		Session session = sessionFactory.openSession();
 		String queryStr = "SELECT c.column_name, pgd.description, c.data_type "
 				+ "from pg_catalog.pg_statio_all_tables as st "
@@ -45,7 +45,6 @@ public class GeoserverStyleDao {
 		List<Object[]> entity = query.getResultList();
 		session.close();
 		return entity;
-		
 	}
 
 	@SuppressWarnings("unchecked")

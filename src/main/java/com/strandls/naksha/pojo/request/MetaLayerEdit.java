@@ -29,33 +29,33 @@ public class MetaLayerEdit {
 	public MetaLayerEdit() {
 		super();
 	}
-	
+
 	public MetaLayer update(MetaLayerEdit metaLayerEdit, MetaLayer metaLayer) {
-		if(metaLayerEdit.getLayerName() != null && !"".equals(metaLayerEdit.getLayerName()))
+		if (metaLayerEdit.getLayerName() != null && !"".equals(metaLayerEdit.getLayerName()))
 			metaLayer.setLayerName(metaLayerEdit.getLayerName());
-		if(metaLayerEdit.getLayerDescription() != null && !"".equals(metaLayerEdit.getLayerDescription()))
+		if (metaLayerEdit.getLayerDescription() != null && !"".equals(metaLayerEdit.getLayerDescription()))
 			metaLayer.setLayerDescription(metaLayerEdit.getLayerDescription());
-		if(metaLayerEdit.getLayerType() != null)
+		if (metaLayerEdit.getLayerType() != null)
 			metaLayer.setLayerType(metaLayerEdit.getLayerType());
-		if(metaLayerEdit.getAttribution() != null)
+		if (metaLayerEdit.getAttribution() != null)
 			metaLayer.setAttribution(metaLayerEdit.getAttribution());
-		if(metaLayerEdit.getTags() != null)
+		if (metaLayerEdit.getTags() != null)
 			metaLayer.setTags(metaLayerEdit.getTags());
-		if(metaLayerEdit.getLicense() != null)
+		if (metaLayerEdit.getLicense() != null)
 			metaLayer.setLicense(metaLayerEdit.getLicense());
-		if(metaLayerEdit.getSummaryColumns() != null)
+		if (metaLayerEdit.getSummaryColumns() != null)
 			metaLayer.setSummaryColumns(metaLayerEdit.getSummaryColumns());
-		if(metaLayerEdit.getDownloadAccess() != null)
+		if (metaLayerEdit.getDownloadAccess() != null)
 			metaLayer.setDownloadAccess(metaLayerEdit.getDownloadAccess());
-		if(metaLayerEdit.getEditAccess() != null)
+		if (metaLayerEdit.getEditAccess() != null)
 			metaLayer.setEditAccess(metaLayerEdit.getEditAccess());
-		if(metaLayerEdit.getColorBy() != null)
+		if (metaLayerEdit.getColorBy() != null)
 			metaLayer.setColorBy(metaLayerEdit.getColorBy());
-		if(metaLayerEdit.getTitleColumn() != null)
+		if (metaLayerEdit.getTitleColumn() != null)
 			metaLayer.setTitleColumn(metaLayerEdit.getTitleColumn());
-		if(metaLayerEdit.getModifiedBy() != null)
+		if (metaLayerEdit.getModifiedBy() != null)
 			metaLayer.setModifiedBy(metaLayerEdit.getModifiedBy());
-		if(metaLayerEdit.getModifiedDate() != null)
+		if (metaLayerEdit.getModifiedDate() != null)
 			metaLayer.setModifiedDate(metaLayerEdit.getModifiedDate());
 		return metaLayer;
 	}

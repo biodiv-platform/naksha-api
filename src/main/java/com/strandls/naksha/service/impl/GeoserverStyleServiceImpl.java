@@ -10,8 +10,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
-import javax.inject.Inject;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,9 +35,10 @@ import com.strandls.naksha.style.json.StyledSource;
 import com.strandls.naksha.utils.MetaLayerUtil;
 
 import it.geosolutions.geoserver.rest.manager.GeoServerRESTStyleManager;
+import jakarta.inject.Inject;
 
 public class GeoserverStyleServiceImpl implements GeoserverStyleService {
-	
+
 	private final Logger logger = LoggerFactory.getLogger(GeoserverStyleServiceImpl.class);
 
 	@Inject
@@ -70,7 +69,7 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 	private static final String CHARACTER = "character";
 
 	private static final int VERSION = 8;
-	
+
 	private static final double OPACITY = 0.8;
 
 	private static String geoserverDataDirectory = "";
@@ -153,7 +152,7 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 			for (Object object : values) {
 				String color = getRandColor();
 				List<Object> stop = new ArrayList<>();
-				if(object == null)
+				if (object == null)
 					stop.add("No Data");
 				else
 					stop.add(object);
@@ -181,14 +180,14 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 	}
 
 	private String getRandColor() {
-		int rndr = ThreadLocalRandom.current().nextInt(150, 400 + 1);//NOSONAR
+		int rndr = ThreadLocalRandom.current().nextInt(150, 400 + 1); // NOSONAR
 
 		double r = Math.floor(rndr * GOLDEN_RATIO_CONJUGATE);
 
-		int rndg = ThreadLocalRandom.current().nextInt(150, 400 + 1);//NOSONAR
+		int rndg = ThreadLocalRandom.current().nextInt(150, 400 + 1); // NOSONAR
 		double g = Math.floor(rndg * GOLDEN_RATIO_CONJUGATE);
 
-		int rndb = ThreadLocalRandom.current().nextInt(150, 400 + 1);//NOSONAR
+		int rndb = ThreadLocalRandom.current().nextInt(150, 400 + 1); // NOSONAR
 		double b = Math.floor(rndb * GOLDEN_RATIO_CONJUGATE);
 
 		return String.format("%x%x%x", (int) r, (int) g, (int) b);
@@ -235,31 +234,31 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 	public void unpublishAllStyles(String layerName, String workspace) {
 		List<GeoserverLayerStyles> styles = fetchAllStyles(layerName);
 		GeoServerRESTStyleManager styleManager = geoserverService.getManager().getStyleManager();
-		for(GeoserverLayerStyles geoserverLayerStyles : styles) {
+		for (GeoserverLayerStyles geoserverLayerStyles : styles) {
 			String styleName = geoserverLayerStyles.getStyleName();
 			styleName = layerName + "_" + styleName;
 			styleManager.removeStyleInWorkspace(workspace, styleName);
 		}
 	}
-	
+
 	@Override
 	public List<String> publishAllStyles(String workspace) throws IOException {
 		List<MetaLayer> metaLayers = metaLayerService.findAll(null, -1, -1);
 		List<String> stylesUpdated = new ArrayList<>();
-		for(MetaLayer metaLayer : metaLayers) {
+		for (MetaLayer metaLayer : metaLayers) {
 			List<String> styles = publishAllStyles(metaLayer.getLayerTableName(), workspace);
 			stylesUpdated.addAll(styles);
 		}
 		return stylesUpdated;
 	}
-	
+
 	@Override
 	public List<String> publishAllStyles(String layerName, String workspace) throws IOException {
-		
+
 		String layerTableName = metaLayerService.isTableAvailable(layerName);
-		if(layerTableName == null)
+		if (layerTableName == null)
 			throw new IOException("Could not find the table name");
-		
+
 		List<Object[]> columnNameTypes = geoserverStyleDao.getColumnTypes(layerTableName);
 		List<String> styles = new ArrayList<>();
 		for (Object[] columnNameType : columnNameTypes) {
@@ -316,5 +315,4 @@ public class GeoserverStyleServiceImpl implements GeoserverStyleService {
 		File file = new File(geoserverStyleFilePath);
 		objectMapper.writeValue(file, jsonStyle);
 	}
-
 }

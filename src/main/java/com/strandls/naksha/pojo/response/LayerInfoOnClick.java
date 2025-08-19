@@ -53,5 +53,4 @@ public class LayerInfoOnClick {
 	public void setStyles(List<GeoserverLayerStyles> styles) {
 		this.styles = styles;
 	}
-
 }

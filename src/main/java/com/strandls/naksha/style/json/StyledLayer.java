@@ -1,9 +1,9 @@
 package com.strandls.naksha.style.json;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 @JsonIgnoreProperties
@@ -15,12 +15,13 @@ public class StyledLayer {
 
 	@JsonProperty("source-layer")
 	private String sourceLayer;
+
 	private StylePaint paint;
-	
+
 	public StyledLayer() {
 		super();
 	}
-	
+
 	public StyledLayer(String id, String type, String source, String sourceLayer, StylePaint paint) {
 		super();
 		this.id = id;

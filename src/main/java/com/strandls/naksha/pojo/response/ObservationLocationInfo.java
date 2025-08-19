@@ -1,6 +1,4 @@
-/**
- * 
- */
+/** */
 package com.strandls.naksha.pojo.response;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -10,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 
 /**
  * @author Abhishek Rudra
- *
  */
 @JsonTypeInfo(use = Id.NAME, include = As.PROPERTY, property = "type", visible = true)
 @JsonSubTypes({ @JsonSubTypes.Type(value = ObservationLocationInfoPA.class, name = "ObservationLocationInfoPA"),
@@ -78,5 +75,4 @@ public class ObservationLocationInfo {
 	public void setForestType(String forestType) {
 		this.forestType = forestType;
 	}
-
 }

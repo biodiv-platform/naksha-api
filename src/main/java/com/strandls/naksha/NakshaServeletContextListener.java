@@ -19,8 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import javax.servlet.ServletContextEvent;
-
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.hibernate.SessionFactory;
@@ -42,6 +40,8 @@ import com.strandls.naksha.service.ServiceModule;
 import com.strandls.user.controller.UserServiceApi;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.PrecisionModel;
+
+import jakarta.servlet.ServletContextEvent;
 
 public class NakshaServeletContextListener extends GuiceServletContextListener {
 
@@ -71,7 +71,7 @@ public class NakshaServeletContextListener extends GuiceServletContextListener {
 				} catch (ClassNotFoundException | IOException | URISyntaxException e) {
 					logger.error(e.getMessage());
 				}
-				
+
 				configuration = configuration.configure();
 				SessionFactory sessionFactory = configuration.buildSessionFactory();
 
@@ -82,10 +82,10 @@ public class NakshaServeletContextListener extends GuiceServletContextListener {
 				} catch (Exception e) {
 					logger.error(e.getMessage());
 				}
-				
-				bind(Channel.class).toInstance(channel); 
+
+				bind(Channel.class).toInstance(channel);
 				RabbitMQProducer producer = new RabbitMQProducer(channel);
-				
+
 				ObjectMapper objectMapper = new ObjectMapper();
 				bind(RabbitMQProducer.class).toInstance(producer);
 				bind(ObjectMapper.class).toInstance(objectMapper);
@@ -96,7 +96,8 @@ public class NakshaServeletContextListener extends GuiceServletContextListener {
 				bind(UserServiceApi.class).in(Scopes.SINGLETON);
 
 				Map<String, String> props = new HashMap<>();
-				props.put("javax.ws.rs.Application", ApplicationConfig.class.getName());
+				props.put("jakarta.ws.rs.Application", ApplicationConfig.class.getName());
+				props.put("jersey.config.server.provider.packages", "com");
 				props.put("jersey.config.server.wadl.disableWadl", "true");
 
 				bind(ServletContainer.class).in(Scopes.SINGLETON);
@@ -115,7 +116,7 @@ public class NakshaServeletContextListener extends GuiceServletContextListener {
 			Annotation[] annotations = cls.getAnnotations();
 
 			for (Annotation annotation : annotations) {
-				if (annotation instanceof javax.persistence.Entity) {
+				if (annotation instanceof jakarta.persistence.Entity) {
 					logger.debug("Mapping entity : {}", cls.getCanonicalName());
 					classes.add(cls);
 				}
@@ -185,5 +186,4 @@ public class NakshaServeletContextListener extends GuiceServletContextListener {
 			}
 		}
 	}
-
 }

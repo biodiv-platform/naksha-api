@@ -4,9 +4,6 @@ import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -15,6 +12,9 @@ import com.strandls.naksha.pojo.NakshaPermission;
 import com.strandls.naksha.pojo.enumtype.PermissionType;
 import com.strandls.naksha.service.AbstractService;
 import com.strandls.naksha.service.PermissionService;
+
+import jakarta.inject.Inject;
+import jakarta.servlet.http.HttpServletRequest;
 
 public class PermissionServiceImpl extends AbstractService<NakshaPermission> implements PermissionService {
 
@@ -48,5 +48,4 @@ public class PermissionServiceImpl extends AbstractService<NakshaPermission> imp
 
 		return permissionMatrix;
 	}
-
 }

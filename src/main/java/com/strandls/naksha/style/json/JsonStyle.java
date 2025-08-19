@@ -3,9 +3,9 @@ package com.strandls.naksha.style.json;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 @JsonIgnoreProperties

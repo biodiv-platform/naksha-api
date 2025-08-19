@@ -5,35 +5,39 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 
 import com.strandls.esmodule.controllers.GeoServiceApi;
+import com.strandls.esmodule.pojo.GeoAggregationData;
 import com.strandls.naksha.ApiConstants;
 import com.strandls.naksha.NakshaConfig;
 import com.strandls.naksha.controller.ObservationController;
 import com.strandls.naksha.service.GeoserverService;
 
-import io.swagger.annotations.Api;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
 
-@Api("ObservationService")
+@Tag(name = "Observation Service")
 @Path(ApiConstants.OBSERVATION)
 public class ObservationControllerImpl implements ObservationController {
 
 	@Inject
 	private GeoServiceApi geoServiceApi;
-
 	@Inject
 	private GeoserverService geoserverService;
 
@@ -47,9 +51,17 @@ public class ObservationControllerImpl implements ObservationController {
 	@Path("map")
 	@Consumes(MediaType.TEXT_PLAIN)
 	@Produces(MediaType.TEXT_HTML)
-	public Response fetchMap(@QueryParam("SpeciesId") String speciesId, @QueryParam("top") Double top,
-			@QueryParam("left") Double left, @QueryParam("bottom") Double bottom, @QueryParam("right") Double right,
-			@QueryParam("width") Double width, @QueryParam("height") Double height) {
+	@Operation(summary = "Fetch WMS HTML map for observations", description = "Returns an HTML OpenLayers WMS map for the given BBOX. Returns 'text/html' content, typically for display in a browser widget.", responses = {
+			@ApiResponse(responseCode = "200", description = "HTML OpenLayers map", content = @Content(mediaType = MediaType.TEXT_HTML, schema = @Schema(type = "string"))),
+			@ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = String.class))) })
+	public Response fetchMap(
+			@Parameter(description = "Species ID (optional)") @QueryParam("SpeciesId") String speciesId,
+			@Parameter(description = "Top coordinate of bounding box") @QueryParam("top") Double top,
+			@Parameter(description = "Left coordinate of bounding box") @QueryParam("left") Double left,
+			@Parameter(description = "Bottom coordinate of bounding box") @QueryParam("bottom") Double bottom,
+			@Parameter(description = "Right coordinate of bounding box") @QueryParam("right") Double right,
+			@Parameter(description = "Width in pixels") @QueryParam("width") Double width,
+			@Parameter(description = "Height in pixels") @QueryParam("height") Double height) {
 		try {
 			String workspace = NakshaConfig.getString("observation.geoserver.workspace");
 			String layer = NakshaConfig.getString("observation.geoserver.layer");
@@ -83,17 +95,25 @@ public class ObservationControllerImpl implements ObservationController {
 	@GET
 	@Path("aggregation")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response fetchESAggs(@QueryParam("index") String index, @QueryParam("type") String type,
-			@QueryParam("geoField") String geoField, @QueryParam("precision") Integer precision,
-			@QueryParam("top") Double top, @QueryParam("left") Double left, @QueryParam("bottom") Double bottom,
-			@QueryParam("right") Double right, @QueryParam("speciesId") Long speciesId) {
+	@Operation(summary = "Fetch ES aggregation geohash grid for observations", description = "Returns ES geohash grid aggregation for selected index/type/field as a JSON object (bucketed counts).", responses = {
+			@ApiResponse(responseCode = "200", description = "Geohash buckets and counts", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = GeoAggregationData.class))),
+			@ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = String.class))) })
+	public Response fetchESAggs(@Parameter(description = "Elasticsearch index") @QueryParam("index") String index,
+			@Parameter(description = "Elasticsearch doc type") @QueryParam("type") String type,
+			@Parameter(description = "Field used for geo index") @QueryParam("geoField") String geoField,
+			@Parameter(description = "Precision (max 12 for geohash)") @QueryParam("precision") Integer precision,
+			@Parameter(description = "Top coordinate of bounding box") @QueryParam("top") Double top,
+			@Parameter(description = "Left coordinate of bounding box") @QueryParam("left") Double left,
+			@Parameter(description = "Bottom coordinate of bounding box") @QueryParam("bottom") Double bottom,
+			@Parameter(description = "Right coordinate of bounding box") @QueryParam("right") Double right,
+			@Parameter(description = "Species ID (optional)") @QueryParam("speciesId") Long speciesId) {
 		try {
 			index = index == null ? NakshaConfig.getString("observation.es.index") : index;
 			type = type == null ? NakshaConfig.getString("observation.es.type") : type;
 			geoField = geoField == null ? NakshaConfig.getString("observation.es.geoField") : geoField;
 
-			Map<String, Object> geoHashToDocCount = geoServiceApi.getGeoAggregation_0(index, type, geoField, precision,
-					top, left, bottom, right, speciesId);
+			Map<String, Long> geoHashToDocCount = geoServiceApi.getGeoAggregationFromIndexType(index, type, geoField,
+					precision, top, left, bottom, right, speciesId).getData();
 			return Response.ok().entity(geoHashToDocCount).build();
 		} catch (Exception e) {
 			throw new WebApplicationException(
@@ -105,9 +125,17 @@ public class ObservationControllerImpl implements ObservationController {
 	@GET
 	@Path("aggregation/map")
 	@Produces(MediaType.TEXT_HTML)
-	public Response fetchAggsMap(@QueryParam("precision") Integer precision, @QueryParam("top") Double top,
-			@QueryParam("left") Double left, @QueryParam("bottom") Double bottom, @QueryParam("right") Double right,
-			@QueryParam("width") Double width, @QueryParam("height") Double height) {
+	@Operation(summary = "Return OpenLayers grid map from Geoserver geohash aggregation", description = "Returns an HTML map for the grid-based ES aggregation (text/html).", responses = {
+			@ApiResponse(responseCode = "200", description = "HTML OpenLayers grid map", content = @Content(mediaType = MediaType.TEXT_HTML, schema = @Schema(type = "string"))),
+			@ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = String.class))) })
+	public Response fetchAggsMap(
+			@Parameter(description = "Geohash precision (default depends on your field)") @QueryParam("precision") Integer precision,
+			@Parameter(description = "Top coordinate of bounding box") @QueryParam("top") Double top,
+			@Parameter(description = "Left coordinate of bounding box") @QueryParam("left") Double left,
+			@Parameter(description = "Bottom coordinate of bounding box") @QueryParam("bottom") Double bottom,
+			@Parameter(description = "Right coordinate of bounding box") @QueryParam("right") Double right,
+			@Parameter(description = "Width in pixels") @QueryParam("width") Double width,
+			@Parameter(description = "Height in pixels") @QueryParam("height") Double height) {
 		try {
 			String workspace = NakshaConfig.getString("observation.geoserver.workspace");
 			String layer = NakshaConfig.getString("observation.geoserver.layer");
@@ -136,5 +164,4 @@ public class ObservationControllerImpl implements ObservationController {
 					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
 		}
 	}
-
 }

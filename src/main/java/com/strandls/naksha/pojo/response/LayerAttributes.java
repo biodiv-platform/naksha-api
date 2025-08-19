@@ -2,9 +2,8 @@ package com.strandls.naksha.pojo.response;
 
 /**
  * Attributes present in a layer
- * 
- * @author mukund
  *
+ * @author mukund
  */
 public class LayerAttributes {
 

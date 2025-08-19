@@ -4,8 +4,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.inject.Inject;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +20,9 @@ import com.strandls.naksha.service.MailService;
 import com.strandls.user.controller.UserServiceApi;
 import com.strandls.user.pojo.User;
 
-public class MailServiceImpl implements MailService{
+import jakarta.inject.Inject;
+
+public class MailServiceImpl implements MailService {
 
 	private final Logger logger = LoggerFactory.getLogger(MailServiceImpl.class);
 
@@ -36,7 +36,6 @@ public class MailServiceImpl implements MailService{
 	public void sendMail(String authorId, String fileName, String type) {
 		try {
 			User user = userServiceApi.getUser(authorId);
-
 
 			Map<String, Object> data = new HashMap<>();
 			data.put(FIELDS.TO.getAction(), new String[] { user.getEmail() });

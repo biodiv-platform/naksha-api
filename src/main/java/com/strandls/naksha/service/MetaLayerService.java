@@ -5,11 +5,7 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 
-import javax.naming.directory.InvalidAttributesException;
-import javax.servlet.http.HttpServletRequest;
-
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.json.simple.parser.ParseException;
 
 import com.strandls.naksha.NakshaConfig;
 import com.strandls.naksha.pojo.MetaLayer;
@@ -19,6 +15,8 @@ import com.strandls.naksha.pojo.response.LocationInfo;
 import com.strandls.naksha.pojo.response.ObservationLocationInfo;
 import com.strandls.naksha.pojo.response.TOCLayer;
 import com.strandls.user.ApiException;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 public interface MetaLayerService {
 
@@ -43,11 +41,10 @@ public interface MetaLayerService {
 
 	public List<MetaLayer> findAll(HttpServletRequest request, Integer limit, Integer offset);
 
-	public Map<String, Object> uploadLayer(HttpServletRequest request, FormDataMultiPart multiPart)
-			throws Exception;
+	public Map<String, Object> uploadLayer(HttpServletRequest request, FormDataMultiPart multiPart) throws Exception;
 
 	public Map<String, String> prepareDownloadLayer(HttpServletRequest request, LayerDownload layerDownload)
-			throws InvalidAttributesException, InterruptedException, IOException;
+			throws IllegalArgumentException, InterruptedException, IOException;
 
 	public MetaLayer removeLayer(String layerName);
 
@@ -71,5 +68,4 @@ public interface MetaLayerService {
 	public LocationInfo getLocationInfo(String lat, String lon);
 
 	public String isTableAvailable(String layerName);
-
 }

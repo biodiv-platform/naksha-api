@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.CacheControl;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -27,13 +25,14 @@ import org.xml.sax.InputSource;
 import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.naksha.pojo.response.GeoserverLayerStyles;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.core.CacheControl;
 import net.minidev.json.JSONArray;
 
 /**
  * Common utility methods
- * 
- * @author mukund
  *
+ * @author mukund
  */
 public class Utils {
 

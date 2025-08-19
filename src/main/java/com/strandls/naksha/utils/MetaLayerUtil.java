@@ -10,9 +10,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
-
 import org.apache.commons.io.FileUtils;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
@@ -24,6 +21,9 @@ import org.slf4j.LoggerFactory;
 
 import com.strandls.naksha.NakshaConfig;
 import com.strandls.naksha.pojo.request.LayerFileDescription;
+
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.Response;
 
 public class MetaLayerUtil {
 
@@ -69,7 +69,7 @@ public class MetaLayerUtil {
 
 	/**
 	 * This method is to copy only CSV file to server.
-	 * 
+	 *
 	 * @param multiPart
 	 * @return location of the copied file
 	 * @throws IOException
@@ -111,7 +111,7 @@ public class MetaLayerUtil {
 
 	/**
 	 * This method copy all the file from multipart to server.
-	 * 
+	 *
 	 * @param multiPart
 	 * @return map of file extension to absolute location of the file
 	 * @throws IOException
@@ -172,7 +172,7 @@ public class MetaLayerUtil {
 	 * This method save each file with given extension. If the extension is optional
 	 * then file need not be there If the extension is required then it will throw
 	 * the exception
-	 * 
+	 *
 	 * @param multiPart
 	 * @param type       - extension type
 	 * @param tmpDirPath - directory location to store
@@ -227,7 +227,7 @@ public class MetaLayerUtil {
 
 	/**
 	 * This return the metadata for layer from metadata.json file.
-	 * 
+	 *
 	 * @param multiPart
 	 * @return - json object from the metadata json file.
 	 * @throws UnsupportedEncodingException

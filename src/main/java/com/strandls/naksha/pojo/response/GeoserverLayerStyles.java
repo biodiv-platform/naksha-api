@@ -3,11 +3,11 @@ package com.strandls.naksha.pojo.response;
 public class GeoserverLayerStyles {
 
 	private String styleName;
-	
+
 	private String styleTitle;
-	
+
 	private String styleType;
-	
+
 	public GeoserverLayerStyles() {
 		super();
 	}

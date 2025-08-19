@@ -51,5 +51,4 @@ public class LayerDownload {
 	public void setLayerTitle(String layerTitle) {
 		this.layerTitle = layerTitle;
 	}
-
 }

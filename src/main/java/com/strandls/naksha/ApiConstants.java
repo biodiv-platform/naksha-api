@@ -2,8 +2,9 @@ package com.strandls.naksha;
 
 public class ApiConstants {
 
-	private ApiConstants() {}
-	
+	private ApiConstants() {
+	}
+
 	// LayersController
 	public static final String UPLOADSHP = "/uploadshp";
 	public static final String DOWNLOADSHP = "/downloadshp";
@@ -18,5 +19,5 @@ public class ApiConstants {
 	public static final String LAYERINFO = "/layerinfo";
 	public static final String OBSERVATION = "/observation";
 	public static final String PERMISSION = "/permission";
-	public static final String LOCATIONINFO="/locationInfo";
+	public static final String LOCATIONINFO = "/locationInfo";
 }

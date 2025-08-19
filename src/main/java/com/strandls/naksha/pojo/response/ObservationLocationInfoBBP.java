@@ -26,5 +26,4 @@ public class ObservationLocationInfoBBP extends ObservationLocationInfo {
 	public void setGeog(String geog) {
 		this.geog = geog;
 	}
-
 }

@@ -10,8 +10,6 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
-import javax.inject.Inject;
-
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -42,6 +40,7 @@ import it.geosolutions.geoserver.rest.decoder.RESTLayer;
 import it.geosolutions.geoserver.rest.encoder.GSLayerEncoder;
 import it.geosolutions.geoserver.rest.encoder.GSResourceEncoder.ProjectionPolicy;
 import it.geosolutions.geoserver.rest.encoder.feature.GSFeatureTypeEncoder;
+import jakarta.inject.Inject;
 
 public class GeoserverServiceImpl implements GeoserverService {
 
@@ -134,7 +133,6 @@ public class GeoserverServiceImpl implements GeoserverService {
 		srs = srs == null ? "EPSG:4326" : srs;
 		return manager.getPublisher().publishGeoTIFF(workspace, datastore, datastore, geoTiffFile, srs,
 				ProjectionPolicy.NONE, styleName, null);
-
 	}
 
 	@Override
@@ -149,7 +147,7 @@ public class GeoserverServiceImpl implements GeoserverService {
 
 	/**
 	 * Makes http get request to geoserver
-	 * 
+	 *
 	 * @param uri    the uri to hit
 	 * @param params the parameters with the url
 	 * @return byte[] response

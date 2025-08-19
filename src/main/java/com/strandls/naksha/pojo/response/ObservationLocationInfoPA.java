@@ -12,7 +12,7 @@ public class ObservationLocationInfoPA extends ObservationLocationInfo {
 
 		this.protectedAreaName = protectedAreaName;
 		this.province = province;
-		this.district = district;		
+		this.district = district;
 	}
 
 	public String getProtectedAreaName() {
@@ -38,5 +38,4 @@ public class ObservationLocationInfoPA extends ObservationLocationInfo {
 	public void setDistrict(String district) {
 		this.district = district;
 	}
-
 }

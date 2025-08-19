@@ -40,5 +40,4 @@ public class LocationInfo {
 	public void setTahsil(String tahsil) {
 		this.tahsil = tahsil;
 	}
-
 }

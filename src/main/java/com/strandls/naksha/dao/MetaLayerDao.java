@@ -5,9 +5,6 @@ import static org.hibernate.type.StandardBasicTypes.LONG;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.inject.Inject;
-import javax.persistence.NoResultException;
-
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -16,6 +13,9 @@ import org.hibernate.query.Query;
 import com.strandls.naksha.pojo.MetaLayer;
 import com.strandls.naksha.pojo.enumtype.LayerStatus;
 import com.strandls.naksha.service.MetaLayerService;
+
+import jakarta.inject.Inject;
+import jakarta.persistence.NoResultException;
 
 public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 
@@ -64,7 +64,6 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 		} finally {
 			session.close();
 		}
-
 	}
 
 	public MetaLayer findByLayerTableName(String layerTableName) {

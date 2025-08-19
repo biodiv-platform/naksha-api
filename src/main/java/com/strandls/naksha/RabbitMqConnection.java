@@ -33,7 +33,7 @@ public class RabbitMqConnection {
 		factory.setPort(rabbitmqPort);
 		factory.setUsername(rabbitmqUsername);
 		factory.setPassword(rabbitmqPassword);
-		
+
 		Connection connection = factory.newConnection();
 		Channel channel = connection.createChannel();
 		channel.exchangeDeclare(EXCHANGE_BIODIV, "direct");
