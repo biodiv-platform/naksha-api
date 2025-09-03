@@ -81,7 +81,7 @@ public class MetaLayer implements Serializable {
 	@Column(name = "url")
 	@Type(type = "text")
 	private String url;
-	
+
 	@Column(name = "shapeFiles")
 	@Type(type = "text")
 	private String dirPath;
@@ -154,7 +154,10 @@ public class MetaLayer implements Serializable {
 
 	@Column(name = "modified_date")
 	private Timestamp modifiedDate;
-	
+
+	@Column(name = "portal_id")
+	private Long portalId;
+
 	public MetaLayer() {
 		super();
 	}
@@ -174,7 +177,7 @@ public class MetaLayer implements Serializable {
 		this.attribution = metaData.getAttribution();
 		this.tags = metaData.getTags();
 		this.license = metaData.getLicense();
-		if(metaData.getSummaryColumns()!=null)
+		if (metaData.getSummaryColumns() != null)
 			this.summaryColumns = metaData.getSummaryColumns().toLowerCase(Locale.ROOT);
 		this.downloadAccess = metaData.getDownloadAccess();
 		this.editAccess = metaData.getEditAccess();
@@ -421,4 +424,13 @@ public class MetaLayer implements Serializable {
 	public void setModifiedDate(Timestamp modifiedDate) {
 		this.modifiedDate = modifiedDate;
 	}
+
+	public Long getPortalId() {
+		return portalId;
+	}
+
+	public void setPortalId(Long portalId) {
+		this.portalId = portalId;
+	}
+
 }

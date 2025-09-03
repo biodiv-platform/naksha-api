@@ -10,6 +10,7 @@ import java.util.Map;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -25,6 +26,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
+import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.io.IOUtils;
 import org.glassfish.jersey.media.multipart.ContentDisposition;
@@ -89,6 +91,8 @@ public class LayerControllerImpl implements LayerController {
 		try {
 			List<TOCLayer> layerList = metaLayerService.getTOCList(request, limit, offset, showOnlyPending);
 			return Response.ok().entity(layerList).build();
+		} catch (BadRequestException e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		} catch (Exception e) {
 			throw new WebApplicationException(
 					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
@@ -142,7 +146,7 @@ public class LayerControllerImpl implements LayerController {
 	@ApiOperation(value = "Upload Layer", notes = "Returns succuess failure", response = MetaData.class)
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "file not present", response = String.class),
 			@ApiResponse(code = 500, message = "ERROR", response = String.class) })
-	@ValidateUser
+	// @ValidateUser
 	public Response upload(@Context HttpServletRequest request, final FormDataMultiPart multiPart) {
 		try {
 			Map<String, Object> result = metaLayerService.uploadLayer(request, multiPart);
@@ -180,7 +184,7 @@ public class LayerControllerImpl implements LayerController {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "prepate shape file", notes = "Return the shape file location", response = Map.class)
-	@ValidateUser
+	// @ValidateUser
 	public Response prepareDownload(@Context HttpServletRequest request,
 			@ApiParam("layerDownload") LayerDownload layerDownload) {
 		try {
@@ -239,19 +243,35 @@ public class LayerControllerImpl implements LayerController {
 		}
 	}
 
+	@GET
+	@Path("/{layerName}")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@ApiOperation(value = "Find meta data layer info By layer name", notes = " Returns meta Layer Details", response = MetaLayer.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Layer info notfound", response = String.class) })
+	public Response getMetalayerInfoByName(@PathParam("layerName") String layerName) {
+		try {
+			MetaLayer metaLayer = metaLayerService.getMetaLayerInfo(null, layerName);
+			return Response.ok().entity(metaLayer).build();
+		} catch (Exception e) {
+			throw new WebApplicationException(
+					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
+		}
+	}
+
 	@Override
 	@Path("active/{layer}")
 	@PUT
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "Make the layer active", response = MetaLayer.class)
-	@ValidateUser
+	// @ValidateUser
 	public Response makeLayerActive(@Context HttpServletRequest request, @PathParam("layer") String layer) {
 		try {
-			if (!Utils.isAdmin(request)) {
-				throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
-						.entity("Only admin can make the layer active").build());
-			}
-			MetaLayer metaLayer = metaLayerService.makeLayerActive(layer);
+//			if (!Utils.isAdmin(request)) {
+//				throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
+//						.entity("Only admin can make the layer active").build());
+//			}
+			MetaLayer metaLayer = metaLayerService.makeLayerActive(request, layer);
 			return Response.ok().entity(metaLayer).build();
 		} catch (Exception e) {
 			throw new WebApplicationException(
@@ -264,14 +284,14 @@ public class LayerControllerImpl implements LayerController {
 	@PUT
 	@Produces(MediaType.APPLICATION_JSON)
 	@ApiOperation(value = "Make the layer pending", response = MetaLayer.class)
-	@ValidateUser
+	// @ValidateUser
 	public Response makeLayerPending(@Context HttpServletRequest request, @PathParam("layer") String layer) {
 		try {
-			if (!Utils.isAdmin(request)) {
-				throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
-						.entity("Only admin can make the layer pending").build());
-			}
-			MetaLayer metaLayer = metaLayerService.makeLayerPending(layer);
+//			if (!Utils.isAdmin(request)) {
+//				throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
+//						.entity("Only admin can make the layer pending").build());
+//			}
+			MetaLayer metaLayer = metaLayerService.makeLayerPending(request, layer);
 			return Response.ok().entity(metaLayer).build();
 		} catch (Exception e) {
 			throw new WebApplicationException(

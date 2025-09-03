@@ -43,8 +43,7 @@ public interface MetaLayerService {
 
 	public List<MetaLayer> findAll(HttpServletRequest request, Integer limit, Integer offset);
 
-	public Map<String, Object> uploadLayer(HttpServletRequest request, FormDataMultiPart multiPart)
-			throws Exception;
+	public Map<String, Object> uploadLayer(HttpServletRequest request, FormDataMultiPart multiPart) throws Exception;
 
 	public Map<String, String> prepareDownloadLayer(HttpServletRequest request, LayerDownload layerDownload)
 			throws InvalidAttributesException, InterruptedException, IOException;
@@ -58,9 +57,9 @@ public interface MetaLayerService {
 	public List<TOCLayer> getTOCList(HttpServletRequest request, Integer limit, Integer offset, boolean showOnlyPending)
 			throws ApiException, com.vividsolutions.jts.io.ParseException, URISyntaxException;
 
-	public MetaLayer makeLayerActive(String layer);
+	public MetaLayer makeLayerActive(HttpServletRequest request, String layer);
 
-	public MetaLayer makeLayerPending(String layerName);
+	public MetaLayer makeLayerPending(HttpServletRequest request, String layerName);
 
 	public MetaLayer deleteLayer(String layerName);
 
@@ -71,5 +70,7 @@ public interface MetaLayerService {
 	public LocationInfo getLocationInfo(String lat, String lon);
 
 	public String isTableAvailable(String layerName);
+
+	public MetaLayer getMetaLayerInfo(HttpServletRequest request, String layerName);
 
 }

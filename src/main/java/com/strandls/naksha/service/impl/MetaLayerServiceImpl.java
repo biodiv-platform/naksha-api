@@ -18,12 +18,15 @@ import java.util.zip.ZipOutputStream;
 import javax.inject.Inject;
 import javax.naming.directory.InvalidAttributesException;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.HttpHeaders;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.message.BasicNameValuePair;
+import org.bouncycastle.pqc.crypto.rainbow.Layer;
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
@@ -34,9 +37,13 @@ import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.naksha.ApiConstants;
 import com.strandls.naksha.Headers;
 import com.strandls.naksha.NakshaConfig;
+import com.strandls.naksha.dao.LayerPortalDao;
 import com.strandls.naksha.dao.MetaLayerDao;
+import com.strandls.naksha.dao.PortalDao;
 import com.strandls.naksha.pojo.MetaLayer;
 import com.strandls.naksha.pojo.OGR2OGR;
+import com.strandls.naksha.pojo.Portal;
+import com.strandls.naksha.pojo.layerPortalMapping;
 import com.strandls.naksha.pojo.enumtype.DownloadAccess;
 import com.strandls.naksha.pojo.enumtype.LayerStatus;
 import com.strandls.naksha.pojo.enumtype.LayerType;
@@ -60,6 +67,7 @@ import com.strandls.user.ApiException;
 import com.strandls.user.controller.UserServiceApi;
 import com.strandls.user.pojo.DownloadLogData;
 import com.strandls.user.pojo.UserIbp;
+import com.strandls.naksha.utils.MessageDigestPasswordEncoder;
 
 import it.geosolutions.geoserver.rest.decoder.RESTLayer;
 import net.minidev.json.JSONArray;
@@ -84,7 +92,16 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	private MetaLayerDao metaLayerDao;
 
 	@Inject
+	private PortalDao portaldao;
+
+	@Inject
+	private LayerPortalDao layerPortalDao;
+
+	@Inject
 	private MailService mailService;
+
+	@Inject
+	private MessageDigestPasswordEncoder passwordEncoder;
 
 	@Inject
 	private Headers headers;
@@ -113,29 +130,35 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 	@Override
 	public List<TOCLayer> getTOCList(HttpServletRequest request, Integer limit, Integer offset, boolean showOnlyPending)
-			throws ApiException, com.vividsolutions.jts.io.ParseException, URISyntaxException {
+			throws ApiException, com.vividsolutions.jts.io.ParseException, URISyntaxException, BadRequestException {
 
-		CommonProfile userProfile = AuthUtil.getProfileFromRequest(request);
+		String portalId = request.getHeader("Portal-Id");
 
-		List<MetaLayer> metaLayers = findAll(request, limit, offset);
+		String apiKeyRecieved = request.getHeader("api-key");
+
+		Portal portal = portaldao.findById(Long.valueOf(portalId));
+		String apiKeyStored = portal.getApiKey();
+
+		boolean apikeyIsValid = passwordEncoder.isPasswordValid(apiKeyStored, apiKeyRecieved, null);
+
+		if (!apikeyIsValid) {
+			throw new BadRequestException("api key is not valid");
+		}
+
+		List<MetaLayer> metaLayers = findAllByPortalId(request, limit, offset, Long.valueOf(portalId));
 		List<TOCLayer> layerLists = new ArrayList<>();
-		boolean isAdmin = Utils.isAdmin(request);
 
 		for (MetaLayer metaLayer : metaLayers) {
 
-			if ((!isAdmin && LayerStatus.PENDING.equals(metaLayer.getLayerStatus()))
-					|| (showOnlyPending && !LayerStatus.PENDING.equals(metaLayer.getLayerStatus())))
-				continue;
-
 			Long authorId = metaLayer.getUploaderUserId();
 
-			UserIbp userIbp = userServiceApi.getUserIbp(authorId + "");
-
-			Boolean isDownloadable = checkDownLoadAccess(userProfile, metaLayer);
+			String downloadAccess = metaLayer.getDownloadAccess().name().toString();
+			String uploaderPortalId = metaLayer.getPortalId().toString();
 
 			List<List<Double>> bbox = geoserverService.getBBoxByLayerName(WORKSPACE, metaLayer.getLayerTableName());
 			String thumbnail = getThumbnail(metaLayer, bbox);
-			TOCLayer tocLayer = new TOCLayer(metaLayer, userIbp, isDownloadable, bbox, thumbnail);
+			TOCLayer tocLayer = new TOCLayer(metaLayer, null, downloadAccess, bbox, thumbnail, authorId.toString(),
+					uploaderPortalId);
 			layerLists.add(tocLayer);
 		}
 		return layerLists;
@@ -166,6 +189,10 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	@Override
 	public List<MetaLayer> findAll(HttpServletRequest request, Integer limit, Integer offset) {
 		return metaLayerDao.findAll(limit, offset);
+	}
+
+	public List<MetaLayer> findAllByPortalId(HttpServletRequest request, Integer limit, Integer offset, Long portalId) {
+		return metaLayerDao.findAll(limit, offset, portalId);
 	}
 
 	public void uploadGeoTiff(String geoLayerName, String inputGeoTiffFileLocation, String inputGeoTiffStyleLocation,
@@ -206,10 +233,23 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	public Map<String, Object> uploadLayer(HttpServletRequest request, FormDataMultiPart multiPart) throws Exception {
 		Map<String, Object> result = new HashMap<>();
 
+		String portalId = request.getHeader("Portal-Id");
+		String apiKeyRecieved = request.getHeader("api-key");
+
+		Portal portal = portaldao.findById(Long.valueOf(portalId));
+		String apiKeyStored = portal.getApiKey();
+
+		boolean apikeyIsValid = passwordEncoder.isPasswordValid(apiKeyStored, apiKeyRecieved, null);
+
+		if (!apikeyIsValid) {
+			throw new BadRequestException("api key is not valid");
+		}
+
 		String jsonString = MetaLayerUtil.getMetadataAsJson(multiPart).toJSONString();
 		MetaData metaData = objectMapper.readValue(jsonString, MetaData.class);
-		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
-		long uploaderUserId = Long.parseLong(profile.getId());
+		FormDataBodyPart formdata = multiPart.getField("uploaderUserId");
+		long uploaderUserId = Long.valueOf(formdata.getValue());
+
 		Map<String, String> layerColumnDescription = metaData.getLayerColumnDescription();
 		LayerFileDescription layerFileDescription = metaData.getLayerFileDescription();
 		String fileType = layerFileDescription.getFileType();
@@ -240,12 +280,17 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		result.put("Files copied to", dirPath);
 
 		MetaLayer metaLayer = new MetaLayer(metaData, uploaderUserId, dirPath);
+		metaLayer.setPortalId(Long.valueOf(portalId));
+
 		metaLayer = save(metaLayer);
 		result.put("Meta layer table entry", metaLayer.getId());
 
 		String layerTableName = "lyr_" + metaLayer.getId() + "_" + MetaLayerUtil.refineLayerName(layerName);
 		metaLayer.setLayerTableName(layerTableName);
 		update(metaLayer);
+
+		layerPortalMapping layerPortalMapping = new layerPortalMapping(metaLayer.getId(), Long.valueOf(portalId));
+		layerPortalDao.save(layerPortalMapping);
 
 		if ("tif".equals(fileType)) {
 			try {
@@ -333,11 +378,16 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		Map<String, String> retValue = new HashMap<>();
 
-		CommonProfile profile = AuthUtil.getProfileFromRequest(request);
+		String portalId = request.getHeader("Portal-Id");
+		String apiKeyRecieved = request.getHeader("api-key");
 
-		if (!checkDownLoadAccess(profile, layerDownload)) {
-			retValue.put("failed", "User is not authorized to download the layer");
-			return retValue;
+		Portal portal = portaldao.findById(Long.valueOf(portalId));
+		String apiKeyStored = portal.getApiKey();
+
+		boolean apikeyIsValid = passwordEncoder.isPasswordValid(apiKeyStored, apiKeyRecieved, null);
+
+		if (!apikeyIsValid) {
+			throw new BadRequestException("api key is not valid");
 		}
 
 		MetaLayer metaLayer = layerDownload.getLayerName() != null ? findByLayerTableName(layerDownload.getLayerName())
@@ -349,12 +399,11 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		String uri = request.getRequestURI();
 		String hashKey = UUID.randomUUID().toString();
-		String authToken = request.getHeader(HttpHeaders.AUTHORIZATION);
 
 		ExecutorService service = Executors.newFixedThreadPool(10);
 		service.execute(() -> {
 			try {
-				runDownloadLayer(profile.getId(), uri, hashKey, authToken, layerDownload, metaLayer);
+				runDownloadLayer(null, uri, hashKey, null, layerDownload, metaLayer);
 			} catch (InvalidAttributesException | InterruptedException | IOException e) {
 				logger.error(e.getMessage());
 				Thread.currentThread().interrupt();
@@ -363,7 +412,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		String layerName = layerDownload.getLayerName();
 
-		retValue.put("url", uri + "/" + hashKey + "/" + layerName);
+		retValue.put("filePath", "/" + hashKey + "/" + layerName);
 		retValue.put("success", "The layer download process has started. You will receive the mail shortly");
 
 		service.shutdown();
@@ -455,22 +504,22 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		logger.debug("{} / {} / {}", uri, hashKey, layerName);
 
-		String url = uri + "/" + hashKey + "/" + layerName;
-
-		mailService.sendMail(authorId, url, "naksha");
-		userServiceApi = headers.addUserHeaders(userServiceApi, requestToken);
-		DownloadLogData data = new DownloadLogData();
-		data.setFilePath(url);
-		data.setFileType(metaLayer.getLayerType() == LayerType.RASTER ? LayerType.RASTER.toString() : "SHP");
-		data.setFilterUrl(uri);
-		data.setStatus("success");
-		data.setSourcetype("Map");
-		data.setNotes(layerDownload.getLayerTitle());
-		try {
-			userServiceApi.logDocumentDownload(data);
-		} catch (ApiException e) {
-			logger.error(e.getMessage());
-		}
+//		String url = uri + "/" + hashKey + "/" + layerName;
+//
+//		mailService.sendMail(authorId, url, "naksha");
+//		userServiceApi = headers.addUserHeaders(userServiceApi, requestToken);
+//		DownloadLogData data = new DownloadLogData();
+//		data.setFilePath(url);
+//		data.setFileType(metaLayer.getLayerType() == LayerType.RASTER ? LayerType.RASTER.toString() : "SHP");
+//		data.setFilterUrl(uri);
+//		data.setStatus("success");
+//		data.setSourcetype("Map");
+//		data.setNotes(layerDownload.getLayerTitle());
+//		try {
+//			userServiceApi.logDocumentDownload(data);
+//		} catch (ApiException e) {
+//			logger.error(e.getMessage());
+//		}
 		// TODO : send mail notification for download url
 		// return directory.getAbsolutePath();
 	}
@@ -510,14 +559,38 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	}
 
 	@Override
-	public MetaLayer makeLayerActive(String layerName) {
+	public MetaLayer makeLayerActive(HttpServletRequest request, String layerName) {
+		String portalId = request.getHeader("Portal-Id");
+		String apiKeyRecieved = request.getHeader("api-key");
+
+		Portal portal = portaldao.findById(Long.valueOf(portalId));
+		String apiKeyStored = portal.getApiKey();
+
+		boolean apikeyIsValid = passwordEncoder.isPasswordValid(apiKeyStored, apiKeyRecieved, null);
+
+		if (!apikeyIsValid) {
+			throw new BadRequestException("api key is not valid");
+		}
 		MetaLayer metaLayer = findByLayerTableName(layerName);
 		metaLayer.setLayerStatus(LayerStatus.ACTIVE);
 		return update(metaLayer);
 	}
 
 	@Override
-	public MetaLayer makeLayerPending(String layerName) {
+	public MetaLayer makeLayerPending(HttpServletRequest request, String layerName) {
+
+		String portalId = request.getHeader("Portal-Id");
+		String apiKeyRecieved = request.getHeader("api-key");
+
+		Portal portal = portaldao.findById(Long.valueOf(portalId));
+		String apiKeyStored = portal.getApiKey();
+
+		boolean apikeyIsValid = passwordEncoder.isPasswordValid(apiKeyStored, apiKeyRecieved, null);
+
+		if (!apikeyIsValid) {
+			throw new BadRequestException("api key is not valid");
+		}
+
 		MetaLayer metaLayer = findByLayerTableName(layerName);
 		metaLayer.setLayerStatus(LayerStatus.PENDING);
 		return update(metaLayer);
@@ -641,5 +714,11 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		}
 
 		return locationResponse;
+	}
+
+	@Override
+	public MetaLayer getMetaLayerInfo(HttpServletRequest request, String layerName) {
+		MetaLayer layer = findByLayerTableName(layerName);
+		return layer;
 	}
 }

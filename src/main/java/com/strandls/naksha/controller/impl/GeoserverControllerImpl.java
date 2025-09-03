@@ -3,6 +3,7 @@ package com.strandls.naksha.controller.impl;
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -25,6 +26,7 @@ import org.apache.http.message.BasicNameValuePair;
 import com.strandls.authentication_utility.filter.ValidateUser;
 import com.strandls.naksha.ApiConstants;
 import com.strandls.naksha.controller.GeoserverController;
+import com.strandls.naksha.pojo.GeoServerResponse;
 import com.strandls.naksha.pojo.MetaLayer;
 import com.strandls.naksha.pojo.enumtype.LayerType;
 import com.strandls.naksha.pojo.response.GeoserverLayerStyles;
@@ -189,10 +191,9 @@ public class GeoserverControllerImpl implements GeoserverController {
 			params.add(new BasicNameValuePair("height", height));
 			params.add(new BasicNameValuePair("srs", srs));
 			params.add(new BasicNameValuePair("format", "image/gif"));
-			if(metaLayer.getLayerType()!= LayerType.RASTER) {
+			if (metaLayer.getLayerType() != LayerType.RASTER) {
 				params.add(new BasicNameValuePair("styles", style.toLowerCase()));
 			}
-			
 
 			byte[] file = geoserverService.getRequest(wspace + "/wms", params);
 
@@ -227,14 +228,51 @@ public class GeoserverControllerImpl implements GeoserverController {
 	@Override
 	@GET
 	@Path("/gwc/service/tms/1.0.0/{layer}/{z}/{x}/{y}")
-	@Produces("application/x-protobuf")
+	@Produces("application/vnd.mapbox-vector-tile")
 	@ApiOperation(value = "Fetch Tiles", notes = "Return Tiles", response = ByteArrayInputStream.class)
 	@ApiResponses(value = { @ApiResponse(code = 400, message = "Tiles not found", response = String.class) })
 	public Response fetchTiles(@PathParam("layer") String layer, @PathParam("z") String z, @PathParam("x") String x,
 			@PathParam("y") String y) {
-		String url = "gwc/service/tms/1.0.0/" + layer + "@EPSG%3A900913@pbf/" + z + "/" + x + "/" + y + ".pbf";
-		byte[] file = geoserverService.getRequest(url, null);
-		return Response.ok(new ByteArrayInputStream(file)).build();
+		String url = "gwc/service/tms/1.0.0/" + layer + "/" + z + "/" + x + "/" + y;
+		GeoServerResponse geoServerResponse = geoserverService.getRequestForTiles(url, null);
+		Response.ResponseBuilder responseBuilder = Response.ok(new ByteArrayInputStream(geoServerResponse.getBody()));
+
+		// Add headers to response
+		for (Map.Entry<String, String> entry : geoServerResponse.getHeaders().entrySet()) {
+			responseBuilder.header(entry.getKey(), entry.getValue());
+		}
+
+		return responseBuilder.build();
+	}
+
+	@GET
+	@Path("/wms")
+	@Produces("image/png")
+	@ApiOperation(value = "Fetch Raster", notes = "Return Raster", response = ByteArrayInputStream.class)
+	@ApiResponses(value = { @ApiResponse(code = 400, message = "Raster not found", response = String.class) })
+	public Response fetchRaster(@QueryParam("bbox") String para, @DefaultValue("200") @QueryParam("width") String width,
+			@DefaultValue("200") @QueryParam("height") String height,
+			@DefaultValue("EPSG:3857") @QueryParam("srs") String srs, @QueryParam("layers") String layers) {
+		try {
+			ArrayList<NameValuePair> params = new ArrayList<>();
+			params.add(new BasicNameValuePair("request", "GetMap"));
+			params.add(new BasicNameValuePair("layers", layers));
+			params.add(new BasicNameValuePair("service", "WMS"));
+			params.add(new BasicNameValuePair("version", "1.1.0"));
+			params.add(new BasicNameValuePair("bbox", para));
+			params.add(new BasicNameValuePair("width", width));
+			params.add(new BasicNameValuePair("height", height));
+			params.add(new BasicNameValuePair("srs", srs));
+			params.add(new BasicNameValuePair("format", "image/png"));
+			params.add(new BasicNameValuePair("transparent", "true"));
+
+			byte[] file = geoserverService.getRequest("/wms", params);
+
+			return Response.status(Status.OK).entity(new ByteArrayInputStream(file)).build();
+		} catch (Exception e) {
+			return Response.status(Status.BAD_REQUEST).build();
+		}
+
 	}
 
 }
