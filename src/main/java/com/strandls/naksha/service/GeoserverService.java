@@ -6,6 +6,8 @@ import java.util.List;
 
 import org.apache.http.NameValuePair;
 
+import com.strandls.naksha.pojo.GeoServerResponse;
+
 import it.geosolutions.geoserver.rest.GeoServerRESTManager;
 
 public interface GeoserverService {
@@ -26,6 +28,8 @@ public interface GeoserverService {
 	public byte[] postRequest(String uri, String styleContent, String contentType, List<NameValuePair> params);
 
 	public byte[] getRequest(String url, List<NameValuePair> params);
+
+	public GeoServerResponse getRequestForTiles(String url, List<NameValuePair> params);
 
 	boolean publishGeoTiffLayer(String workspace, String datastore, File geoTiffFile) throws FileNotFoundException;
 

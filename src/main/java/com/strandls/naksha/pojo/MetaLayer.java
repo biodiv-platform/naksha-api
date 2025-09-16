@@ -155,6 +155,9 @@ public class MetaLayer implements Serializable {
 	@Schema(description = "Timestamp when last modified", example = "2025-01-16T08:21:00.000Z")
 	private Timestamp modifiedDate;
 
+	@Column(name = "portal_id")
+	private Long portalId;
+
 	public MetaLayer() {
 		super();
 	}
@@ -421,4 +424,13 @@ public class MetaLayer implements Serializable {
 	public void setModifiedDate(Timestamp modifiedDate) {
 		this.modifiedDate = modifiedDate;
 	}
+
+	public Long getPortalId() {
+		return portalId;
+	}
+
+	public void setPortalId(Long portalId) {
+		this.portalId = portalId;
+	}
+
 }

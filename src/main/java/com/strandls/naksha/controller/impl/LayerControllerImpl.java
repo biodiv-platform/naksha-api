@@ -35,6 +35,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.DefaultValue;
@@ -49,6 +50,7 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
 import jakarta.ws.rs.core.StreamingOutput;
 
 @Tag(name = "Layer Service")
@@ -91,6 +93,8 @@ public class LayerControllerImpl implements LayerController {
 		try {
 			List<TOCLayer> layerList = metaLayerService.getTOCList(request, limit, offset, showOnlyPending);
 			return Response.ok().entity(layerList).build();
+		} catch (BadRequestException e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
 		} catch (Exception e) {
 			throw new WebApplicationException(
 					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
@@ -248,6 +252,54 @@ public class LayerControllerImpl implements LayerController {
 		}
 	}
 
+	@GET
+	@Path("/{layerName}")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Operation(
+		summary = "Find meta data layer info By layer name",
+		description = "Returns meta Layer Details",
+		responses = {
+			@ApiResponse(
+				responseCode = "200",
+				description = "MetaLayer returned",
+				content = @Content(
+					mediaType = "application/json",
+					schema = @Schema(implementation = MetaLayer.class)
+				)
+			),
+			@ApiResponse(
+				responseCode = "400",
+				description = "Layer info not found",
+				content = @Content(
+					mediaType = "application/json",
+					schema = @Schema(implementation = String.class)
+				)
+			),
+			@ApiResponse(
+				responseCode = "500",
+				description = "Internal server error",
+				content = @Content(
+					mediaType = "application/json",
+					schema = @Schema(implementation = String.class)
+				)
+			)
+		}
+	)
+	public Response getMetalayerInfoByName(@PathParam("layerName") String layerName) {
+		try {
+			MetaLayer metaLayer = metaLayerService.getMetaLayerInfo(null, layerName);
+			return Response.ok().entity(metaLayer).build();
+		} catch (Exception e) {
+			throw new WebApplicationException(
+				Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+					.entity(e.getMessage())
+					.type(MediaType.APPLICATION_JSON)
+					.build()
+			);
+		}
+	}
+
 	@Override
 	@PUT
 	@Path("active/{layer}")
@@ -259,11 +311,11 @@ public class LayerControllerImpl implements LayerController {
 			@ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response makeLayerActive(@Context HttpServletRequest request, @PathParam("layer") String layer) {
 		try {
-			if (!Utils.isAdmin(request)) {
-				throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
-						.entity("Only admin can make the layer active").build());
-			}
-			MetaLayer metaLayer = metaLayerService.makeLayerActive(layer);
+//			if (!Utils.isAdmin(request)) {
+//				throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
+//						.entity("Only admin can make the layer active").build());
+//			}
+			MetaLayer metaLayer = metaLayerService.makeLayerActive(request, layer);
 			return Response.ok().entity(metaLayer).build();
 		} catch (Exception e) {
 			throw new WebApplicationException(
@@ -282,11 +334,11 @@ public class LayerControllerImpl implements LayerController {
 			@ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = String.class))) })
 	public Response makeLayerPending(@Context HttpServletRequest request, @PathParam("layer") String layer) {
 		try {
-			if (!Utils.isAdmin(request)) {
-				throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
-						.entity("Only admin can make the layer pending").build());
-			}
-			MetaLayer metaLayer = metaLayerService.makeLayerPending(layer);
+//			if (!Utils.isAdmin(request)) {
+//				throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED)
+//						.entity("Only admin can make the layer pending").build());
+//			}
+			MetaLayer metaLayer = metaLayerService.makeLayerPending(request, layer);
 			return Response.ok().entity(metaLayer).build();
 		} catch (Exception e) {
 			throw new WebApplicationException(
