@@ -93,7 +93,7 @@ public class MetaLayerDao extends AbstractDao<MetaLayer, Long> {
 
 	// @Override
 	public List<MetaLayer> findAll(int limit, int offset, Long portalId) {
-		String queryStr = "from MetaLayer t where t.layerStatus != :value and id IN (select layerId from layerPortalMapping where portalId = :portalId) order by id";
+		String queryStr = "from MetaLayer t where t.layerStatus != :value and id IN (select layerId from LayerPortalMapping where portalId = :portalId) order by id";
 		Session session = sessionFactory.openSession();
 		Query<MetaLayer> query = session.createQuery(queryStr, MetaLayer.class);
 		query.setParameter("value", LayerStatus.INACTIVE);
