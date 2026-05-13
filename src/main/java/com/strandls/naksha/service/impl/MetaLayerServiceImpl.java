@@ -347,25 +347,68 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			Map<String, String> layerColumnDescription, LayerFileDescription layerFileDescription,
 			Map<String, Object> result) throws IllegalArgumentException, InterruptedException, IOException {
 
+		logger.info("🎬 [createDBTable] Starting DB table generation pipeline for table: {}", layerTableName);
+		logger.info("📁 [createDBTable] Target OGR input file location: {}", ogrInputFileLocation);
+
 		String encoding = layerFileDescription.getEncoding();
+		logger.info("🔤 [createDBTable] Extracted file character encoding schema: {}", encoding);
 
 		OGR2OGR ogr2ogr = new OGR2OGR(OGR2OGR.SHP_TO_POSTGRES, null, layerTableName, "precision=NO", null,
 				ogrInputFileLocation, encoding);
 
+		logger.info("🚀 [createDBTable] Attempting to execute ogr2ogr system process...");
 		Process process = ogr2ogr.execute();
+
 		if (process == null) {
+			logger.error(
+					"❌ [createDBTable] Process initialization returned NULL. ProcessBuilder failed to start command.");
 			throw new IOException("Layer upload on the postgis failed");
 		} else {
-			process.waitFor();
+			logger.info(
+					"⏳ [createDBTable] Step 1: Entering process.waitFor() for ogr2ogr execution. If logs freeze here, you are deadlocked or hitting a network proxy timeout.");
+
+			// Capture exit code to diagnose if it crashes immediately or hangs
+			int exitCode = process.waitFor();
+
+			logger.info("✅ [createDBTable] Step 1 Finished. ogr2ogr process completed with Exit Code: {}", exitCode);
+
+			if (exitCode != 0) {
+				logger.error(
+						"❌ [createDBTable] ogr2ogr failed with non-zero exit status. Check database permissions or file health.");
+				throw new IOException("Layer upload on the postgis failed with exit code: " + exitCode);
+			}
+
 			result.put("Table created for layer", layerTableName);
 		}
+
+		logger.info(
+				"💬 [createDBTable] Step 2: Preparing column definitions map insertion payload. Total keys to process: {}",
+				layerColumnDescription != null ? layerColumnDescription.size() : 0);
+
 		process = ogr2ogr.addColumnDescription(layerTableName, layerColumnDescription);
+
 		if (process == null) {
+			logger.error("❌ [createDBTable] Step 2 Failed: addColumnDescription returned a NULL process handle.");
 			throw new IOException("Comment could not be added to table");
 		} else {
-			process.waitFor();
+			logger.info(
+					"⏳ [createDBTable] Step 2: Entering process.waitFor() for psql column descriptions update statement execution...");
+
+			int commentExitCode = process.waitFor();
+
+			logger.info("✅ [createDBTable] Step 2 Finished. psql comments process completed with Exit Code: {}",
+					commentExitCode);
+
+			if (commentExitCode != 0) {
+				logger.warn("⚠️ [createDBTable] psql comments process completed with warning error status code: {}",
+						commentExitCode);
+			}
+
 			result.put("Comments added", "success");
 		}
+
+		logger.info("🎉 [createDBTable] Complete execution pipeline finished cleanly for table context: {}",
+				layerTableName);
 	}
 
 	@Override
