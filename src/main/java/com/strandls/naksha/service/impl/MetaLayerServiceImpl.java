@@ -228,10 +228,12 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 	@Override
 	public Map<String, Object> uploadLayer(HttpServletRequest request, FormDataMultiPart multiPart) throws Exception {
+		logger.info("🎬 Starting uploadLayer process");
 		Map<String, Object> result = new HashMap<>();
 
 		String portalId = request.getHeader("Portal-Id");
 		String apiKeyRecieved = request.getHeader("api-key");
+		logger.debug("🔑 Auth check for Portal-Id: {}", portalId);
 
 		Portal portal = portaldao.findById(Long.valueOf(portalId));
 		String apiKeyStored = portal.getApiKey();
@@ -239,9 +241,11 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		boolean apikeyIsValid = passwordEncoder.isPasswordValid(apiKeyStored, apiKeyRecieved, null);
 
 		if (!apikeyIsValid) {
+			logger.error("❌ API Key validation failed for portal: {}", portalId);
 			throw new BadRequestException("api key is not valid");
 		}
 
+		logger.info("📄 Parsing metadata and uploader info");
 		String jsonString = MetaLayerUtil.getMetadataAsJson(multiPart).toJSONString();
 		MetaData metaData = objectMapper.readValue(jsonString, MetaData.class);
 		FormDataBodyPart formdata = multiPart.getField("uploaderUserId");
@@ -256,6 +260,8 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		String ogrInputStyleFileLocation = null;
 		String layerName;
 
+		// --- FILE COPY SECTION ---
+		logger.info("📂 Processing file type: {}", fileType);
 		if ("shp".equals(fileType)) {
 			copiedFiles = MetaLayerUtil.copyFiles(multiPart);
 			ogrInputFileLocation = copiedFiles.get("shp");
@@ -270,12 +276,16 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			ogrInputStyleFileLocation = copiedFiles.get("sld");
 			layerName = multiPart.getField("tif").getContentDisposition().getFileName().split("\\.")[0].toLowerCase();
 		} else {
+			logger.error("❌ Unsupported file type: {}", fileType);
 			throw new IllegalArgumentException("Invalid file type");
 		}
 
 		String dirPath = copiedFiles.get("dirPath");
+		logger.info("💾 Files copied to directory: {}", dirPath);
 		result.put("Files copied to", dirPath);
 
+		// --- DATABASE RECORD SECTION ---
+		logger.info("🗄️ Saving MetaLayer record to database");
 		MetaLayer metaLayer = new MetaLayer(metaData, uploaderUserId, dirPath);
 		metaLayer.setPortalId(Long.valueOf(portalId));
 
@@ -285,49 +295,64 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		String layerTableName = "lyr_" + metaLayer.getId() + "_" + MetaLayerUtil.refineLayerName(layerName);
 		metaLayer.setLayerTableName(layerTableName);
 		update(metaLayer);
+		logger.info("📝 Table name generated: {}", layerTableName);
 
 		LayerPortalMapping layerPortalMapping = new LayerPortalMapping(metaLayer.getId(), Long.valueOf(portalId));
 		layerPortalDao.save(layerPortalMapping);
 
+		// --- RASTER PROCESSING ---
 		if ("tif".equals(fileType)) {
+			logger.info("🛰️ Starting Raster (TIF) upload to GeoServer");
 			try {
 				String styleName = ogrInputStyleFileLocation != null
 						? uploadSLDStyle(layerTableName, ogrInputStyleFileLocation, result)
 						: null;
+				logger.debug("🎨 Style name: {}", styleName);
 				uploadGeoTiff(layerTableName, ogrInputFileLocation, ogrInputFileLocation, styleName, result);
+				logger.info("✅ Raster upload successful");
 				return result;
 			} catch (Exception e) {
-				logger.error(e.getMessage());
+				logger.error("💥 Raster processing failed: {}", e.getMessage(), e);
 				MetaLayerUtil.deleteFiles(dirPath);
 				metaLayerDao.delete(metaLayer);
-				Thread.currentThread().interrupt();
 				throw new IOException("Table creation failed");
 			}
 		}
+
+		// --- VECTOR PROCESSING (SHP/CSV) ---
 		try {
+			logger.info("🏗️ Starting createDBTable (ogr2ogr) for: {}", layerTableName);
 			createDBTable(layerTableName, ogrInputFileLocation, layerColumnDescription, layerFileDescription, result);
+			logger.info("✅ Database table created successfully");
 		} catch (Exception e) {
-			// Roll back
+			logger.error("💥 createDBTable failed for {}: {}", layerTableName, e.getMessage(), e);
 			MetaLayerUtil.deleteFiles(dirPath);
 			metaLayerDao.delete(metaLayer);
-			Thread.currentThread().interrupt();
 			throw new IOException("Table creation failed");
 		}
 
+		// --- GEOSERVER PUBLISHING SECTION ---
 		List<String> keywords = new ArrayList<>();
 		keywords.add(layerTableName);
 
-		boolean isPublished;
+		boolean isPublished = false;
 		try {
+			logger.info("🌍 Finding SRID and publishing styles for {}", layerTableName);
 			String srs = metaLayerDao.findSRID(layerTableName);
+			logger.debug("🌐 SRID identified: {}", srs);
+
 			List<String> styles = geoserverStyleService.publishAllStyles(layerTableName, WORKSPACE);
+
+			logger.info("📡 Calling GeoServer publishLayer...");
 			isPublished = geoserverService.publishLayer(WORKSPACE, DATASTORE, layerTableName, srs, layerTableName,
 					keywords, styles);
 		} catch (Exception e) {
+			logger.error("💥 Geoserver publication exception for {}: {}", layerTableName, e.getMessage(), e);
 			isPublished = false;
 		}
+
 		if (!isPublished) {
-			// roll back
+			logger.error("❌ Geoserver publication failed for {}. Rolling back DB and files.", layerTableName);
 			MetaLayerUtil.deleteFiles(dirPath);
 			metaLayerDao.delete(metaLayer);
 			metaLayerDao.dropTable(layerTableName);
@@ -337,9 +362,17 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		metaLayer.setLayerStatus(LayerStatus.PENDING);
 		update(metaLayer);
 
+		logger.info("🏁 Upload process complete for {}. Fetching GeoServer URL.", layerTableName);
 		result.put("Uplaoded on geoserver", layerTableName);
-		RESTLayer layer = geoserverService.getManager().getReader().getLayer(WORKSPACE, layerTableName);
-		result.put("Geoserver layer url", layer.getResourceUrl());
+
+		try {
+			RESTLayer layer = geoserverService.getManager().getReader().getLayer(WORKSPACE, layerTableName);
+			result.put("Geoserver layer url", layer.getResourceUrl());
+			logger.info("🔗 Layer URL: {}", layer.getResourceUrl());
+		} catch (Exception e) {
+			logger.warn("⚠️ Could not fetch Resource URL from GeoServer, but layer was published.");
+		}
+
 		return result;
 	}
 
