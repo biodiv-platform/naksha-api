@@ -245,4 +245,19 @@ public class MetaLayerUtil {
 		JSONParser parser = new JSONParser();
 		return (JSONObject) parser.parse(inputStreamReader);
 	}
+
+	/**
+	 * Generates the .vrt sidecar for a CSV that's already landed on disk (e.g. from
+	 * a chunked/tus upload), instead of pulling it from a live FormDataMultiPart
+	 * the way copyCSVFile does.
+	 */
+	public static String generateVrtForCsv(String csvFilePath, LayerFileDescription layerFileDescription)
+			throws IOException {
+		File csvFile = new File(csvFilePath);
+		String layerName = csvFile.getName().split("\\.")[0].toLowerCase();
+		String tmpDirPath = csvFile.getParent();
+
+		String vrtFileContent = createVRTFileContent(layerName, csvFilePath, layerFileDescription);
+		return createVRTFile(tmpDirPath, layerName, vrtFileContent);
+	}
 }
