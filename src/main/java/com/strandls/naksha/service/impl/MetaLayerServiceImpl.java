@@ -303,10 +303,11 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		try {
 			createDBTable(layerTableName, ogrInputFileLocation, layerColumnDescription, layerFileDescription, result);
 		} catch (Exception e) {
+			logger.error("Table creation failed for layer {}", layerTableName, e);
 			MetaLayerUtil.deleteFiles(dirPath);
 			metaLayerDao.delete(metaLayer);
 			Thread.currentThread().interrupt();
-			throw new IOException("Table creation failed");
+			throw new IOException("Table creation failed: " + e.getMessage(), e);
 		}
 
 		List<String> keywords = new ArrayList<>();
@@ -420,16 +421,34 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		Process process = ogr2ogr.execute();
 		if (process == null) {
 			throw new IOException("Layer upload on the postgis failed");
-		} else {
-			process.waitFor();
-			result.put("Table created for layer", layerTableName);
 		}
+		// Must drain the (merged stdout+stderr) stream before/while waiting —
+		// otherwise a chatty ogr2ogr can fill the OS pipe buffer and deadlock
+		// here forever instead of ever reaching waitFor().
+		String ogrOutput = readProcessOutput(process);
+		int exitCode = process.waitFor();
+		if (exitCode != 0) {
+			throw new IOException("ogr2ogr failed (exit code " + exitCode + ") for layer " + layerTableName + ": "
+					+ ogrOutput);
+		}
+		result.put("Table created for layer", layerTableName);
+
 		process = ogr2ogr.addColumnDescription(layerTableName, layerColumnDescription);
 		if (process == null) {
 			throw new IOException("Comment could not be added to table");
-		} else {
-			process.waitFor();
-			result.put("Comments added", "success");
+		}
+		String commentOutput = readProcessOutput(process);
+		int commentExitCode = process.waitFor();
+		if (commentExitCode != 0) {
+			throw new IOException(
+					"Adding column comments failed (exit code " + commentExitCode + "): " + commentOutput);
+		}
+		result.put("Comments added", "success");
+	}
+
+	private String readProcessOutput(Process process) throws IOException {
+		try (java.io.InputStream in = process.getInputStream()) {
+			return new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
 		}
 	}
 
