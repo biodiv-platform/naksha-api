@@ -59,7 +59,6 @@ import com.strandls.naksha.pojo.response.TOCLayer;
 import com.strandls.naksha.service.AbstractService;
 import com.strandls.naksha.service.GeoserverService;
 import com.strandls.naksha.service.GeoserverStyleService;
-import com.strandls.naksha.service.MailService;
 import com.strandls.naksha.service.MetaLayerService;
 import com.strandls.naksha.utils.MetaLayerUtil;
 import com.strandls.naksha.utils.Utils;
@@ -96,8 +95,6 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	@Inject
 	private LayerPortalDao layerPortalDao;
 
-	@Inject
-	private MailService mailService;
 	@Inject
 	private MessageDigestPasswordEncoder passwordEncoder;
 
@@ -503,7 +500,6 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 //		String url = uri + "/" + hashKey + "/" + layerName;
 //
-//		mailService.sendMail(authorId, url, "naksha");
 //		userServiceApi = headers.addUserHeaders(userServiceApi, requestToken);
 //		DownloadLogData data = new DownloadLogData();
 //		data.setFilePath(url);
