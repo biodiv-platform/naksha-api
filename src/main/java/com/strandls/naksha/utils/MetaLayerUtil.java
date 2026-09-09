@@ -216,12 +216,44 @@ public class MetaLayerUtil {
 		return layerName;
 	}
 
+	/**
+	 * NOTE: dirPath must be the directory to delete itself — do NOT chop off a
+	 * trailing segment here. Every caller (createLayerFromFiles's
+	 * copiedFiles.get("dirPath"), MetaLayer.getDirPath()) already passes the
+	 * exact target directory (dir.getAbsolutePath()), not a file path. An
+	 * earlier version of this method assumed a file path and trimmed the last
+	 * path segment, which walked one level too high and deleted the *parent*
+	 * of the intended directory — e.g. wiping the entire shared tusUpload
+	 * staging directory (all in-flight uploads for every user) instead of
+	 * just the one hash directory that actually failed.
+	 */
 	public static void deleteFiles(String dirPath) {
-		dirPath = dirPath.substring(0, dirPath.lastIndexOf("/"));
 		try {
 			FileUtils.deleteDirectory(new File(dirPath));
 		} catch (IOException e) {
 			logger.error(e.getMessage());
+		}
+	}
+
+	/**
+	 * Used on layer-creation failure instead of deleteFiles: moves the
+	 * uploaded/copied files aside (under a sibling "failed-layer-uploads"
+	 * directory, timestamped) rather than deleting them outright, so a failure
+	 * can actually be inspected/reproduced by hand afterward instead of
+	 * vanishing the instant the request fails.
+	 */
+	public static void archiveFailedFiles(String dirPath) {
+		File source = new File(dirPath);
+		if (!source.exists()) {
+			return;
+		}
+		File archiveRoot = new File(source.getParentFile(), "failed-layer-uploads");
+		File dest = new File(archiveRoot, source.getName() + "-" + System.currentTimeMillis());
+		try {
+			FileUtils.moveDirectory(source, dest);
+			logger.warn("Layer creation failed; moved files from {} to {} for inspection", source, dest);
+		} catch (IOException e) {
+			logger.error("Failed to archive files from {} after layer creation failure: {}", source, e.getMessage());
 		}
 	}
 
