@@ -293,7 +293,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 				return result;
 			} catch (Exception e) {
 				logger.error(e.getMessage());
-				MetaLayerUtil.deleteFiles(dirPath);
+				MetaLayerUtil.archiveFailedFiles(dirPath);
 				metaLayerDao.delete(metaLayer);
 				Thread.currentThread().interrupt();
 				throw new IOException("Table creation failed");
@@ -304,7 +304,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			createDBTable(layerTableName, ogrInputFileLocation, layerColumnDescription, layerFileDescription, result);
 		} catch (Exception e) {
 			logger.error("Table creation failed for layer {}", layerTableName, e);
-			MetaLayerUtil.deleteFiles(dirPath);
+			MetaLayerUtil.archiveFailedFiles(dirPath);
 			metaLayerDao.delete(metaLayer);
 			Thread.currentThread().interrupt();
 			throw new IOException("Table creation failed: " + e.getMessage(), e);
@@ -323,7 +323,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			isPublished = false;
 		}
 		if (!isPublished) {
-			MetaLayerUtil.deleteFiles(dirPath);
+			MetaLayerUtil.archiveFailedFiles(dirPath);
 			metaLayerDao.delete(metaLayer);
 			metaLayerDao.dropTable(layerTableName);
 			throw new IOException("Geoserver publication of layer failed");
@@ -359,7 +359,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		long offsetHeader = Long.parseLong(request.getHeader("Upload-Offset"));
 		File dir = new File(NakshaConfig.getString("layerChunkUploadPath"), hash);
 		FileUtils.forceMkdir(dir);
-		File dest = new File(dir, fileRole + "_" + filename);
+		File dest = new File(dir, filename);
 
 		long currentLength = dest.exists() ? dest.length() : 0;
 		if (offsetHeader != currentLength) {
@@ -395,8 +395,10 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		Map<String, String> copiedFiles = new HashMap<>();
 		copiedFiles.put("dirPath", dir.getAbsolutePath());
 		for (File f : files) {
-			String[] parts = f.getName().split("_", 2);
-			copiedFiles.put(parts[0], f.getAbsolutePath());
+			String name = f.getName();
+			int dot = name.lastIndexOf('.');
+			String ext = dot >= 0 ? name.substring(dot + 1).toLowerCase() : name.toLowerCase();
+			copiedFiles.put(ext, f.getAbsolutePath());
 		}
 		if ("csv".equals(layerFileDescription.getFileType())) {
 			copiedFiles.put("vrt", MetaLayerUtil.generateVrtForCsv(copiedFiles.get("csv"), layerFileDescription));
