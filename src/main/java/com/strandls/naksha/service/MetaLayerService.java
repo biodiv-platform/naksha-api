@@ -71,4 +71,9 @@ public interface MetaLayerService {
 
 	public MetaLayer getMetaLayerInfo(HttpServletRequest request, String layerName);
 
+	public long appendChunk(HttpServletRequest request, String hash, String fileRole, String filename) throws Exception;
+
+	public Map<String, Object> createLayerFromChunkUpload(HttpServletRequest request, String hash,
+			Map<String, Object> payload) throws Exception;
+
 }

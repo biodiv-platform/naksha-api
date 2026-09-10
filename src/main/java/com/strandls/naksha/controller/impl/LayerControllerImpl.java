@@ -25,6 +25,7 @@ import com.strandls.naksha.pojo.response.ObservationLocationInfo;
 import com.strandls.naksha.pojo.response.TOCLayer;
 import com.strandls.naksha.service.GeoserverStyleService;
 import com.strandls.naksha.service.MetaLayerService;
+import com.strandls.naksha.utils.ChunkOffsetConflictException;
 import com.strandls.naksha.utils.Utils;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -256,47 +257,17 @@ public class LayerControllerImpl implements LayerController {
 	@Path("/{layerName}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	@Operation(
-		summary = "Find meta data layer info By layer name",
-		description = "Returns meta Layer Details",
-		responses = {
-			@ApiResponse(
-				responseCode = "200",
-				description = "MetaLayer returned",
-				content = @Content(
-					mediaType = "application/json",
-					schema = @Schema(implementation = MetaLayer.class)
-				)
-			),
-			@ApiResponse(
-				responseCode = "400",
-				description = "Layer info not found",
-				content = @Content(
-					mediaType = "application/json",
-					schema = @Schema(implementation = String.class)
-				)
-			),
-			@ApiResponse(
-				responseCode = "500",
-				description = "Internal server error",
-				content = @Content(
-					mediaType = "application/json",
-					schema = @Schema(implementation = String.class)
-				)
-			)
-		}
-	)
+	@Operation(summary = "Find meta data layer info By layer name", description = "Returns meta Layer Details", responses = {
+			@ApiResponse(responseCode = "200", description = "MetaLayer returned", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MetaLayer.class))),
+			@ApiResponse(responseCode = "400", description = "Layer info not found", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))),
+			@ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = "application/json", schema = @Schema(implementation = String.class))) })
 	public Response getMetalayerInfoByName(@PathParam("layerName") String layerName) {
 		try {
 			MetaLayer metaLayer = metaLayerService.getMetaLayerInfo(null, layerName);
 			return Response.ok().entity(metaLayer).build();
 		} catch (Exception e) {
-			throw new WebApplicationException(
-				Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-					.entity(e.getMessage())
-					.type(MediaType.APPLICATION_JSON)
-					.build()
-			);
+			throw new WebApplicationException(Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+					.entity(e.getMessage()).type(MediaType.APPLICATION_JSON).build());
 		}
 	}
 
@@ -412,6 +383,43 @@ public class LayerControllerImpl implements LayerController {
 		} catch (Exception e) {
 			throw new WebApplicationException(
 					Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build());
+		}
+	}
+
+	@Override
+	@POST
+	@Path("upload/chunk/{hash}/{fileRole}")
+	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
+	@Operation(summary = "Append one chunk of a layer file", description = "Server-to-server: called by naksha-integrator, keeps each request under the sending portal's proxy size limit")
+	public Response uploadChunk(@Context HttpServletRequest request, @PathParam("hash") String hash,
+			@PathParam("fileRole") String fileRole, @QueryParam("filename") String filename) {
+		try {
+			long newOffset = metaLayerService.appendChunk(request, hash, fileRole, filename);
+			return Response.noContent().header("Upload-Offset", newOffset).build();
+		} catch (ChunkOffsetConflictException e) {
+			return Response.status(409).header("Upload-Offset", e.getExpectedOffset()).build();
+		} catch (BadRequestException e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		} catch (Exception e) {
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
+		}
+	}
+
+	@Override
+	@POST
+	@Path("upload/session/{hash}")
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Operation(summary = "Finalize a chunked layer upload", description = "Builds the layer from files already landed via uploadChunk")
+	public Response finalizeChunkUpload(@Context HttpServletRequest request, @PathParam("hash") String hash,
+			Map<String, Object> payload) {
+		try {
+			Map<String, Object> result = metaLayerService.createLayerFromChunkUpload(request, hash, payload);
+			return Response.ok().entity(result).build();
+		} catch (BadRequestException e) {
+			return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+		} catch (Exception e) {
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(e.getMessage()).build();
 		}
 	}
 }

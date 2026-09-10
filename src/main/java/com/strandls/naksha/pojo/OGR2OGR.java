@@ -107,6 +107,11 @@ public class OGR2OGR {
 		System.out.println("===========================================================");
 		ProcessBuilder pb = new ProcessBuilder();
 		pb.command("/bin/bash", "-c", command);
+		// Merge stderr into stdout so callers can drain a single stream to get
+		// ogr2ogr's actual error output (previously neither stream was read,
+		// so failures were invisible and could even block the process once
+		// its output buffer filled).
+		pb.redirectErrorStream(true);
 		try {
 			return pb.start();
 		} catch (IOException e) {
@@ -141,6 +146,7 @@ public class OGR2OGR {
 
 		ProcessBuilder pb = new ProcessBuilder();
 		pb.command("/bin/bash", "-c", comments.toString());
+		pb.redirectErrorStream(true);
 
 		try {
 			return pb.start();

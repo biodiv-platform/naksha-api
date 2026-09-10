@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,17 +16,10 @@ import java.util.concurrent.Executors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-// import jakarta.inject.Inject;
-// import jakarta.naming.directory.InvalidAttributesException;
-// import jakarta.servlet.http.HttpServletRequest;
-// import jakarta.ws.rs.BadRequestException;
-// import jakarta.ws.rs.core.HttpHeaders;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.message.BasicNameValuePair;
-import org.bouncycastle.pqc.crypto.rainbow.Layer;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.pac4j.core.profile.CommonProfile;
@@ -33,9 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.strandls.authentication_utility.util.AuthUtil;
 import com.strandls.naksha.ApiConstants;
-import com.strandls.naksha.Headers;
 import com.strandls.naksha.NakshaConfig;
 import com.strandls.naksha.dao.LayerPortalDao;
 import com.strandls.naksha.dao.MetaLayerDao;
@@ -59,22 +51,20 @@ import com.strandls.naksha.pojo.response.TOCLayer;
 import com.strandls.naksha.service.AbstractService;
 import com.strandls.naksha.service.GeoserverService;
 import com.strandls.naksha.service.GeoserverStyleService;
-import com.strandls.naksha.service.MailService;
 import com.strandls.naksha.service.MetaLayerService;
 import com.strandls.naksha.utils.MetaLayerUtil;
 import com.strandls.naksha.utils.Utils;
 import com.strandls.user.ApiException;
-import com.strandls.user.controller.UserServiceApi;
-import com.strandls.user.pojo.DownloadLogData;
-import com.strandls.user.pojo.UserIbp;
+import com.strandls.naksha.utils.ChunkOffsetConflictException;
 import com.strandls.naksha.utils.MessageDigestPasswordEncoder;
 
 import it.geosolutions.geoserver.rest.decoder.RESTLayer;
 import jakarta.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.BadRequestException;
-import jakarta.ws.rs.core.HttpHeaders;
 import net.minidev.json.JSONArray;
+
+import java.io.InputStream;
 
 public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements MetaLayerService {
 
@@ -86,8 +76,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	private GeoserverService geoserverService;
 	@Inject
 	private GeoserverStyleService geoserverStyleService;
-	@Inject
-	private UserServiceApi userServiceApi;
+
 	@Inject
 	private MetaLayerDao metaLayerDao;
 	@Inject
@@ -97,12 +86,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 	private LayerPortalDao layerPortalDao;
 
 	@Inject
-	private MailService mailService;
-	@Inject
 	private MessageDigestPasswordEncoder passwordEncoder;
-
-	@Inject
-	private Headers headers;
 
 	public static final String DOWNLOAD_BASE_LOCATION = NakshaConfig.getString(MetaLayerUtil.TEMP_DIR_PATH)
 			+ File.separator + "temp_zip";
@@ -228,65 +212,76 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 	@Override
 	public Map<String, Object> uploadLayer(HttpServletRequest request, FormDataMultiPart multiPart) throws Exception {
-		Map<String, Object> result = new HashMap<>();
-
-		String portalId = request.getHeader("Portal-Id");
-		String apiKeyRecieved = request.getHeader("api-key");
-
-		Portal portal = portaldao.findById(Long.valueOf(portalId));
-		String apiKeyStored = portal.getApiKey();
-
-		boolean apikeyIsValid = passwordEncoder.isPasswordValid(apiKeyStored, apiKeyRecieved, null);
-
-		if (!apikeyIsValid) {
-			throw new BadRequestException("api key is not valid");
-		}
+		Portal portal = validatePortal(request);
 
 		String jsonString = MetaLayerUtil.getMetadataAsJson(multiPart).toJSONString();
 		MetaData metaData = objectMapper.readValue(jsonString, MetaData.class);
 		FormDataBodyPart formdata = multiPart.getField("uploaderUserId");
 		long uploaderUserId = Long.valueOf(formdata.getValue());
 
-		Map<String, String> layerColumnDescription = metaData.getLayerColumnDescription();
 		LayerFileDescription layerFileDescription = metaData.getLayerFileDescription();
 		String fileType = layerFileDescription.getFileType();
 
 		Map<String, String> copiedFiles;
+		if ("shp".equals(fileType)) {
+			copiedFiles = MetaLayerUtil.copyFiles(multiPart);
+		} else if ("csv".equals(fileType)) {
+			copiedFiles = MetaLayerUtil.copyCSVFile(multiPart, layerFileDescription);
+		} else if ("tif".equals(fileType)) {
+			copiedFiles = MetaLayerUtil.copyRasterFiles(multiPart);
+		} else {
+			throw new IllegalArgumentException("Invalid file type");
+		}
+
+		return createLayerFromFiles(metaData, uploaderUserId, portal.getPortalId(), copiedFiles);
+	}
+
+	// Shared tail: DB table / GeoTIFF publish / GeoServer registration.
+	// Same logic uploadLayer always ran — extracted so the chunked path can
+	// call it too, from files that arrived a different way.
+	private Map<String, Object> createLayerFromFiles(MetaData metaData, long uploaderUserId, Long portalId,
+			Map<String, String> copiedFiles) throws Exception {
+
+		Map<String, Object> result = new HashMap<>();
+		String dirPath = copiedFiles.get("dirPath");
+		result.put("Files copied to", dirPath);
+
+		Map<String, String> layerColumnDescription = metaData.getLayerColumnDescription();
+		LayerFileDescription layerFileDescription = metaData.getLayerFileDescription();
+		String fileType = layerFileDescription.getFileType();
+
 		String ogrInputFileLocation;
 		String ogrInputStyleFileLocation = null;
 		String layerName;
 
 		if ("shp".equals(fileType)) {
-			copiedFiles = MetaLayerUtil.copyFiles(multiPart);
 			ogrInputFileLocation = copiedFiles.get("shp");
-			layerName = multiPart.getField("shp").getContentDisposition().getFileName().split("\\.")[0].toLowerCase();
+			layerName = MetaLayerUtil
+					.refineLayerName(new File(copiedFiles.get("shp")).getName().split("\\.")[0].toLowerCase());
 		} else if ("csv".equals(fileType)) {
-			copiedFiles = MetaLayerUtil.copyCSVFile(multiPart, layerFileDescription);
 			ogrInputFileLocation = copiedFiles.get("vrt");
-			layerName = multiPart.getField("csv").getContentDisposition().getFileName().split("\\.")[0].toLowerCase();
+			layerName = MetaLayerUtil
+					.refineLayerName(new File(copiedFiles.get("csv")).getName().split("\\.")[0].toLowerCase());
 		} else if ("tif".equals(fileType)) {
-			copiedFiles = MetaLayerUtil.copyRasterFiles(multiPart);
 			ogrInputFileLocation = copiedFiles.get("tif");
 			ogrInputStyleFileLocation = copiedFiles.get("sld");
-			layerName = multiPart.getField("tif").getContentDisposition().getFileName().split("\\.")[0].toLowerCase();
+			layerName = MetaLayerUtil
+					.refineLayerName(new File(copiedFiles.get("tif")).getName().split("\\.")[0].toLowerCase());
 		} else {
 			throw new IllegalArgumentException("Invalid file type");
 		}
 
-		String dirPath = copiedFiles.get("dirPath");
-		result.put("Files copied to", dirPath);
-
 		MetaLayer metaLayer = new MetaLayer(metaData, uploaderUserId, dirPath);
-		metaLayer.setPortalId(Long.valueOf(portalId));
+		metaLayer.setPortalId(portalId);
 
 		metaLayer = save(metaLayer);
 		result.put("Meta layer table entry", metaLayer.getId());
 
-		String layerTableName = "lyr_" + metaLayer.getId() + "_" + MetaLayerUtil.refineLayerName(layerName);
+		String layerTableName = "lyr_" + metaLayer.getId() + "_" + layerName;
 		metaLayer.setLayerTableName(layerTableName);
 		update(metaLayer);
 
-		LayerPortalMapping layerPortalMapping = new LayerPortalMapping(metaLayer.getId(), Long.valueOf(portalId));
+		LayerPortalMapping layerPortalMapping = new LayerPortalMapping(metaLayer.getId(), portalId);
 		layerPortalDao.save(layerPortalMapping);
 
 		if ("tif".equals(fileType)) {
@@ -298,20 +293,21 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 				return result;
 			} catch (Exception e) {
 				logger.error(e.getMessage());
-				MetaLayerUtil.deleteFiles(dirPath);
+				MetaLayerUtil.archiveFailedFiles(dirPath);
 				metaLayerDao.delete(metaLayer);
 				Thread.currentThread().interrupt();
 				throw new IOException("Table creation failed");
 			}
 		}
+
 		try {
 			createDBTable(layerTableName, ogrInputFileLocation, layerColumnDescription, layerFileDescription, result);
 		} catch (Exception e) {
-			// Roll back
-			MetaLayerUtil.deleteFiles(dirPath);
+			logger.error("Table creation failed for layer {}", layerTableName, e);
+			MetaLayerUtil.archiveFailedFiles(dirPath);
 			metaLayerDao.delete(metaLayer);
 			Thread.currentThread().interrupt();
-			throw new IOException("Table creation failed");
+			throw new IOException("Table creation failed: " + e.getMessage(), e);
 		}
 
 		List<String> keywords = new ArrayList<>();
@@ -327,8 +323,7 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 			isPublished = false;
 		}
 		if (!isPublished) {
-			// roll back
-			MetaLayerUtil.deleteFiles(dirPath);
+			MetaLayerUtil.archiveFailedFiles(dirPath);
 			metaLayerDao.delete(metaLayer);
 			metaLayerDao.dropTable(layerTableName);
 			throw new IOException("Geoserver publication of layer failed");
@@ -343,6 +338,79 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		return result;
 	}
 
+	// The Portal-Id/api-key check, previously duplicated in every method that
+	// needed it — now shared.
+	private Portal validatePortal(HttpServletRequest request) {
+		String portalId = request.getHeader("Portal-Id");
+		String apiKeyRecieved = request.getHeader("api-key");
+		Portal portal = portaldao.findById(Long.valueOf(portalId));
+		boolean apikeyIsValid = passwordEncoder.isPasswordValid(portal.getApiKey(), apiKeyRecieved, null);
+		if (!apikeyIsValid) {
+			throw new BadRequestException("api key is not valid");
+		}
+		return portal;
+	}
+
+	@Override
+	public long appendChunk(HttpServletRequest request, String hash, String fileRole, String filename)
+			throws Exception {
+		validatePortal(request);
+
+		long offsetHeader = Long.parseLong(request.getHeader("Upload-Offset"));
+		File dir = new File(NakshaConfig.getString("layerChunkUploadPath"), hash);
+		FileUtils.forceMkdir(dir);
+		File dest = new File(dir, filename);
+
+		long currentLength = dest.exists() ? dest.length() : 0;
+		if (offsetHeader != currentLength) {
+			throw new ChunkOffsetConflictException(currentLength);
+		}
+
+		try (InputStream in = request.getInputStream(); RandomAccessFile raf = new RandomAccessFile(dest, "rw")) {
+			raf.seek(currentLength);
+			byte[] buffer = new byte[8192];
+			int len;
+			while ((len = in.read(buffer)) != -1) {
+				raf.write(buffer, 0, len);
+			}
+		}
+		return dest.length();
+	}
+
+	@Override
+	public Map<String, Object> createLayerFromChunkUpload(HttpServletRequest request, String hash,
+			Map<String, Object> payload) throws Exception {
+		Portal portal = validatePortal(request);
+
+		File dir = new File(NakshaConfig.getString("layerChunkUploadPath"), hash);
+		File[] files = dir.listFiles();
+		if (files == null || files.length == 0) {
+			throw new BadRequestException("No uploaded chunks found for " + hash);
+		}
+
+		long uploaderUserId = Long.parseLong(String.valueOf(payload.get("uploaderUserId")));
+		MetaData metaData = objectMapper.convertValue(payload.get("metadata"), MetaData.class);
+		LayerFileDescription layerFileDescription = metaData.getLayerFileDescription();
+
+		Map<String, String> copiedFiles = new HashMap<>();
+		copiedFiles.put("dirPath", dir.getAbsolutePath());
+		for (File f : files) {
+			String name = f.getName();
+			int dot = name.lastIndexOf('.');
+			String ext = dot >= 0 ? name.substring(dot + 1).toLowerCase() : name.toLowerCase();
+			copiedFiles.put(ext, f.getAbsolutePath());
+		}
+		if ("csv".equals(layerFileDescription.getFileType())) {
+			copiedFiles.put("vrt", MetaLayerUtil.generateVrtForCsv(copiedFiles.get("csv"), layerFileDescription));
+		}
+
+		try {
+			return createLayerFromFiles(metaData, uploaderUserId, portal.getPortalId(), copiedFiles);
+		} finally {
+			FileUtils.deleteQuietly(dir);
+		}
+	}
+
 	private void createDBTable(String layerTableName, String ogrInputFileLocation,
 			Map<String, String> layerColumnDescription, LayerFileDescription layerFileDescription,
 			Map<String, Object> result) throws IllegalArgumentException, InterruptedException, IOException {
@@ -355,16 +423,34 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		Process process = ogr2ogr.execute();
 		if (process == null) {
 			throw new IOException("Layer upload on the postgis failed");
-		} else {
-			process.waitFor();
-			result.put("Table created for layer", layerTableName);
 		}
+		// Must drain the (merged stdout+stderr) stream before/while waiting —
+		// otherwise a chatty ogr2ogr can fill the OS pipe buffer and deadlock
+		// here forever instead of ever reaching waitFor().
+		String ogrOutput = readProcessOutput(process);
+		int exitCode = process.waitFor();
+		if (exitCode != 0) {
+			throw new IOException("ogr2ogr failed (exit code " + exitCode + ") for layer " + layerTableName + ": "
+					+ ogrOutput);
+		}
+		result.put("Table created for layer", layerTableName);
+
 		process = ogr2ogr.addColumnDescription(layerTableName, layerColumnDescription);
 		if (process == null) {
 			throw new IOException("Comment could not be added to table");
-		} else {
-			process.waitFor();
-			result.put("Comments added", "success");
+		}
+		String commentOutput = readProcessOutput(process);
+		int commentExitCode = process.waitFor();
+		if (commentExitCode != 0) {
+			throw new IOException(
+					"Adding column comments failed (exit code " + commentExitCode + "): " + commentOutput);
+		}
+		result.put("Comments added", "success");
+	}
+
+	private String readProcessOutput(Process process) throws IOException {
+		try (java.io.InputStream in = process.getInputStream()) {
+			return new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
 		}
 	}
 
@@ -501,24 +587,6 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 
 		logger.debug("{} / {} / {}", uri, hashKey, layerName);
 
-//		String url = uri + "/" + hashKey + "/" + layerName;
-//
-//		mailService.sendMail(authorId, url, "naksha");
-//		userServiceApi = headers.addUserHeaders(userServiceApi, requestToken);
-//		DownloadLogData data = new DownloadLogData();
-//		data.setFilePath(url);
-//		data.setFileType(metaLayer.getLayerType() == LayerType.RASTER ? LayerType.RASTER.toString() : "SHP");
-//		data.setFilterUrl(uri);
-//		data.setStatus("success");
-//		data.setSourcetype("Map");
-//		data.setNotes(layerDownload.getLayerTitle());
-//		try {
-//			userServiceApi.logDocumentDownload(data);
-//		} catch (ApiException e) {
-//			logger.error(e.getMessage());
-//		}
-		// TODO : send mail notification for download url
-		// return directory.getAbsolutePath();
 	}
 
 	public void zipFolder(String zipFileLocation, File fileDirectory) throws IOException {
