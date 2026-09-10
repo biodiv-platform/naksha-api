@@ -4,7 +4,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.strandls.naksha.service.impl.GeoserverServiceImpl;
 import com.strandls.naksha.service.impl.GeoserverStyleServiceImpl;
-import com.strandls.naksha.service.impl.MailServiceImpl;
 import com.strandls.naksha.service.impl.MetaLayerServiceImpl;
 import com.strandls.naksha.service.impl.PermissionServiceImpl;
 
@@ -16,6 +15,5 @@ public class ServiceModule extends AbstractModule {
 		bind(GeoserverService.class).to(GeoserverServiceImpl.class).in(Scopes.SINGLETON);
 		bind(PermissionService.class).to(PermissionServiceImpl.class).in(Scopes.SINGLETON);
 		bind(GeoserverStyleService.class).to(GeoserverStyleServiceImpl.class).in(Scopes.SINGLETON);
-		bind(MailService.class).to(MailServiceImpl.class).in(Scopes.SINGLETON);
 	}
 }
