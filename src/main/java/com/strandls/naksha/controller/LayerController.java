@@ -1,6 +1,7 @@
 package com.strandls.naksha.controller;
 
 import java.io.FileNotFoundException;
+import java.util.Map;
 
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 
@@ -41,4 +42,8 @@ public interface LayerController {
 	public Response updateMetaLayerData(HttpServletRequest request, MetaLayerEdit metaLayerEdit);
 
 	public Response fetchLocationInfo(String lat, String lon);
+
+	Response uploadChunk(HttpServletRequest request, String hash, String fileRole, String filename);
+
+	Response finalizeChunkUpload(HttpServletRequest request, String hash, Map<String, Object> payload);
 }
