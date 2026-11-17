@@ -1,6 +1,8 @@
 package com.strandls.naksha.pojo;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -124,35 +126,56 @@ public class OGR2OGR {
 		return execute(ogrCommand);
 	}
 
-	public Process addColumnDescription(String layerName, Map<String, String> layerColumnDescription) {
-
-		StringBuilder comments = new StringBuilder();
-		for (Map.Entry<String, String> entry : layerColumnDescription.entrySet()) {
-			String columnName = entry.getKey();
-			String description = entry.getValue();
-
-			String comment = "";
-			comment += "PGPASSWORD=" + password;
-			comment += " psql ";
-			comment += " -h " + host;
-			comment += " -d " + dbName;
-			comment += " -a -U " + user;
-			String sqlComment = "COMMENT ON COLUMN public." + layerName + "." + columnName + " IS '" + description
-					+ "'";
-			comment += " -c \"" + sqlComment + "\"";
-			comment += ";";
-			comments.append(comment);
-		}
-
-		ProcessBuilder pb = new ProcessBuilder();
-		pb.command("/bin/bash", "-c", comments.toString());
-		pb.redirectErrorStream(true);
-
-		try {
-			return pb.start();
-		} catch (IOException e) {
-			logger.error(e.getMessage());
+	public Process addColumnDescription(String layerName, Map<String, String> layerColumnDescription)
+			throws IOException {
+		if (layerColumnDescription == null || layerColumnDescription.isEmpty()) {
 			return null;
 		}
+
+		List<String> command = new ArrayList<>();
+		command.add("psql");
+		command.add("-h");
+		command.add(host);
+		if (port != null && !port.trim().isEmpty()) {
+			command.add("-p");
+			command.add(port.trim());
+		}
+		command.add("-U");
+		command.add(user);
+		command.add("-d");
+		command.add(dbName);
+		command.add("-a");
+		command.add("-v");
+		command.add("ON_ERROR_STOP=1");
+
+		int commentCount = 0;
+		for (Map.Entry<String, String> entry : layerColumnDescription.entrySet()) {
+			String columnName = entry.getKey();
+			if (columnName == null || columnName.trim().isEmpty()) {
+				continue;
+			}
+			String description = entry.getValue();
+			String escapedDescription = (description != null)
+					? "'" + description.replace("'", "''") + "'"
+					: "NULL";
+
+			String sqlComment = "COMMENT ON COLUMN public." + layerName + "." + columnName + " IS "
+					+ escapedDescription + ";";
+			command.add("-c");
+			command.add(sqlComment);
+			commentCount++;
+		}
+
+		if (commentCount == 0) {
+			return null;
+		}
+
+		ProcessBuilder pb = new ProcessBuilder(command);
+		if (password != null && !password.isEmpty()) {
+			pb.environment().put("PGPASSWORD", password);
+		}
+		pb.redirectErrorStream(true);
+
+		return pb.start();
 	}
 }

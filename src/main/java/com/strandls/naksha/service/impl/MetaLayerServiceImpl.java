@@ -435,17 +435,18 @@ public class MetaLayerServiceImpl extends AbstractService<MetaLayer> implements 
 		}
 		result.put("Table created for layer", layerTableName);
 
-		process = ogr2ogr.addColumnDescription(layerTableName, layerColumnDescription);
-		if (process == null) {
-			throw new IOException("Comment could not be added to table");
+		if (layerColumnDescription != null && !layerColumnDescription.isEmpty()) {
+			process = ogr2ogr.addColumnDescription(layerTableName, layerColumnDescription);
+			if (process != null) {
+				String commentOutput = readProcessOutput(process);
+				int commentExitCode = process.waitFor();
+				if (commentExitCode != 0) {
+					throw new IOException(
+							"Adding column comments failed (exit code " + commentExitCode + "): " + commentOutput);
+				}
+				result.put("Comments added", "success");
+			}
 		}
-		String commentOutput = readProcessOutput(process);
-		int commentExitCode = process.waitFor();
-		if (commentExitCode != 0) {
-			throw new IOException(
-					"Adding column comments failed (exit code " + commentExitCode + "): " + commentOutput);
-		}
-		result.put("Comments added", "success");
 	}
 
 	private String readProcessOutput(Process process) throws IOException {
